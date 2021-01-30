@@ -36,7 +36,8 @@ function CreateItem(){
   useEffect(()=>{
     axios.get('/api/'+id)
       .then((res) => {
-        setElem(res.data);
+        console.log(JSON.parse(res.data.payload));
+        setElem(JSON.parse(res.data.payload));
         setElemQueried(true);
       })
       .catch(()=>{

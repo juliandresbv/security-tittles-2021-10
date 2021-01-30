@@ -20,6 +20,6 @@ cd -
 
 cd ./containers/app/server
   npm install
-  # rm ./.env
-  # cp ./.env.docker-compose ./.env
+  rm ./.env
+  cp ./.env.docker-compose ./.env
 cd -
