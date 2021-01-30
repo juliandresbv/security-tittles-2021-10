@@ -1,0 +1,52 @@
+#https://github.com/coredns/coredns/issues/2164#issuecomment-427970152
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sawtooth-org0peer0
+  namespace: default
+spec:
+  clusterIP: None
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+---
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: sawtooth-org0peer0
+  namespace: default
+subsets:
+  - addresses:
+      - ip: ip-peerorg0peer0
+    ports:
+      - port: 53
+        name: dns
+        protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sawtooth-org0peer1
+  namespace: default
+spec:
+  clusterIP: None
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+---
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: sawtooth-org0peer1
+  namespace: default
+subsets:
+  - addresses:
+      - ip: ip-peerorg0peer1
+    ports:
+      - port: 53
+        name: dns
+        protocol: UDP
+---

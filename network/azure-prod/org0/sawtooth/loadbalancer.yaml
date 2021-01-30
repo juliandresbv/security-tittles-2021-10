@@ -1,0 +1,38 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sawtooth-org0peer0-lb
+spec:
+  selector:
+    name: pbft-org0peer0
+  ports:
+    - name: "4004"
+      port: 4004
+    - name: "8008"
+      port: 8008
+    - name: "8800"
+      port: 8800
+  type: LoadBalancer
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sawtooth-org0peer1-lb
+spec:
+  selector:
+    name: pbft-org0peer1
+  ports:
+    - name: "4004"
+      port: 4004
+    - name: "8008"
+      port: 8008
+    - name: "8800"
+      port: 8800
+  type: LoadBalancer
+
+---
+
+

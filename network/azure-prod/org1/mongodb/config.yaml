@@ -1,0 +1,12 @@
+image:
+  repository: bitnami/mongodb
+  tag: 4.2.7
+  
+architecture: standalone
+auth:
+  enabled: true
+  rootPassword: "password"
+  username: root
+  password: example
+  database: mydb
+

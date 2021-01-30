@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pbft-keys
+spec:
+  containers:
+    - name: pbft-keys-generator
+      image: hyperledger/sawtooth-shell:1.2.6
+      command:
+        - bash
+      args:
+        - -c
+        - |
+            export SAWTOOTH_HOME="/var/lib/sawtooth" &&
+            mkdir -p /var/lib/sawtooth/keys &&
+            mkdir -p /var/lib/sawtooth/data &&
+            for i in org0peer0 org0peer1 org1peer0 org1peer1  ; do 
+              sawadm keygen -q pbft${i} &&
+              sawtooth keygen --key-dir /var/lib/sawtooth/keys/ my_key${i} > /dev/null 2>&1
+              export pbft${i}pub="$(cat /var/lib/sawtooth/keys/pbft${i}.pub)"
+            done && 
+            cd /var/lib/sawtooth/keys/ && 
+            grep '' * | sed 's/\.//' | sed 's/:/:\ /' > /var/lib/sawtooth/keys.txt &&
+            cd /var/lib/sawtooth &&
+            sawset genesis -k /var/lib/sawtooth/keys/my_keyorg0peer0.priv -o config-genesis.batch &&
+            sawset proposal create \
+              -k /var/lib/sawtooth/keys/my_keyorg0peer0.priv \
+              sawtooth.consensus.algorithm.name=pbft \
+              sawtooth.consensus.algorithm.version=1.0\
+              sawtooth.consensus.pbft.members=["\"$pbftorg0peer0pub\",\"$pbftorg0peer1pub\",\"$pbftorg1peer0pub\",\"$pbftorg1peer1pub\""] \
+              sawtooth.publisher.max_batches_per_block=1200 \
+              -o config.batch &&
+            sawadm genesis config-genesis.batch config.batch &&
+            echo "import zmq" >> genkeys.py &&
+            echo "(public, secret) = zmq.curve_keypair()" >> genkeys.py &&
+            echo "print('network_public_key =', public.decode('utf-8'),'\nnetwork_private_key =', secret.decode('utf-8'))" >> genkeys.py &&
+            python3 /var/lib/sawtooth/genkeys.py > network_keys.txt &&
+            echo "true" > /finished.txt &&
+            sleep 3600
