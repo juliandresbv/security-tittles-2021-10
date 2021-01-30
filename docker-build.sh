@@ -8,6 +8,6 @@ cd ./containers/tp1
   docker build -t le999/tp1:1.0 .
 cd -
 
-cd ./containers/client
+cd ./containers/app
   docker build -t le999/app1:1.0 .
 cd -

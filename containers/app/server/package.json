@@ -1,0 +1,24 @@
+{
+  "name": "mearn",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon -e yaml,js ./bin/www"
+  },
+  "dependencies": {
+    "@godaddy/terminus": "4.4.1",
+    "cookie-parser": "1.4.4",
+    "debug": "2.6.9",
+    "dotenv": "8.2.0",
+    "ethers": "^5.0.26",
+    "express": "4.16.1",
+    "http-errors": "1.6.3",
+    "js-yaml": "3.14.0",
+    "morgan": "1.9.1",
+    "swagger-ui-express": "4.1.4",
+    "underscore": "1.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.7"
+  }
+}
