@@ -1,21 +1,13 @@
 const { ethers } = require("ethers");
 var _ = require('underscore');
-const axios = require('axios');
-const CancelToken = axios.CancelToken;
 
 const {
-  sendTransaction,
   sendTransactionWithAwait,
   queryState, 
 } = require('../sawtooth/sawtooth-helpers');
 const TRANSACTION_FAMILY = 'intkey';
 
-const TIMEOUT = 1000*10;
-
-
-let todos = [
-  {id: 1, text: "laundry"},
-];
+let todos = [];
 
 
 module.exports.getAllToDo = function(req, res) {
@@ -46,7 +38,7 @@ module.exports.postToDo = async function(req, res) {
   }
 
   let content = JSON.parse(payload);
-  const newId = _.max(todos, (e) => {return e.id}).id + 1;
+  let newId = todos.length;
   todos.push({id: newId, text: content.text});
 
   try{
@@ -54,7 +46,6 @@ module.exports.postToDo = async function(req, res) {
     return res.json(value);
   }
   catch(err){
-    console.log(err.message);
     if(err.message === 'Timeout'){
       return res.status(500).json({msg: "Timeout"});
     }
