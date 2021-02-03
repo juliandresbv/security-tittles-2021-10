@@ -6,12 +6,15 @@ const { createHash, randomBytes } = require('crypto');
 const {protobuf} = require('sawtooth-sdk')
 const _ = require('underscore')
 
-let privateKey;
-do {
-  privateKey = randomBytes(32);
-} while (!secp256k1.privateKeyVerify(privateKey));
-const publicKey = secp256k1.publicKeyCreate(privateKey);
+// let privateKey;
+// do {
+//   privateKey = randomBytes(32);
+// } while (!secp256k1.privateKeyVerify(privateKey));
 
+let privateKey = Buffer.from(
+  "0x7f664d71e4200b4a2989558d1f6006d0dac9771a36a546b1a47c384ec9c4f04b".slice(2), 'hex');
+
+const publicKey = secp256k1.publicKeyCreate(privateKey);
 
 const hash = (x) =>
   crypto.createHash('sha512').update(x).digest('hex').toLowerCase()

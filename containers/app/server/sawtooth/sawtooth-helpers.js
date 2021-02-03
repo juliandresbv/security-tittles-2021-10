@@ -1,14 +1,12 @@
-const {createContext, CryptoFactory} = require('sawtooth-sdk/signing')
-
-const context = createContext('secp256k1')
-const privateKey = context.newRandomPrivateKey();
-// const privateKey = Buffer.from(process.env.SAWTOOTH_PRIVATE_KEY.slice(2), 'hex');
-const signer = (new CryptoFactory(context)).newSigner(privateKey)
+const _ = require('underscore')
+const secp256k1 = require('secp256k1');
 const crypto = require('crypto');
 const {protobuf} = require('sawtooth-sdk')
 const axios =  require('axios').create({});
 axios.defaults.timeout = 10*1000;
-const _ = require('underscore')
+
+const privateKey = Buffer.from(process.env.SAWTOOTH_PRIVATE_KEY.slice(2), 'hex');
+const publicKey = secp256k1.publicKeyCreate(privateKey);
 
 const hash = (x) =>
   crypto.createHash('sha512').update(x).digest('hex').toLowerCase()
@@ -34,11 +32,11 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
     familyVersion: '1.0',
     inputs: [address],
     outputs: [address],
-    signerPublicKey: signer.getPublicKey().asHex(),
+    signerPublicKey: Buffer.from(publicKey).toString('hex'),
     // In this example, we're signing the batch with the same private key,
     // but the batch can be signed by another party, in which case, the
     // public key will need to be associated with that key.
-    batcherPublicKey: signer.getPublicKey().asHex(),
+    batcherPublicKey: Buffer.from(publicKey).toString('hex'),
     // In this example, there are no dependencies.  This list should include
     // an previous transaction header signatures that must be applied for
     // this transaction to successfully commit.
@@ -49,7 +47,14 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
     nonce:crypto.randomBytes(12).toString('hex')
   }).finish()
   
-  let signature = signer.sign(transactionHeaderBytes)
+  const hashHeader = crypto.createHash('sha256').update(transactionHeaderBytes).digest('hex');
+
+  let signature = Buffer.from(
+    secp256k1.ecdsaSign(
+      Uint8Array.from(Buffer.from(hashHeader, 'hex')),
+      Uint8Array.from(privateKey)
+      ).signature
+  ).toString('hex');
   
   const transaction = protobuf.Transaction.create({
     header: transactionHeaderBytes,
@@ -74,13 +79,20 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
   //transactions = [transaction]
   
   const batchHeaderBytes = protobuf.BatchHeader.encode({
-    signerPublicKey: signer.getPublicKey().asHex(),
+    signerPublicKey: Buffer.from(publicKey).toString('hex'),
     transactionIds: transactions.map((txn) => txn.headerSignature),
   }).finish()
   
   
   
-  signature = signer.sign(batchHeaderBytes)
+  const batchHashHeader = crypto.createHash('sha256').update(batchHeaderBytes).digest('hex');
+
+  signature = Buffer.from(
+    secp256k1.ecdsaSign(
+      Uint8Array.from(Buffer.from(batchHashHeader, 'hex')),
+      Uint8Array.from(privateKey)
+      ).signature
+  ).toString('hex');
   
   const batch = protobuf.Batch.create({
     header: batchHeaderBytes,
