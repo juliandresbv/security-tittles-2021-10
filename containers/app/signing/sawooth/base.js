@@ -7,7 +7,6 @@ const privateKey = context.newRandomPrivateKey();
 const signer = (new CryptoFactory(context)).newSigner(privateKey)
 const crypto = require('crypto');
 const {protobuf} = require('sawtooth-sdk')
-const _ = require('underscore')
 
 const hash = (x) =>
   crypto.createHash('sha512').update(x).digest('hex').toLowerCase()

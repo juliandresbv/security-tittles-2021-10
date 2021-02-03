@@ -2,9 +2,8 @@
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/txn_submit_tutorial.html
 const secp256k1 = require('secp256k1');
 const crypto = require('crypto');
-const { createHash, randomBytes } = require('crypto');
+const { createHash } = require('crypto');
 const {protobuf} = require('sawtooth-sdk')
-const _ = require('underscore')
 
 // let privateKey;
 // do {
@@ -61,7 +60,7 @@ let signature = Buffer.from(
   secp256k1.ecdsaSign(
     Uint8Array.from(Buffer.from(hashHeader, 'hex')),
     Uint8Array.from(privateKey)
-    ).signature
+  ).signature
 ).toString('hex');
 
 const transaction = protobuf.Transaction.create({
@@ -97,7 +96,7 @@ signature = Buffer.from(
   secp256k1.ecdsaSign(
     Uint8Array.from(Buffer.from(batchHashHeader, 'hex')),
     Uint8Array.from(privateKey)
-    ).signature
+  ).signature
 ).toString('hex');
 
 const batch = protobuf.Batch.create({

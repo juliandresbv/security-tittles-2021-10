@@ -38,7 +38,7 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
     // public key will need to be associated with that key.
     batcherPublicKey: Buffer.from(publicKey).toString('hex'),
     // In this example, there are no dependencies.  This list should include
-    // an previous transaction header signatures that must be applied for
+    // an previous transactioun header signatures that must be applied for
     // this transaction to successfully commit.
     // For example,
     // dependencies: ['540a6803971d1880ec73a96cb97815a95d374cbad5d865925e5aa0432fcf1931539afe10310c122c5eaae15df61236079abbf4f258889359c4d175516934484a'],
@@ -91,7 +91,7 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
     secp256k1.ecdsaSign(
       Uint8Array.from(Buffer.from(batchHashHeader, 'hex')),
       Uint8Array.from(privateKey)
-      ).signature
+    ).signature
   ).toString('hex');
   
   const batch = protobuf.Batch.create({
@@ -122,7 +122,6 @@ module.exports.queryState = async function (transactionFamily, varName, cancelTo
   if(cancelToken){
     params.cancelToken = cancelToken;
   } 
-  console.log("to:", `${process.env.SAWTOOTH_REST}/state/${address}`)
   let response = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`, params);
   let base = Buffer.from(response.data.data, 'base64');
   let stateValue = JSON.parse(base.toString('utf8'));
@@ -135,30 +134,29 @@ const {
   EventList,
   EventSubscription,
   EventFilter,
-  StateChangeList,
+  // StateChangeList,
   ClientEventsSubscribeRequest,
   ClientEventsSubscribeResponse
 } = require('sawtooth-sdk/protobuf')
 
 
 const PREFIX = hash("intkey").substring(0, 6);
-console.log(PREFIX);
 const NULL_BLOCK_ID = '0000000000000000'
 
 const VALIDATOR_HOST = process.env.VALIDATOR_HOST;
 // const VALIDATOR_HOST = 'tcp://localhost:4004';
 console.log('connecting to ', VALIDATOR_HOST);
-stream = new Stream(VALIDATOR_HOST);
+const stream = new Stream(VALIDATOR_HOST);
 
 
 module.exports.subscribeToSawtoothEvents = () =>{
-    return new Promise((resolve)=>{
-        stream.connect(()=>{
-          stream.onReceive(handleEvent);
-          subscribe().then(resolve);
-          console.log('Connected');
-        });
-      })
+  return new Promise((resolve)=>{
+    stream.connect(()=>{
+      stream.onReceive(handleEvent);
+      subscribe().then(resolve);
+      console.log('Connected');
+    });
+  })
 }
 
 const handleEvent = msg => {
@@ -219,7 +217,7 @@ const subscribe = () => {
     .then(response => ClientEventsSubscribeResponse.decode(response))
     .then(decoded => {
       const status = _.findKey(ClientEventsSubscribeResponse.Status,
-                               val => val === decoded.status)
+        val => val === decoded.status)
       if (status !== 'OK') {
         throw new Error(`Validator responded with status "${status}"`)
       }

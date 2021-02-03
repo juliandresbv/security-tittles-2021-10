@@ -1,0 +1,18 @@
+{
+  "extends": [
+      "eslint:recommended"
+  ],
+  "rules": {
+    "no-unused-vars": 1,
+    "no-console": 1,
+    "indent": ["error", 2]
+  },
+  "env": {
+    "node": true,
+    "es2017": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 8
+  }
+}
+
