@@ -4,58 +4,63 @@ const crypto = require('crypto');
 const {protobuf} = require('sawtooth-sdk')
 const axios =  require('axios').create({});
 axios.defaults.timeout = 10*1000;
+const CancelToken = require('axios').CancelToken;
 
 const privateKey = Buffer.from(process.env.SAWTOOTH_PRIVATE_KEY.slice(2), 'hex');
 const publicKey = secp256k1.publicKeyCreate(privateKey);
+const publicKeyHex = Buffer.from(publicKey).toString('hex');
 
-const hash = (x) =>
-  crypto.createHash('sha512').update(x).digest('hex').toLowerCase()
+const hash512 = (x) =>
+  crypto.createHash('sha512').update(x).digest('hex');
 
+const hash256 = (x) =>
+  crypto.createHash('sha256').update(x).digest('hex');
 
 const getAddress = (transactionFamily, varName) => {
-  const INT_KEY_NAMESPACE = hash(transactionFamily).substring(0, 6)
-  return INT_KEY_NAMESPACE + hash(varName).slice(-64)
+  const INT_KEY_NAMESPACE = hash512(transactionFamily).substring(0, 6)
+  return INT_KEY_NAMESPACE + hash512(varName).slice(-64)
+}
+
+const sign = (dataBytes, privKey) => {
+  const hash = hash256(dataBytes);
+  return Buffer.from(
+    secp256k1.ecdsaSign(
+      Uint8Array.from(Buffer.from(hash, 'hex')),
+      Uint8Array.from(privKey)
+    ).signature
+  ).toString('hex');
 }
 
 module.exports.getAddress = getAddress;
 
-module.exports.sendTransaction = async function (transactionFamily, payload, cancelToken /*Optional*/){
-
+function buildBatch(transactionFamily, payload){
   const address = getAddress(transactionFamily, payload.Name)
 
   const payloadBytes = Buffer.from(JSON.stringify(payload), 'utf8')
-  
-  const {createHash} = require('crypto')
-  
+    
   const transactionHeaderBytes = protobuf.TransactionHeader.encode({
     familyName: 'intkey',
     familyVersion: '1.0',
     inputs: [address],
     outputs: [address],
-    signerPublicKey: Buffer.from(publicKey).toString('hex'),
+    signerPublicKey: publicKeyHex,
     // In this example, we're signing the batch with the same private key,
     // but the batch can be signed by another party, in which case, the
     // public key will need to be associated with that key.
-    batcherPublicKey: Buffer.from(publicKey).toString('hex'),
+    batcherPublicKey: publicKeyHex,
     // In this example, there are no dependencies.  This list should include
     // an previous transactioun header signatures that must be applied for
     // this transaction to successfully commit.
     // For example,
     // dependencies: ['540a6803971d1880ec73a96cb97815a95d374cbad5d865925e5aa0432fcf1931539afe10310c122c5eaae15df61236079abbf4f258889359c4d175516934484a'],
     dependencies: [],
-    payloadSha512: createHash('sha512').update(payloadBytes).digest('hex'),
-    nonce:crypto.randomBytes(12).toString('hex')
+    payloadSha512: hash512(payloadBytes),
+    nonce: crypto.randomBytes(32).toString('hex')
   }).finish()
   
-  const hashHeader = crypto.createHash('sha256').update(transactionHeaderBytes).digest('hex');
 
-  let signature = Buffer.from(
-    secp256k1.ecdsaSign(
-      Uint8Array.from(Buffer.from(hashHeader, 'hex')),
-      Uint8Array.from(privateKey)
-      ).signature
-  ).toString('hex');
-  
+  let signature = sign(transactionHeaderBytes, privateKey);
+
   const transaction = protobuf.Transaction.create({
     header: transactionHeaderBytes,
     headerSignature: signature,
@@ -79,20 +84,12 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
   //transactions = [transaction]
   
   const batchHeaderBytes = protobuf.BatchHeader.encode({
-    signerPublicKey: Buffer.from(publicKey).toString('hex'),
+    signerPublicKey: publicKeyHex,
     transactionIds: transactions.map((txn) => txn.headerSignature),
   }).finish()
   
   
-  
-  const batchHashHeader = crypto.createHash('sha256').update(batchHeaderBytes).digest('hex');
-
-  signature = Buffer.from(
-    secp256k1.ecdsaSign(
-      Uint8Array.from(Buffer.from(batchHashHeader, 'hex')),
-      Uint8Array.from(privateKey)
-    ).signature
-  ).toString('hex');
+  signature = sign(batchHeaderBytes, privateKey);
   
   const batch = protobuf.Batch.create({
     header: batchHeaderBytes,
@@ -100,9 +97,15 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
     transactions: transactions
   })
   
-  const batchListBytes = protobuf.BatchList.encode({
+  return protobuf.BatchList.encode({
     batches: [batch]
   }).finish();
+}
+
+
+module.exports.sendTransaction = async function (transactionFamily, payload, cancelToken /*Optional*/){
+
+  const batchListBytes = buildBatch(transactionFamily, payload);
   
   let params = {
     headers: {'Content-Type': 'application/octet-stream'}
@@ -111,7 +114,138 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
     params.cancelToken = cancelToken;
   } 
   return axios.post(`${process.env.SAWTOOTH_REST}/batches`, batchListBytes, params);
+}
+
+const TIMEOUT = 1000*10;
+
+module.exports.sendTransactionWithAwait = async function (TRANSACTION_FAMILY, body, newId){
+  return new Promise((resolve, reject) => {
+    let timeoutTimer = undefined;
+    let timer1 = undefined;
+    let axiosSource = CancelToken.source();
+
+    function releaseResources(){
+      if(timeoutTimer){
+        clearTimeout(timeoutTimer);
+        timeoutTimer.unref();
+      }
+      if(timer1){
+        clearTimeout(timer1);
+        timer1.unref();
+      }
+      if(axiosSource){
+        axiosSource.cancel();
+      }
+    }
+
+    let finished = false;
+    
+    function respond(err, value){
+      if(finished){
+        return;
+      }
+
+      finished = true;
+      releaseResources();
+
+      if(err){
+        reject(err);
+      }
+      resolve(value);
+    }
+
+    timeoutTimer = setTimeout(() =>{
+      respond(new Error('Timeout'));
+    }, TIMEOUT);
+
+    let statusLink;
+
+    (async ()=>{
+      try{
+
+        let response = await module.exports.sendTransaction(TRANSACTION_FAMILY , {
+          Action: 'set',
+          Name: newId + '',
+          Value: JSON.stringify(body)
+        }, axiosSource.token);
   
+        if(!response.data || !response.data.link){
+          return respond(new Error("Transaction response err"));
+        }
+        statusLink = response.data.link;
+      }
+      catch(e){
+        return respond(e);
+      }
+  
+  
+      try{
+        let batchStatus;
+        let retries = 0;
+        while(batchStatus !== "COMMITTED" && retries < 20){
+          if(finished){
+            return;
+          }
+          await new Promise((resolve) => {
+            timer1 = setTimeout(resolve, 200 + 100*Math.pow(2, retries));
+          });
+  
+  
+          let value = await axios.get(`${statusLink}&wait=4`, {
+            cancelToken: axiosSource.token
+          });
+      
+          if(value.data && 
+            value.data.data && 
+            value.data.data[0])
+          {
+            batchStatus = value.data.data[0].status;
+            if(batchStatus === 'INVALID'){
+              break;
+            }
+          }
+          retries = retries + 1;
+        }
+        //https://sawtooth.hyperledger.org/docs/core/nightly/1-1/rest_api/endpoint_specs.html
+        if(batchStatus !== "COMMITTED"){
+          if(batchStatus === 'INVALID'){
+            return respond(new Error('Invalid transaction'));
+          }
+          else if(batchStatus === 'PENDING'){
+            let err = new Error('PENDING transaction');
+            err.data = {statusLink}
+            return respond(err);
+          }
+          else if(batchStatus === 'UNKNOWN'){
+            return respond(new Error('Unknown transaction'));
+          }
+          else{
+            return respond(new Error('Unknown error'));
+          }
+        }
+  
+      }
+      catch(e){
+        return respond(e);
+      }
+  
+  
+      if(finished){
+        return;
+      }
+  
+      try{
+        let value = await module.exports.queryState(TRANSACTION_FAMILY, newId + '', axiosSource.token);
+        return respond(null,{
+          key: newId + '',
+          value: value
+        });
+      }
+      catch(e){
+        return respond(e);
+      }
+    })();
+  });
 }
 
 module.exports.queryState = async function (transactionFamily, varName, cancelToken){
@@ -140,7 +274,7 @@ const {
 } = require('sawtooth-sdk/protobuf')
 
 
-const PREFIX = hash("intkey").substring(0, 6);
+const PREFIX = hash512("intkey").substring(0, 6);
 const NULL_BLOCK_ID = '0000000000000000'
 
 const VALIDATOR_HOST = process.env.VALIDATOR_HOST;

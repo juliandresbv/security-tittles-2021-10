@@ -5,9 +5,8 @@ const CancelToken = axios.CancelToken;
 
 const {
   sendTransaction,
+  sendTransactionWithAwait,
   queryState, 
-  subscribeToSawtoothEvents,
-  getAddress
 } = require('../sawtooth/sawtooth-helpers');
 const TRANSACTION_FAMILY = 'intkey';
 
@@ -18,7 +17,8 @@ let todos = [
   {id: 1, text: "laundry"},
 ];
 
-module.exports.getAllToDo =function(req, res) {
+
+module.exports.getAllToDo = function(req, res) {
   res.json(todos);
 };
 
@@ -49,137 +49,21 @@ module.exports.postToDo = async function(req, res) {
   const newId = _.max(todos, (e) => {return e.id}).id + 1;
   todos.push({id: newId, text: content.text});
 
-
-  let timeoutTimer = undefined;
-  let timer1 = undefined;
-  let axiosSource = CancelToken.source();
-
-  function releaseResources(){
-    if(timeoutTimer){
-      clearTimeout(timeoutTimer);
-      timeoutTimer.unref();
-    }
-    if(timer1){
-      clearTimeout(timer1);
-      timer1.unref();
-    }
-    if(axiosSource){
-      axiosSource.cancel();
-    }
-  }
-
-  let storedValue;
-  let finished = false;
-
-  function respond(err, value){
-    if(finished){
-      return;
-    }
-
-    finished = true;
-    releaseResources();
-
-    if(err){
-      console.log(err.message);
-      if(err.message === 'Timeout'){
-        return res.status(500).json({msg: "Timeout"});
-      }
-      else if(err.message === 'PENDING transaction'){
-        return res.status(500).json({msg: "PENDING", data: err.data});
-      }
-      return res.status(500).json({msg: err});
-    }
+  try{
+    let value = await sendTransactionWithAwait(TRANSACTION_FAMILY, req.body, newId);
     return res.json(value);
   }
-
-  timeoutTimer = setTimeout(() =>{
-    respond(new Error('Timeout'));
-  }, TIMEOUT);
-
-  let statusLink;
-
-  try{
-
-    let response = await sendTransaction(TRANSACTION_FAMILY , {
-      Action: 'set',
-      Name: newId + '',
-      Value: JSON.stringify(req.body)
-    }, axiosSource.token);
-
-    if(!response.data || !response.data.link){
-      return respond(new Error("Transaction response err"));
+  catch(err){
+    console.log(err.message);
+    if(err.message === 'Timeout'){
+      return res.status(500).json({msg: "Timeout"});
     }
-    statusLink = response.data.link;
+    else if(err.message === 'PENDING transaction'){
+      return res.status(500).json({msg: "PENDING", data: err.data});
+    }
+    return res.status(500).json({msg: err});
   }
-  catch(e){
-    return respond(e);
-  }
-
-
-  try{
-    let batchStatus;
-    retries = 0;
-    while(batchStatus !== "COMMITTED" && retries < 20){
-      if(finished){
-        return;
-      }
-      await new Promise((resolve) => {
-        timer1 = setTimeout(resolve, 200 + 100*Math.pow(2, retries));
-      });
-
-
-      let value = await axios.get(`${statusLink}&wait=4`, {
-        cancelToken: axiosSource.token
-      });
   
-      if(value.data && 
-        value.data.data && 
-        value.data.data[0]){
-          batchStatus = value.data.data[0].status;
-          if(batchStatus === 'INVALID'){
-            break;
-          }
-        }
-      retries = retries + 1;
-    }
-    //https://sawtooth.hyperledger.org/docs/core/nightly/1-1/rest_api/endpoint_specs.html
-    if(batchStatus !== "COMMITTED"){
-      if(batchStatus === 'INVALID'){
-        return respond(new Error('Invalid transaction'));
-      }
-      else if(batchStatus === 'PENDING'){
-        let err = new Error('PENDING transaction');
-        err.data = {statusLink}
-        return respond(err);
-      }
-      else if(batchStatus === 'UNKNOWN'){
-        return respond(new Error('Unknown transaction'));
-      }
-      else{
-        return respond(new Error('Unknown error'));
-      }
-    }
-
-  }
-  catch(e){
-    return respond(e);
-  }
-
-
-  if(finished){
-    return;
-  }
-
-  try{
-    let value = await queryState(TRANSACTION_FAMILY, newId + '', axiosSource.token);
-    return respond(null,{
-      key: newId + '',
-      value: value
-    });
-  }
-  catch(e){
-    return respond(e);
-  }
 };
 
 
@@ -195,148 +79,36 @@ module.exports.putToDo = async function(req, res) {
   let content = JSON.parse(payload);
   todos = _.map(todos, e => {
     if(e.id == req.params.id){
-      return {...e, text: content.text}
+      // return {...e, text: content.text}
+      let c = _.clone(e);
+      c['text'] = content.text;
+      return c;
     }
     return e;
   })
+  
   const elem = _.find(todos, (e) =>{
     return e.id == req.params.id
   });
+
   if(!elem){
     return res.status(404).json({msg: "Not found"});
   }
 
   const newId = req.params.id;
 
-  let timeoutTimer = undefined;
-  let timer1 = undefined;
-  let axiosSource = CancelToken.source();
-
-  function releaseResources(){
-    if(timeoutTimer){
-      clearTimeout(timeoutTimer);
-      timeoutTimer.unref();
-    }
-    if(timer1){
-      clearTimeout(timer1);
-      timer1.unref();
-    }
-    if(axiosSource){
-      axiosSource.cancel();
-    }
-  }
-
-  let storedValue;
-  let finished = false;
-
-  function respond(err, value){
-    if(finished){
-      return;
-    }
-
-    finished = true;
-    releaseResources();
-
-    if(err){
-      console.log(err.message);
-      if(err.message === 'Timeout'){
-        return res.status(500).json({msg: "Timeout"});
-      }
-      else if(err.message === 'PENDING transaction'){
-        return res.status(500).json({msg: "PENDING", data: err.data});
-      }
-      return res.status(500).json({msg: err});
-    }
+  try{
+    let value = await sendTransactionWithAwait(TRANSACTION_FAMILY, req.body, newId);
     return res.json(value);
   }
-
-  timeoutTimer = setTimeout(() =>{
-    respond(new Error('Timeout'));
-  }, TIMEOUT);
-
-  let statusLink;
-
-  try{
-
-    let response = await sendTransaction(TRANSACTION_FAMILY , {
-      Action: 'set',
-      Name: newId + '',
-      Value: JSON.stringify(req.body)
-    }, axiosSource.token);
-
-    if(!response.data || !response.data.link){
-      return respond(new Error("Transaction response err"));
+  catch(err){
+    if(err.message === 'Timeout'){
+      return res.status(500).json({msg: "Timeout"});
     }
-    statusLink = response.data.link;
-  }
-  catch(e){
-    return respond(e);
-  }
-
-
-  try{
-    let batchStatus;
-    retries = 0;
-    while(batchStatus !== "COMMITTED" && retries < 20){
-      if(finished){
-        return;
-      }
-      await new Promise((resolve) => {
-        timer1 = setTimeout(resolve, 200 + 100*Math.pow(2, retries));
-      });
-
-
-      let value = await axios.get(`${statusLink}&wait=4`, {
-        cancelToken: axiosSource.token
-      });
-  
-      if(value.data && 
-        value.data.data && 
-        value.data.data[0]){
-          batchStatus = value.data.data[0].status;
-          if(batchStatus === 'INVALID'){
-            break;
-          }
-        }
-      retries = retries + 1;
+    else if(err.message === 'PENDING transaction'){
+      return res.status(500).json({msg: "PENDING", data: err.data});
     }
-    //https://sawtooth.hyperledger.org/docs/core/nightly/1-1/rest_api/endpoint_specs.html
-    if(batchStatus !== "COMMITTED"){
-      if(batchStatus === 'INVALID'){
-        return respond(new Error('Invalid transaction'));
-      }
-      else if(batchStatus === 'PENDING'){
-        let err = new Error('PENDING transaction');
-        err.data = {statusLink}
-        return respond(err);
-      }
-      else if(batchStatus === 'UNKNOWN'){
-        return respond(new Error('Unknown transaction'));
-      }
-      else{
-        return respond(new Error('Unknown error'));
-      }
-    }
-
-  }
-  catch(e){
-    return respond(e);
-  }
-
-
-  if(finished){
-    return;
-  }
-
-  try{
-    let value = await queryState(TRANSACTION_FAMILY, newId + '', axiosSource.token);
-    return respond(null,{
-      key: newId + '',
-      value: value
-    });
-  }
-  catch(e){
-    return respond(e);
+    return res.status(500).json({msg: err});
   }
 
 };
