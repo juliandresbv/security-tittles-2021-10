@@ -1,7 +1,8 @@
 const {createContext, CryptoFactory} = require('sawtooth-sdk/signing')
 
 const context = createContext('secp256k1')
-const privateKey = context.newRandomPrivateKey()
+const privateKey = context.newRandomPrivateKey();
+// const privateKey = Buffer.from(process.env.SAWTOOTH_PRIVATE_KEY.slice(2), 'hex');
 const signer = (new CryptoFactory(context)).newSigner(privateKey)
 const crypto = require('crypto');
 const {protobuf} = require('sawtooth-sdk')
