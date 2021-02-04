@@ -6,6 +6,20 @@ const {
   queryState, 
 } = require('../sawtooth/sawtooth-helpers');
 const TRANSACTION_FAMILY = 'intkey';
+const TRANSACTION_FAMILY_VERSION = '1.0';
+
+const crypto = require('crypto');
+
+const hash512 = (x) =>
+  crypto.createHash('sha512').update(x).digest('hex');
+
+const hash256 = (x) =>
+  crypto.createHash('sha256').update(x).digest('hex');
+
+const getAddress = (transactionFamily, varName) => {
+  const INT_KEY_NAMESPACE = hash512(transactionFamily).substring(0, 6)
+  return INT_KEY_NAMESPACE + hash512(varName).slice(-64)
+}
 
 let todos = [];
 
@@ -16,8 +30,13 @@ module.exports.getAllToDo = function(req, res) {
 
 module.exports.getToDo = async function(req, res) {
   try{
-    let value = await queryState(TRANSACTION_FAMILY, req.params.id+"");
-    return res.json(JSON.parse(value[req.params.id]));
+    const address = getAddress(TRANSACTION_FAMILY, req.params.id + "");
+    let values = await queryState(address);
+    let value = _.find(values, v => v.key == req.params.id + "");
+    if(!value){
+      return res.status(404).json("not found"); 
+    }
+    return res.json(value);
   }
   catch(e){
     if(e.response && e.response.status === 404){
@@ -37,12 +56,21 @@ module.exports.postToDo = async function(req, res) {
     return res.status(400).json({msg:"bad signature"})
   }
 
-  let content = JSON.parse(payload);
-  let newId = todos.length;
-  todos.push({id: newId, text: content.text});
+  let payloadJ = JSON.parse(payload);
+  let newId = payloadJ.args.id;
+  todos.push({
+    id: newId, 
+    text: payloadJ.args.text
+  });
 
   try{
-    let value = await sendTransactionWithAwait(TRANSACTION_FAMILY, req.body, newId);
+    const inputs = [getAddress(TRANSACTION_FAMILY, payloadJ.args.id + "")];
+    const outputs = inputs;
+    let value = await sendTransactionWithAwait(TRANSACTION_FAMILY, 
+      TRANSACTION_FAMILY_VERSION, 
+      inputs, 
+      outputs, 
+      JSON.stringify(req.body));
     return res.json(value);
   }
   catch(err){
@@ -59,7 +87,6 @@ module.exports.postToDo = async function(req, res) {
 
 
 module.exports.putToDo = async function(req, res) {
-
   let {signature, payload} = req.body;
   if(!signature){
     return res.status(400).json({msg:"no signature"})
@@ -67,12 +94,14 @@ module.exports.putToDo = async function(req, res) {
   if(!isValidSignature(req)){
     return res.status(400).json({msg:"bad signature"})
   }
-  let content = JSON.parse(payload);
+  let payloadJ = JSON.parse(payload);
+  let newId = payloadJ.args.id;
+
   todos = _.map(todos, e => {
-    if(e.id == req.params.id){
+    if(e.id == newId){
       // return {...e, text: content.text}
       let c = _.clone(e);
-      c['text'] = content.text;
+      c['text'] = payloadJ.args.text;
       return c;
     }
     return e;
@@ -86,13 +115,19 @@ module.exports.putToDo = async function(req, res) {
     return res.status(404).json({msg: "Not found"});
   }
 
-  const newId = req.params.id;
-
+  
   try{
-    let value = await sendTransactionWithAwait(TRANSACTION_FAMILY, req.body, newId);
+    const inputs = [getAddress(TRANSACTION_FAMILY, payloadJ.args.id + "")];
+    const outputs = inputs;
+    let value = await sendTransactionWithAwait(TRANSACTION_FAMILY, 
+      TRANSACTION_FAMILY_VERSION, 
+      inputs, 
+      outputs, 
+      JSON.stringify(req.body));
     return res.json(value);
   }
   catch(err){
+    console.log(err);
     if(err.message === 'Timeout'){
       return res.status(500).json({msg: "Timeout"});
     }

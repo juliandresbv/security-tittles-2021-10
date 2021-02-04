@@ -36,8 +36,7 @@ function CreateItem(){
   useEffect(()=>{
     axios.get('/api/'+id)
       .then((res) => {
-        console.log(JSON.parse(res.data.payload));
-        setElem(JSON.parse(res.data.payload));
+        setElem(res.data);
         setElemQueried(true);
       })
       .catch(()=>{
@@ -48,7 +47,7 @@ function CreateItem(){
 
   const formik = useFormik({
     initialValues: {
-      text: (elem)? elem.text: '',
+      text: (elem)? elem.value.text: '',
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
@@ -58,8 +57,13 @@ function CreateItem(){
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
     
-      let payload = JSON.stringify({text: values.text});
-
+      let payload = JSON.stringify({
+        function: 'intkey/1.0/put', 
+        args: {
+          id: elem.key,
+          text: values.text, 
+        }
+      });
       try{
         const signature = await signer.signMessage(payload);
         
@@ -102,6 +106,7 @@ function CreateItem(){
               error={formik.touched.text && Boolean(formik.errors.text)}
               helperText={formik.touched.text && formik.errors.text}
               disabled={formik.isSubmitting || !elem}
+              autoFocus
             />
           </Grid>
 

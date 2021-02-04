@@ -38,7 +38,13 @@ function CreateItem(){
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
     
-      let payload = JSON.stringify({text: values.text});
+      let payload = JSON.stringify({
+        function: 'intkey/1.0/put', 
+        args: {
+          id: Math.floor(Math.random() * 10000), //Should probably use another
+          text: values.text, 
+        }
+      });
       try{
         const signature = await signer.signMessage(payload);
         
@@ -76,6 +82,7 @@ function CreateItem(){
               error={formik.touched.text && Boolean(formik.errors.text)}
               helperText={formik.touched.text && formik.errors.text}
               disabled={formik.isSubmitting}
+              autoFocus
             />
           </Grid>
 

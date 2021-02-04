@@ -33,16 +33,20 @@ const sign = (dataBytes, privKey) => {
 
 module.exports.getAddress = getAddress;
 
-function buildBatch(transactionFamily, payload){
-  const address = getAddress(transactionFamily, payload.Name)
-
-  const payloadBytes = Buffer.from(JSON.stringify(payload), 'utf8')
+function buildBatch(
+  transactionFamily, 
+  transactionFamilyVersion,
+  inputs,
+  outputs,
+  payload)
+{
+  const payloadBytes = Buffer.from(payload, 'utf8')
     
   const transactionHeaderBytes = protobuf.TransactionHeader.encode({
-    familyName: 'intkey',
-    familyVersion: '1.0',
-    inputs: [address],
-    outputs: [address],
+    familyName: transactionFamily,
+    familyVersion: transactionFamilyVersion,
+    inputs,
+    outputs,
     signerPublicKey: publicKeyHex,
     // In this example, we're signing the batch with the same private key,
     // but the batch can be signed by another party, in which case, the
@@ -103,9 +107,15 @@ function buildBatch(transactionFamily, payload){
 }
 
 
-module.exports.sendTransaction = async function (transactionFamily, payload, cancelToken /*Optional*/){
+module.exports.sendTransaction = async function (
+  transactionFamily, 
+  transactionFamilyVersion, 
+  inputs,
+  outputs,
+  payload, 
+  cancelToken /*Optional*/){
 
-  const batchListBytes = buildBatch(transactionFamily, payload);
+  const batchListBytes = buildBatch(transactionFamily, transactionFamilyVersion, inputs, outputs, payload);
   
   let params = {
     headers: {'Content-Type': 'application/octet-stream'}
@@ -118,7 +128,12 @@ module.exports.sendTransaction = async function (transactionFamily, payload, can
 
 const TIMEOUT = 1000*10;
 
-module.exports.sendTransactionWithAwait = async function (TRANSACTION_FAMILY, body, newId){
+module.exports.sendTransactionWithAwait = async function (
+  transactionFamily, 
+  transactionFamilyVersion, 
+  inputs,
+  outputs,
+  payload){
   return new Promise((resolve, reject) => {
     let timeoutTimer = undefined;
     let timer1 = undefined;
@@ -163,11 +178,13 @@ module.exports.sendTransactionWithAwait = async function (TRANSACTION_FAMILY, bo
     (async ()=>{
       try{
 
-        let response = await module.exports.sendTransaction(TRANSACTION_FAMILY , {
-          Action: 'set',
-          Name: newId + '',
-          Value: JSON.stringify(body)
-        }, axiosSource.token);
+        let response = await module.exports.sendTransaction(
+          transactionFamily, 
+          transactionFamilyVersion , 
+          inputs,
+          outputs, 
+          payload, 
+          axiosSource.token);
   
         if(!response.data || !response.data.link){
           return respond(new Error("Transaction response err"));
@@ -235,11 +252,9 @@ module.exports.sendTransactionWithAwait = async function (TRANSACTION_FAMILY, bo
       }
   
       try{
-        let value = await module.exports.queryState(TRANSACTION_FAMILY, newId + '', axiosSource.token);
-        return respond(null,{
-          key: newId + '',
-          value: value
-        });
+        
+        let value = await module.exports.queryState(inputs[0], axiosSource.token);
+        return respond(null, value);
       }
       catch(e){
         return respond(e);
@@ -248,8 +263,7 @@ module.exports.sendTransactionWithAwait = async function (TRANSACTION_FAMILY, bo
   });
 }
 
-module.exports.queryState = async function (transactionFamily, varName, cancelToken){
-  const address = getAddress(transactionFamily, varName);
+module.exports.queryState = async function (address, cancelToken){
   let params = {
     headers: {'Content-Type': 'application/json'}
   };
@@ -259,8 +273,9 @@ module.exports.queryState = async function (transactionFamily, varName, cancelTo
   let response = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`, params);
   let base = Buffer.from(response.data.data, 'base64');
   let stateValue = JSON.parse(base.toString('utf8'));
-  return stateValue
+  return stateValue;
 }
+
 
 const { Stream } = require('sawtooth-sdk/messaging/stream')
 const {
