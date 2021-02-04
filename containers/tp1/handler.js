@@ -117,9 +117,13 @@ async function getState(context, key){
     throw new InvalidTransaction('State Error')
   }
 
-  return _.find(values, (v) => {
+  let f = _.find(values, (v) => {
     return v.key === key
   });
+  if(f){
+    return f.value;
+  }
+  return;
 }
 
 

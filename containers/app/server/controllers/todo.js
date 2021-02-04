@@ -9,6 +9,7 @@ const TRANSACTION_FAMILY = 'intkey';
 const TRANSACTION_FAMILY_VERSION = '1.0';
 
 const crypto = require('crypto');
+const { default: axios } = require("axios");
 
 const hash512 = (x) =>
   crypto.createHash('sha512').update(x).digest('hex');
@@ -21,11 +22,31 @@ const getAddress = (transactionFamily, varName) => {
   return INT_KEY_NAMESPACE + hash512(varName).slice(-64)
 }
 
-let todos = [];
+module.exports.getAllToDo = async function(req, res) {
 
+  let params = {
+    headers: {'Content-Type': 'application/json'}
+  };
 
-module.exports.getAllToDo = function(req, res) {
-  res.json(todos);
+  const INT_KEY_NAMESPACE = hash512(TRANSACTION_FAMILY).substring(0, 6)
+  let query = await axios.get(`${process.env.SAWTOOTH_REST}/state?address=${INT_KEY_NAMESPACE}&limit=${20}`, params);
+
+  let allTodos = _.chain(query.data.data)
+    .map((d) => {
+      let base = JSON.parse(Buffer.from(d.data, 'base64'));
+      return base;
+    })
+    .flatten()
+    .map((d) => {
+      return {
+        id: d.key,
+        text: d.value.text
+      }
+    })
+    .value();
+
+  res.json(allTodos);
+
 };
 
 module.exports.getToDo = async function(req, res) {
@@ -56,12 +77,7 @@ module.exports.postToDo = async function(req, res) {
     return res.status(400).json({msg:"bad signature"})
   }
 
-  let payloadJ = JSON.parse(payload);
-  let newId = payloadJ.args.id;
-  todos.push({
-    id: newId, 
-    text: payloadJ.args.text
-  });
+  let payloadJ = JSON.parse(payload);  
 
   try{
     const inputs = [getAddress(TRANSACTION_FAMILY, payloadJ.args.id + "")];
@@ -95,26 +111,6 @@ module.exports.putToDo = async function(req, res) {
     return res.status(400).json({msg:"bad signature"})
   }
   let payloadJ = JSON.parse(payload);
-  let newId = payloadJ.args.id;
-
-  todos = _.map(todos, e => {
-    if(e.id == newId){
-      // return {...e, text: content.text}
-      let c = _.clone(e);
-      c['text'] = payloadJ.args.text;
-      return c;
-    }
-    return e;
-  })
-  
-  const elem = _.find(todos, (e) =>{
-    return e.id == req.params.id
-  });
-
-  if(!elem){
-    return res.status(404).json({msg: "Not found"});
-  }
-
   
   try{
     const inputs = [getAddress(TRANSACTION_FAMILY, payloadJ.args.id + "")];
