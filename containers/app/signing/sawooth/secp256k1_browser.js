@@ -1,8 +1,8 @@
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/sdk_submit_tutorial_js.html
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/txn_submit_tutorial.html
 const secp256k1 = require('secp256k1');
-const crypto = require('crypto');
-const {protobuf} = require('sawtooth-sdk')
+const {protobuf} = require('sawtooth-sdk');
+const CryptoJS = require('crypto-js');
 
 // let privateKey;
 // do {
@@ -15,10 +15,14 @@ let privateKey = Buffer.from(
 const publicKey = secp256k1.publicKeyCreate(privateKey);
 
 const sha512 = (x) =>
-  crypto.createHash('sha512').update(x).digest('hex')
+  CryptoJS.SHA512(x).toString(CryptoJS.enc.Hex);
 
 const sha256 = (x) =>
-  crypto.createHash('sha256').update(x).digest('hex')
+  CryptoJS.SHA256(x).toString(CryptoJS.enc.Hex);
+
+
+const randomBytes = (num) => 
+  CryptoJS.lib.WordArray.random(num).toString(CryptoJS.enc.Hex);
 
 // Address scheme can be different
 const getAddress = (transactionFamily, varName) => {
@@ -52,8 +56,10 @@ const transactionHeaderBytes = protobuf.TransactionHeader.encode({
   // dependencies: ['540a6803971d1880ec73a96cb97815a95d374cbad5d865925e5aa0432fcf1931539afe10310c122c5eaae15df61236079abbf4f258889359c4d175516934484a'],
   dependencies: [],
   payloadSha512: sha512(payloadBytes),
-  nonce: crypto.randomBytes(32).toString('hex')
+  nonce: randomBytes(32)
 }).finish()
+
+
 
 const hashHeader = sha256(transactionHeaderBytes);
 

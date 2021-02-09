@@ -1,3 +1,11 @@
+## Based on
+https://github.com/le99/sawtooth-with-metamask-signatures
+For signatures
+
+
+web 0.20.7 doc:
+https://github.com/ChainSafe/web3.js/blob/0.20.7/DOCUMENTATION.md
+
 ## Docs
 https://reactjs.org/
 https://reactrouter.com/web/guides/quick-start
