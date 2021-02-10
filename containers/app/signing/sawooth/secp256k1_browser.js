@@ -3,6 +3,14 @@
 const secp256k1 = require('secp256k1');
 const {protobuf} = require('sawtooth-sdk');
 const CryptoJS = require('crypto-js');
+const axios = require('axios');
+
+const ID = "5";
+const VALUE = "HELLO";
+const payload = {
+  func: "put",
+  params: {id: ID, value: VALUE}
+};
 
 // let privateKey;
 // do {
@@ -14,30 +22,41 @@ let privateKey = Buffer.from(
 
 const publicKey = secp256k1.publicKeyCreate(privateKey);
 
+// https://stackoverflow.com/questions/33914764/how-to-read-a-binary-file-with-filereader-in-order-to-hash-it-with-sha-256-in-cr
+function arrayBufferToWordArray(ab) {
+  var i8a = new Uint8Array(ab);
+  var a = [];
+  for (var i = 0; i < i8a.length; i += 4) {
+    a.push(i8a[i] << 24 | i8a[i + 1] << 16 | i8a[i + 2] << 8 | i8a[i + 3]);
+  }
+  return CryptoJS.lib.WordArray.create(a, i8a.length);
+}
+
 const sha512 = (x) =>
-  CryptoJS.SHA512(x).toString(CryptoJS.enc.Hex);
+  CryptoJS.SHA512(arrayBufferToWordArray(x)).toString(CryptoJS.enc.Hex);
 
 const sha256 = (x) =>
-  CryptoJS.SHA256(x).toString(CryptoJS.enc.Hex);
-
+  CryptoJS.SHA256(arrayBufferToWordArray(x)).toString(CryptoJS.enc.Hex);
 
 const randomBytes = (num) => 
   CryptoJS.lib.WordArray.random(num).toString(CryptoJS.enc.Hex);
 
 // Address scheme can be different
 const getAddress = (transactionFamily, varName) => {
+
+  const sha512 = (x) =>
+    CryptoJS.SHA512(x).toString(CryptoJS.enc.Hex);
+
   const INT_KEY_NAMESPACE = sha512(transactionFamily).substring(0, 6)
   return INT_KEY_NAMESPACE + sha512(varName).slice(-64)
 }
 
 const TRANSACTION_FAMILY_NAME = 'intkey';
 const TRANSACTION_FAMILY_VERSION = '1.0';
-const NAME = 'x';
-const VALUE = "some value";
 
-const address = getAddress(TRANSACTION_FAMILY_NAME, NAME);
+const address = getAddress(TRANSACTION_FAMILY_NAME, ID);
 
-const payloadBytes = Buffer.from(JSON.stringify(VALUE), 'utf8')
+const payloadBytes = Buffer.from(JSON.stringify(payload), 'utf8')
 
 const transactionHeaderBytes = protobuf.TransactionHeader.encode({
   familyName: TRANSACTION_FAMILY_NAME,
@@ -56,10 +75,8 @@ const transactionHeaderBytes = protobuf.TransactionHeader.encode({
   // dependencies: ['540a6803971d1880ec73a96cb97815a95d374cbad5d865925e5aa0432fcf1931539afe10310c122c5eaae15df61236079abbf4f258889359c4d175516934484a'],
   dependencies: [],
   payloadSha512: sha512(payloadBytes),
-  nonce: randomBytes(32)
+  nonce: "nonce"//randomBytes(32)
 }).finish()
-
-
 
 const hashHeader = sha256(transactionHeaderBytes);
 
@@ -112,10 +129,36 @@ const batch = protobuf.Batch.create({
   transactions: transactions
 })
 
-const batchListBytes = protobuf.BatchList.encode({
+let batchListBytes = protobuf.BatchList.encode({
   batches: [batch]
 }).finish();
 
 
-console.log(batchListBytes.toString('hex'));  
 
+console.log(Buffer.from(batchListBytes).toString('base64'));  
+
+
+// let params = {
+//   headers: {'Content-Type': 'application/octet-stream'}
+// };
+
+
+// batchListBytes = Buffer.from('CrkHCscBCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhKAATM1MTdjMmQ3MzJmNTZkMTk2ZThhNGQwMDk4ZGJkZWY0YzVmNGE4ZmUwZTIzZTA2NjFlYTAzNDUyYzVlNDY2NWQ2OTZkYTNiZmMzNTMzZmEzMzk5MzdlZmE2OTEyODkzMzBhODNkOTQyZmQzNDg1NTllNzE1YjA5NDk5MWQ0NWNmGukECq8DCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcaBmludGtleSIDMS4wKkYxY2YxMjZmNDUxN2JkYTRhNjk1ZjAyZDBhNzNkZDRkYjU0M2I0NjUzZGYyOGY1ZDA5ZGFiODZmOTJmZmI5Yjg2ZDAxZTI1MgVub25jZTpGMWNmMTI2ZjQ1MTdiZGE0YTY5NWYwMmQwYTczZGQ0ZGI1NDNiNDY1M2RmMjhmNWQwOWRhYjg2ZjkyZmZiOWI4NmQwMWUyNUqAATJiYjEzZWM2NTI3MTdjZTA2OWE2NzBmYTU4YzEwZDU1MWI2YTNkYzBmNTU5NTg4Nzk3YmUwN2Y2OGIzOTM1MDI4YWFlYWY2YmJhMWFjNjk0N2JiOTQzODYwMzM3MTc5NmI1NjZlZjQ0M2MxZjY4NmYzNzU0MzY0OTM2NTdjZDc2UkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhoyeyJmdW5jIjoicHV0IiwicGFyYW1zIjp7ImlkIjoiNSIsInZhbHVlIjoiSEVMTE8ifX0=',
+//   'base64');
+
+// (async () => {
+//   let r = await axios.post(`${process.env.SAWTOOTH_REST}/batches`, batchListBytes, params)
+//   let batchStatusLink = r.data.link;
+
+//   await new Promise((resolve) =>{
+//     setTimeout(()=>{
+//       resolve();
+//     }, 2000);
+//   });
+
+//   r = await axios.get(batchStatusLink);
+//   console.log(r.data);
+
+//   r = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`);
+//   console.log(JSON.parse(Buffer.from(r.data.data, 'base64')));
+// })();

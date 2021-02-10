@@ -1,8 +1,16 @@
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/sdk_submit_tutorial_js.html
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/txn_submit_tutorial.html
+require('dotenv').config()
+
 const secp256k1 = require('secp256k1');
 const crypto = require('crypto');
 const {protobuf} = require('sawtooth-sdk')
+
+const axios = require('axios');
+
+
+const ID = "5";
+const VALUE = "HELLO";
 
 // let privateKey;
 // do {
@@ -28,12 +36,16 @@ const getAddress = (transactionFamily, varName) => {
 
 const TRANSACTION_FAMILY_NAME = 'intkey';
 const TRANSACTION_FAMILY_VERSION = '1.0';
-const NAME = 'x';
-const VALUE = "some value";
 
-const address = getAddress(TRANSACTION_FAMILY_NAME, NAME);
 
-const payloadBytes = Buffer.from(JSON.stringify(VALUE), 'utf8')
+const payload = {
+  func: "put",
+  params: {id: ID, value: VALUE}
+};
+
+const address = getAddress(TRANSACTION_FAMILY_NAME, ID);
+
+const payloadBytes = Buffer.from(JSON.stringify(payload), 'utf8')
 
 const transactionHeaderBytes = protobuf.TransactionHeader.encode({
   familyName: TRANSACTION_FAMILY_NAME,
@@ -52,8 +64,10 @@ const transactionHeaderBytes = protobuf.TransactionHeader.encode({
   // dependencies: ['540a6803971d1880ec73a96cb97815a95d374cbad5d865925e5aa0432fcf1931539afe10310c122c5eaae15df61236079abbf4f258889359c4d175516934484a'],
   dependencies: [],
   payloadSha512: sha512(payloadBytes),
-  nonce: crypto.randomBytes(32).toString('hex')
+  nonce: "nonce"//crypto.randomBytes(32).toString('hex')
 }).finish()
+
+// console.log('>:', transactionHeaderBytes.toString('base64'))
 
 const hashHeader = sha256(transactionHeaderBytes);
 
@@ -106,10 +120,40 @@ const batch = protobuf.Batch.create({
   transactions: transactions
 })
 
-const batchListBytes = protobuf.BatchList.encode({
+let batchListBytes = protobuf.BatchList.encode({
   batches: [batch]
 }).finish();
 
 
-console.log(batchListBytes.toString('hex'));  
+console.log(Buffer.from(batchListBytes).toString('base64'));  
+
+
+// let params = {
+//   headers: {'Content-Type': 'application/octet-stream'}
+// };
+
+
+// batchListBytes = Buffer.from('CrkHCscBCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhKAATM1MTdjMmQ3MzJmNTZkMTk2ZThhNGQwMDk4ZGJkZWY0YzVmNGE4ZmUwZTIzZTA2NjFlYTAzNDUyYzVlNDY2NWQ2OTZkYTNiZmMzNTMzZmEzMzk5MzdlZmE2OTEyODkzMzBhODNkOTQyZmQzNDg1NTllNzE1YjA5NDk5MWQ0NWNmGukECq8DCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcaBmludGtleSIDMS4wKkYxY2YxMjZmNDUxN2JkYTRhNjk1ZjAyZDBhNzNkZDRkYjU0M2I0NjUzZGYyOGY1ZDA5ZGFiODZmOTJmZmI5Yjg2ZDAxZTI1MgVub25jZTpGMWNmMTI2ZjQ1MTdiZGE0YTY5NWYwMmQwYTczZGQ0ZGI1NDNiNDY1M2RmMjhmNWQwOWRhYjg2ZjkyZmZiOWI4NmQwMWUyNUqAATJiYjEzZWM2NTI3MTdjZTA2OWE2NzBmYTU4YzEwZDU1MWI2YTNkYzBmNTU5NTg4Nzk3YmUwN2Y2OGIzOTM1MDI4YWFlYWY2YmJhMWFjNjk0N2JiOTQzODYwMzM3MTc5NmI1NjZlZjQ0M2MxZjY4NmYzNzU0MzY0OTM2NTdjZDc2UkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhoyeyJmdW5jIjoicHV0IiwicGFyYW1zIjp7ImlkIjoiNSIsInZhbHVlIjoiSEVMTE8ifX0=',
+//   'base64');
+
+// (async () => {
+//   let r = await axios.post(`${process.env.SAWTOOTH_REST}/batches`, batchListBytes, params)
+//   let batchStatusLink = r.data.link;
+
+//   await new Promise((resolve) =>{
+//     setTimeout(()=>{
+//       resolve();
+//     }, 2000);
+//   });
+
+//   r = await axios.get(batchStatusLink);
+//   console.log(r.data);
+
+//   r = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`);
+//   console.log(JSON.parse(Buffer.from(r.data.data, 'base64')));
+// })();
+
+
+  
+
 
