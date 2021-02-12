@@ -1,10 +1,13 @@
 ## Based on
-https://github.com/le99/sawtooth-with-metamask-signatures
+https://github.com/le99/sawtooth-with-metamask-signatures/blob/master/src/App.js
 For signatures
 
 
 web 0.20.7 doc:
 https://github.com/ChainSafe/web3.js/blob/0.20.7/DOCUMENTATION.md
+
+Should look at:
+https://docs.metamask.io/guide/provider-migration.html#migrating-to-the-new-provider-api
 
 ## Docs
 https://reactjs.org/

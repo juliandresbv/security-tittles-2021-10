@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import _ from 'underscore';
+import { getPublicKey, getCurrentAccount } from '../helpers/signing';
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -16,6 +17,7 @@ export const authSlice = createSlice({
     },
     addAccount: (state, action) =>{
       state.accounts[action.payload.account] = action.payload;
+      state.currentAccount = action.payload.account;
     },
     removeAccount: (state, action) =>{
       delete state.accounts[action.payload];
@@ -80,10 +82,11 @@ export const signupAsync = (email, username, password) => async (dispatch, getSt
   let {accounts, currentAccount} = getState().auth;
   accounts = _.clone(accounts);
   if(!currentAccount){
-    const _accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    currentAccount = _accounts[0];
+    currentAccount = await getCurrentAccount();
   }
-  let newAccount = {account: currentAccount, email};
+  let publicKey = await getPublicKey();
+
+  let newAccount = {account: currentAccount, email, publicKey};
   accounts[currentAccount] = newAccount;
 
   localSaveAccounts(accounts, currentAccount)
@@ -94,10 +97,12 @@ export const signinAsync = (email, password) => async (dispatch, getState) => {
   let {accounts, currentAccount} = getState().auth;
   accounts = _.clone(accounts);
   if(!currentAccount){
-    const _accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    currentAccount = _accounts[0];
+    currentAccount = await getCurrentAccount();
   }
-  let newAccount = {account: currentAccount, email};
+
+  let publicKey = await getPublicKey();
+
+  let newAccount = {account: currentAccount, email, publicKey};
   accounts[currentAccount] = newAccount;
 
   localSaveAccounts(accounts, currentAccount)
@@ -120,12 +125,16 @@ export const setCurrentAccountAsync = (account) => async (dispatch) =>{
   dispatch(setCurrentAccount(account));
 }
 
-// The function below is called a selector and allows us to select a value from
-// the state. Selectors can also be defined inline where they're used instead of
-// in the slice file. For example: `useSelector((state) => state.counter.value)`
 export const selectUsername = state => {
   if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
     return state.auth.accounts[state.auth.currentAccount].email;
+  }
+  return null;
+};
+
+export const selectPublicKey = state => {
+  if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
+    return state.auth.accounts[state.auth.currentAccount].publicKey;
   }
   return null;
 };

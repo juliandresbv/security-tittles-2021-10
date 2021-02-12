@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/sdk_submit_tutorial_js.html
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/txn_submit_tutorial.html
 const secp256k1 = require('secp256k1');
@@ -6,7 +8,7 @@ const CryptoJS = require('crypto-js');
 const axios = require('axios');
 
 const ID = "5";
-const VALUE = "HELLO";
+const VALUE = "WHAT";
 const payload = {
   func: "put",
   params: {id: ID, value: VALUE}
@@ -138,27 +140,28 @@ let batchListBytes = protobuf.BatchList.encode({
 console.log(Buffer.from(batchListBytes).toString('base64'));  
 
 
-// let params = {
-//   headers: {'Content-Type': 'application/octet-stream'}
-// };
+let params = {
+  headers: {'Content-Type': 'application/octet-stream'}
+};
 
 
-// batchListBytes = Buffer.from('CrkHCscBCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhKAATM1MTdjMmQ3MzJmNTZkMTk2ZThhNGQwMDk4ZGJkZWY0YzVmNGE4ZmUwZTIzZTA2NjFlYTAzNDUyYzVlNDY2NWQ2OTZkYTNiZmMzNTMzZmEzMzk5MzdlZmE2OTEyODkzMzBhODNkOTQyZmQzNDg1NTllNzE1YjA5NDk5MWQ0NWNmGukECq8DCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcaBmludGtleSIDMS4wKkYxY2YxMjZmNDUxN2JkYTRhNjk1ZjAyZDBhNzNkZDRkYjU0M2I0NjUzZGYyOGY1ZDA5ZGFiODZmOTJmZmI5Yjg2ZDAxZTI1MgVub25jZTpGMWNmMTI2ZjQ1MTdiZGE0YTY5NWYwMmQwYTczZGQ0ZGI1NDNiNDY1M2RmMjhmNWQwOWRhYjg2ZjkyZmZiOWI4NmQwMWUyNUqAATJiYjEzZWM2NTI3MTdjZTA2OWE2NzBmYTU4YzEwZDU1MWI2YTNkYzBmNTU5NTg4Nzk3YmUwN2Y2OGIzOTM1MDI4YWFlYWY2YmJhMWFjNjk0N2JiOTQzODYwMzM3MTc5NmI1NjZlZjQ0M2MxZjY4NmYzNzU0MzY0OTM2NTdjZDc2UkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhoyeyJmdW5jIjoicHV0IiwicGFyYW1zIjp7ImlkIjoiNSIsInZhbHVlIjoiSEVMTE8ifX0=',
-//   'base64');
+// batchListBytes = Uint8Array.from(Buffer.from('CsEHCscBCkIwMjY4ZDRhMzIxMzQwMWQ5YWY1MjFkM2JmMDQ3MjJjYWVmYjZiYjZhYTQ0MmZmODIwYWYzNzcwYzM3MjhjOWRkOTYSgAE3OWE4MTQ1YTVkZDJjOThjMGU5OThkZWIxOTRlYjVlOWRlNWZkNGUzODMxMDE5ODY4YjcxODllYjg1NzdiZmVlNmZmZmU3ZmVmMTJmZTM2YWRiNjU3MzE2MGVhOGRjMjU3MzM5NTJjMDI2MWQ3NDFkOGVlYmVkYTM5NDQ3NTA2MxKAAWI4N2I1YzQ2MGY1ZGI5ZWJhYzIwY2FmN2UzOWU3MWNiNzUyZmQ1ZmY2NWNiYmM3ZGY5NzBmMzNiNWEyMzA0ZWY0YzAzNmE3OWQ0N2FlNTliMTEwM2Y4MGY2MjI0ZDJmNTUzNzI3YWMzY2NlYTRkYjBiYjc4Njk2NTQyNmU3ZmRlGvEECq4DCkIwMjY4ZDRhMzIxMzQwMWQ5YWY1MjFkM2JmMDQ3MjJjYWVmYjZiYjZhYTQ0MmZmODIwYWYzNzcwYzM3MjhjOWRkOTYaBmludGtleSIDMS4wKkYxY2YxMjYxM2U1OTk3MDg4YjcyMTg1NGU4MDYyZjQ5OWJkNzQ3MzJiOWUxODlhZTliNzhhMTg3ZWM4ODM2YTEzNTRmZGVhMgRoZXk0OkYxY2YxMjYxM2U1OTk3MDg4YjcyMTg1NGU4MDYyZjQ5OWJkNzQ3MzJiOWUxODlhZTliNzhhMTg3ZWM4ODM2YTEzNTRmZGVhSoABZTVkYWRkZDlhOTkwNWVlMzBiNzg3ZTliMDM4OWVhOWZhZWVlNTUxZjdkMmM1YWNjZjg3NWE4YmI4ZThhYzQ1YjBkNDM4MTkwNzJkNDMwMmE5MzQ2YWNjYWU2NjI4YzkzMWQ0MjBhNzg2MjBiNjFjMDQzODlhZDhlNGY0NDYxOWFSQjAyNjhkNGEzMjEzNDAxZDlhZjUyMWQzYmYwNDcyMmNhZWZiNmJiNmFhNDQyZmY4MjBhZjM3NzBjMzcyOGM5ZGQ5NhKAATc5YTgxNDVhNWRkMmM5OGMwZTk5OGRlYjE5NGViNWU5ZGU1ZmQ0ZTM4MzEwMTk4NjhiNzE4OWViODU3N2JmZWU2ZmZmZTdmZWYxMmZlMzZhZGI2NTczMTYwZWE4ZGMyNTczMzk1MmMwMjYxZDc0MWQ4ZWViZWRhMzk0NDc1MDYzGjt7ImZ1bmMiOiJwdXQiLCJwYXJhbXMiOnsiaWQiOiI5Mjg4IiwidmFsdWUiOiJkbyB0aGUgYmVzdCJ9fQ==',
+  'base64'));
 
-// (async () => {
-//   let r = await axios.post(`${process.env.SAWTOOTH_REST}/batches`, batchListBytes, params)
-//   let batchStatusLink = r.data.link;
+(async () => {
+  let r = await axios.post(`${process.env.SAWTOOTH_REST}/batches`, batchListBytes, params)
 
-//   await new Promise((resolve) =>{
-//     setTimeout(()=>{
-//       resolve();
-//     }, 2000);
-//   });
+  let batchStatusLink = r.data.link;
 
-//   r = await axios.get(batchStatusLink);
-//   console.log(r.data);
+  await new Promise((resolve) =>{
+    setTimeout(()=>{
+      resolve();
+    }, 2000);
+  });
 
-//   r = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`);
-//   console.log(JSON.parse(Buffer.from(r.data.data, 'base64')));
-// })();
+  r = await axios.get(batchStatusLink);
+  console.log(r.data);
+
+  r = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`);
+  console.log(JSON.parse(Buffer.from(r.data.data, 'base64')));
+})();

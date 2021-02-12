@@ -24,6 +24,8 @@ import { signinAsync } from '../redux/authSlice';
 
 import { useStore } from 'react-redux';
 
+import { getPublicKey } from '../helpers/signing';
+
 
 function Copyright() {
   return (

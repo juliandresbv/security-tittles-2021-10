@@ -14,7 +14,6 @@ import PropTypes from 'prop-types';
 //https://reactrouter.com/web/example/auth-workflow
 function PrivateRoute({ children, ...rest }) {
   const username = useSelector(selectUsername);
-
   return (
     <Route
       {...rest}

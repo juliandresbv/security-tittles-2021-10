@@ -10,10 +10,17 @@ import * as Yup from 'yup';
 import { useHistory } from "react-router-dom";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
+import { useSelector } from 'react-redux';
 
-const { ethers } = require("ethers");
+import {buildBatch} from '../helpers/signing';
+import {selectPublicKey} from '../redux/authSlice'
 
 import axios from 'axios';
+import { buildAddress } from '../helpers/signing'
+
+const TRANSACTION_FAMILY = "intkey";
+const TRANSACTION_FAMILY_VERSION = "1.0";
+const address = buildAddress(TRANSACTION_FAMILY);
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -25,7 +32,7 @@ const useStyles = makeStyles(() => ({
 function CreateItem(){
   const classes = useStyles();
   const history = useHistory();
-
+  const publicKey = useSelector(selectPublicKey);
   const formik = useFormik({
     initialValues: {
       text: '',
@@ -35,25 +42,24 @@ function CreateItem(){
     }),
     onSubmit: async (values, {setStatus}) => {
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-    
-      let payload = JSON.stringify({
-        function: 'intkey/1.0/put', 
-        args: {
-          id: Math.floor(Math.random() * 10000), //Should probably use another
-          text: values.text, 
-        }
-      });
       try{
-        const signature = await signer.signMessage(payload);
+
+        let ID = Math.floor(Math.random() * 10000) + ""; //Should probably use another
         
-        const hashEthers = ethers.utils.hashMessage(payload);
-        const fromEthersToEthersRecoveredPubKeyUncompressed = ethers.utils.recoverPublicKey(hashEthers, signature);
-        const fromEthersToEthersRecoveredPubKey = ethers.utils.computePublicKey(fromEthersToEthersRecoveredPubKeyUncompressed, true);
+        const payload = {
+          func: "put",
+          params: {id: ID, value: values.text}
+        };
 
-
-        await axios.post('/api/', {payload, signature, publickey: fromEthersToEthersRecoveredPubKey});
+        let batch = await buildBatch(
+          publicKey,
+          TRANSACTION_FAMILY, 
+          TRANSACTION_FAMILY_VERSION,
+          [address(ID)],
+          [address(ID)],
+          payload);
+                
+        await axios.post('/api/', {batch});
         history.replace('/dashboard');
       }
       catch(e){
@@ -65,6 +71,7 @@ function CreateItem(){
         }
         setStatus({error});
       }
+
     },
   });
 

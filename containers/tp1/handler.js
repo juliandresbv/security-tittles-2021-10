@@ -46,47 +46,32 @@ class TPHandler extends TransactionHandler {
   async apply (transactionProcessRequest, context) {    
     
     let payload = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());   
-    
-    const _p = JSON.parse(payload.payload);
-    const func = _p['function'];
-    const args = _p['args'];
+    const {func, params} = payload;
 
-    const funcSplit = func.split('/');
-    const transactionFamily = funcSplit[0];
-    const transactionFamilyVersion = funcSplit[1];
-    const funcName = funcSplit[2];
-
-    if(transactionFamily !== INT_KEY_FAMILY){
-      throw new InvalidTransaction('Transaction Family does not match')
-    }
-    if(transactionFamilyVersion !== INT_KEY_VERSION){
-      throw new InvalidTransaction('Transaction Family Version does not match')
-    }
-
-    if(!this[funcName]){
+    if(!this[func]){
       throw new InvalidTransaction('Function does not exist')
     }
 
-    await this[funcName].call(this, args, context)
+    await this[func].call(this, params, context)
   }
 
-  async put({id, text}, context){
+  async put({id, value}, context){
     await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
 
     if (!id) {
       throw new InvalidTransaction('id is required')
     }
 
-    if (!text) {
-      throw new InvalidTransaction('text is required')
+    if (!value) {
+      throw new InvalidTransaction('value is required')
     }
 
     let stateValue = await getState(context, id + "");
     if (!stateValue) {
-      stateValue = {};
+      stateValue = null;
     }
   
-    stateValue['text'] = text
+    stateValue = value;
   
     await putState(context, id+"", stateValue);
     return;

@@ -1,6 +1,7 @@
+require('dotenv').config()
+
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/sdk_submit_tutorial_js.html
 // https://sawtooth.hyperledger.org/docs/core/releases/1.2.6/_autogen/txn_submit_tutorial.html
-require('dotenv').config()
 
 const secp256k1 = require('secp256k1');
 const crypto = require('crypto');
@@ -10,7 +11,7 @@ const axios = require('axios');
 
 
 const ID = "5";
-const VALUE = "HELLO";
+const VALUE = "hi";
 
 // let privateKey;
 // do {
@@ -128,30 +129,30 @@ let batchListBytes = protobuf.BatchList.encode({
 console.log(Buffer.from(batchListBytes).toString('base64'));  
 
 
-// let params = {
-//   headers: {'Content-Type': 'application/octet-stream'}
-// };
+let params = {
+  headers: {'Content-Type': 'application/octet-stream'}
+};
 
 
 // batchListBytes = Buffer.from('CrkHCscBCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhKAATM1MTdjMmQ3MzJmNTZkMTk2ZThhNGQwMDk4ZGJkZWY0YzVmNGE4ZmUwZTIzZTA2NjFlYTAzNDUyYzVlNDY2NWQ2OTZkYTNiZmMzNTMzZmEzMzk5MzdlZmE2OTEyODkzMzBhODNkOTQyZmQzNDg1NTllNzE1YjA5NDk5MWQ0NWNmGukECq8DCkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcaBmludGtleSIDMS4wKkYxY2YxMjZmNDUxN2JkYTRhNjk1ZjAyZDBhNzNkZDRkYjU0M2I0NjUzZGYyOGY1ZDA5ZGFiODZmOTJmZmI5Yjg2ZDAxZTI1MgVub25jZTpGMWNmMTI2ZjQ1MTdiZGE0YTY5NWYwMmQwYTczZGQ0ZGI1NDNiNDY1M2RmMjhmNWQwOWRhYjg2ZjkyZmZiOWI4NmQwMWUyNUqAATJiYjEzZWM2NTI3MTdjZTA2OWE2NzBmYTU4YzEwZDU1MWI2YTNkYzBmNTU5NTg4Nzk3YmUwN2Y2OGIzOTM1MDI4YWFlYWY2YmJhMWFjNjk0N2JiOTQzODYwMzM3MTc5NmI1NjZlZjQ0M2MxZjY4NmYzNzU0MzY0OTM2NTdjZDc2UkIwMjRhNjkzMjBkM2RhOWRkMzNlMWRlZmE1ZTgwNzhkZjAxOWIxNGJmMTE2ODRlOTYzODg5YjFkZDhhMDBjOTkxYTcSgAEzMzFiYjk4YTk5NmNlMTAxMmRlNzMzOGM0MTdkOWU0NjFjNjFmNjFmOTJlYzBhYjNhMDFkZDhiYmMwYzNmYTMyNWZhYjUwYjYzYmNlMzAyMzAxNzI3ZmNmMmNhODg3MWY1NDc1YjZkZDFiYzc0OTFmOWJlMDBiNzdmOWM3ZDkwZhoyeyJmdW5jIjoicHV0IiwicGFyYW1zIjp7ImlkIjoiNSIsInZhbHVlIjoiSEVMTE8ifX0=',
 //   'base64');
 
-// (async () => {
-//   let r = await axios.post(`${process.env.SAWTOOTH_REST}/batches`, batchListBytes, params)
-//   let batchStatusLink = r.data.link;
+(async () => {
+  let r = await axios.post(`${process.env.SAWTOOTH_REST}/batches`, batchListBytes, params)
+  let batchStatusLink = r.data.link;
 
-//   await new Promise((resolve) =>{
-//     setTimeout(()=>{
-//       resolve();
-//     }, 2000);
-//   });
+  await new Promise((resolve) =>{
+    setTimeout(()=>{
+      resolve();
+    }, 2000);
+  });
 
-//   r = await axios.get(batchStatusLink);
-//   console.log(r.data);
+  r = await axios.get(batchStatusLink);
+  console.log(r.data);
 
-//   r = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`);
-//   console.log(JSON.parse(Buffer.from(r.data.data, 'base64')));
-// })();
+  r = await axios.get(`${process.env.SAWTOOTH_REST}/state/${address}`);
+  console.log(JSON.parse(Buffer.from(r.data.data, 'base64')));
+})();
 
 
   
