@@ -1,42 +1,24 @@
-/**
- * Copyright 2016 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ------------------------------------------------------------------------------
- */
-
 'use strict'
-
-const _ = require('underscore')
 
 const { TransactionHandler } = require('sawtooth-sdk/processor/handler')
 const {
-  InvalidTransaction,
-  InternalError
+  InvalidTransaction
 } = require('sawtooth-sdk/processor/exceptions')
-
 const crypto = require('crypto')
+
+const INT_KEY_FAMILY = 'intkey'
+const INT_KEY_VERSION = '1.0'
 
 const hash512 = (x) =>
   crypto.createHash('sha512').update(x).digest('hex');
 
-const INT_KEY_FAMILY = 'intkey'
 const INT_KEY_NAMESPACE = hash512(INT_KEY_FAMILY).substring(0, 6)
-const INT_KEY_VERSION = '1.0'
 
-const getAddress = (transactionFamily, id) => {
-  return INT_KEY_NAMESPACE + hash512(id + "").slice(-64)
+const address = (key) => {
+  return INT_KEY_NAMESPACE + hash512(key).slice(-64)
 }
+
+const {getState, putState} = require('./keyState')(address);
 
 class TPHandler extends TransactionHandler {
   constructor () {
@@ -78,103 +60,25 @@ class TPHandler extends TransactionHandler {
   }
 }
 
-
-async function getRawState(context, address){
-  let possibleAddressValues = await context.getState([address])
-  let stateValueRep = possibleAddressValues[address]
-
-  if (!stateValueRep || stateValueRep.length == 0) {
-    return;
-  }
-  return stateValueRep;
-}
-
-async function getState(context, key){
-  let address = getAddress(INT_KEY_FAMILY, key);
-
-  const rawState = await getRawState(context, address);
-  if(_.isUndefined(rawState)){
-    return;
-  }
-
-  let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
-  if(!_.isArray(values)){
-    throw new InvalidTransaction('State Error')
-  }
-
-  let f = _.find(values, (v) => {
-    return v.key === key
-  });
-  if(f){
-    return f.value;
-  }
-  return;
-}
-
-
-async function putState(context, key, value){
-  let address = getAddress(INT_KEY_FAMILY, key);
-
-  const rawState = await getRawState(context, address);
-  let toSave;
-  if(_.isUndefined(rawState)){
-    toSave = [{key, value}] 
-  }
-  else{
-    let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
-    if(!_.isArray(values)){
-      throw new InvalidTransaction('State Error')
-    }
-
-    let existed = false;
-    for(let n = 0; n < values.length; n++){
-      if(values[n].key === key){
-        values[n].value = value;
-        existed = true;
-        break;
-      }
-    }
-    if(!existed){
-      values.push({key, value});
-    }
-    toSave = values;
-  }
-
-  let addresses = await context.setState({
-    [address]: Buffer.from(JSON.stringify(toSave), 'utf8')
-  })
-
-  if(addresses.length === 0){
-    throw new InternalError('State Error!')
-  }
-}
-
-async function deleteState(context, key, value){
-  let address = getAddress(INT_KEY_FAMILY, key);
-
-  const rawState = await getRawState(context, address);
-  let toSave;
-  if(_.isUndefined(rawState)){
-    toSave = [{key, value}] 
-  }
-  else{
-    let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
-    if(!_.isArray(values)){
-      throw new InvalidTransaction('State Error')
-    }
-    toSave = _.filter(values, (v) => {
-      v.key === key;
-    });
-  }
-
-  let addresses = await context.setState({
-    [address]: Buffer.from(JSON.stringify(toSave), 'utf8')
-  })
-
-  if(addresses.length === 0){
-    throw new InternalError('State Error!')
-  }
-}
-
 module.exports = TPHandler;
+
+
+
+/**
+ * Copyright 2016 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ------------------------------------------------------------------------------
+ */
+
 
