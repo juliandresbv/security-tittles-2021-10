@@ -23,6 +23,14 @@ const address = buildAddress(TRANSACTION_FAMILY);
 
 import axios from 'axios';
 
+function sleep(time){
+  return new Promise((resolve) => {
+    setTimeout(()=>{
+      resolve();
+    }, time);
+  });
+}
+
 const useStyles = makeStyles(() => ({
   root: {
     flexGrow: 1,
@@ -73,7 +81,8 @@ function CreateItem(){
           [address(id)],
           payload);
   
-        await axios.post('/api/', {batch});
+        await axios.post('/api/', {batch});        
+        await sleep(1000);
         history.replace('/dashboard');
       }
       catch(e){

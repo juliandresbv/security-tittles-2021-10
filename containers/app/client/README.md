@@ -1,14 +1,3 @@
-## Based on
-https://github.com/le99/sawtooth-with-metamask-signatures/blob/master/src/App.js
-For signatures
-
-
-web 0.20.7 doc:
-https://github.com/ChainSafe/web3.js/blob/0.20.7/DOCUMENTATION.md
-
-Should look at:
-https://docs.metamask.io/guide/provider-migration.html#migrating-to-the-new-provider-api
-
 ## Docs
 https://reactjs.org/
 https://reactrouter.com/web/guides/quick-start
@@ -17,6 +6,11 @@ https://material-ui.com/getting-started/usage/
 https://redux-toolkit.js.org/
 https://react-redux.js.org/
 https://redux.js.org/
+
+Metamask:
+https://docs.metamask.io/guide/ethereum-provider.html#legacy-properties
+https://docs.metamask.io/guide/provider-migration.html#migrating-to-the-new-provider-api
+
 
 # Getting Started with Create React App
 

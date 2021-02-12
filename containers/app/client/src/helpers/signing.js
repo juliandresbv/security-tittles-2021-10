@@ -1,18 +1,7 @@
-import Web3 from 'web3'
 import CryptoJS from 'crypto-js'
 import secp256k1 from 'secp256k1'
 import protobuf from 'sawtooth-sdk/protobuf'
 import { selectPublicKey } from '../redux/authSlice'
- 
-//https://github.com/ethereum/web3.js/blob/0.20.7/DOCUMENTATION.md
-// let web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
-let web3;
-if (typeof window.web3 !== 'undefined') {
-  web3 = new Web3(window.web3.currentProvider);
-} else {
-  // set the provider you want from Web3.providers
-  web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-}
 
 let store;
 
@@ -20,23 +9,22 @@ export function init(_store){
   store = _store;
 }
 
-export {web3};
-
 export async function getCurrentAccount() {
   const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
   return accounts[0];
 }
 
 export async function getPublicKey() {
-  var from = web3.eth.accounts[0];
+
+  const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+  const from = accounts[0];
 
   var msgHash = Buffer.from('8144a6fa26be252b86456491fbcd43c1de7e022241845ffea1c3df066f7cfede', 'hex');  
-  
-  let signature1 = await new Promise((resolve, reject)=>{
-    web3.eth.sign(from, msgHash, function (err, result) {
-      if (err) return reject(err)
-      return resolve(result)
-    })
+
+  await sleep(100);
+  let signature1 = await window.ethereum.request({
+    method: 'eth_sign',
+    params: [from, msgHash]
   });
 
   let publicKey = Buffer.from(secp256k1.ecdsaRecover(
@@ -107,7 +95,8 @@ async function _buildBatch(
   payload
 )
 {
-  const from = web3.eth.accounts[0];
+  const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+  const from = accounts[0];
 
   const payloadBytes = Buffer.from(JSON.stringify(payload), 'utf8')
 
@@ -136,11 +125,10 @@ async function _buildBatch(
     sha256(transactionHeaderBytes), 
     'hex'));
 
-  let signature = await new Promise((resolve, reject)=>{
-    web3.eth.sign(from, transactionHeaderHash, function (err, result) {
-      if (err) return reject(err)
-      return resolve(result)
-    })
+  await sleep(100);
+  let signature = await window.ethereum.request({
+    method: 'eth_sign',
+    params: [from, transactionHeaderHash]
   });
 
   signature = signature.slice(2, -2)
@@ -176,11 +164,10 @@ async function _buildBatch(
     sha256(batchHeaderBytes), 
     'hex'));
 
-  signature = await new Promise((resolve, reject)=>{
-    web3.eth.sign(from, batchHeaderHash, function (err, result) {
-      if (err) return reject(err)
-      return resolve(result)
-    })
+  await sleep(100);
+  signature = await window.ethereum.request({
+    method: 'eth_sign',
+    params: [from, batchHeaderHash]
   });
   signature = signature.slice(2, -2)
 
@@ -196,4 +183,13 @@ async function _buildBatch(
   }).finish()
   
   return Buffer.from(batchListBytes).toString('base64');
+}
+
+
+function sleep(time){
+  return new Promise((resolve) => {
+    setTimeout(()=>{
+      resolve();
+    }, time);
+  });
 }

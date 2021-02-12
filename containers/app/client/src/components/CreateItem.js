@@ -27,6 +27,14 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+function sleep(time){
+  return new Promise((resolve) => {
+    setTimeout(()=>{
+      resolve();
+    }, time);
+  });
+}
+
 function CreateItem(){
   const classes = useStyles();
   const history = useHistory();
@@ -56,6 +64,9 @@ function CreateItem(){
           payload);
                 
         await axios.post('/api/', {batch});
+
+        await sleep(1000);
+
         history.replace('/dashboard');
       }
       catch(e){
