@@ -13,12 +13,7 @@ import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
 import { useHistory } from "react-router-dom";
-
-import { useStore } from 'react-redux';
-
 import axios from 'axios';
-
-const { ethers } = require("ethers");
 
 
 const useStyles = makeStyles((theme) => ({
