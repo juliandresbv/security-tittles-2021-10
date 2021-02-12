@@ -11,6 +11,9 @@ import store from './redux/store'
 import { Provider } from 'react-redux'
 
 import { initAsync } from './redux/authSlice';
+import { init } from './helpers/signing';
+init(store);
+
 store.dispatch(initAsync()).then(()=>{
   ReactDOM.render(
     <React.StrictMode>

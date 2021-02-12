@@ -1,8 +1,9 @@
-const Web3 = require('web3');
-const CryptoJS = require('crypto-js');
-import secp256k1 from 'secp256k1';
-const protobuf = require('sawtooth-sdk/protobuf');
-
+import Web3 from 'web3'
+import CryptoJS from 'crypto-js'
+import secp256k1 from 'secp256k1'
+import protobuf from 'sawtooth-sdk/protobuf'
+import { selectPublicKey } from '../redux/authSlice'
+ 
 //https://github.com/ethereum/web3.js/blob/0.20.7/DOCUMENTATION.md
 // let web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 let web3;
@@ -13,6 +14,11 @@ if (typeof window.web3 !== 'undefined') {
   web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 }
 
+let store;
+
+export function init(_store){
+  store = _store;
+}
 
 export {web3};
 
@@ -77,6 +83,22 @@ export function buildAddress(transactionFamily){
 }
 
 export async function buildBatch(
+  transactionFamily, 
+  transactionFamilyVersion,
+  inputs,
+  outputs,
+  payload
+){
+  const publickKey = selectPublicKey(store.getState());
+  return _buildBatch(publickKey, 
+    transactionFamily, 
+    transactionFamilyVersion,
+    inputs,
+    outputs,
+    payload);
+}
+
+async function _buildBatch(
   publicKey,
   transactionFamily, 
   transactionFamilyVersion,

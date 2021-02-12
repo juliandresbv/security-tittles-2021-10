@@ -10,10 +10,8 @@ import * as Yup from 'yup';
 import { useHistory } from "react-router-dom";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
-import { useSelector } from 'react-redux';
 
 import {buildBatch} from '../helpers/signing';
-import {selectPublicKey} from '../redux/authSlice'
 
 import axios from 'axios';
 import { buildAddress } from '../helpers/signing'
@@ -32,7 +30,6 @@ const useStyles = makeStyles(() => ({
 function CreateItem(){
   const classes = useStyles();
   const history = useHistory();
-  const publicKey = useSelector(selectPublicKey);
   const formik = useFormik({
     initialValues: {
       text: '',
@@ -52,7 +49,6 @@ function CreateItem(){
         };
 
         let batch = await buildBatch(
-          publicKey,
           TRANSACTION_FAMILY, 
           TRANSACTION_FAMILY_VERSION,
           [address(ID)],

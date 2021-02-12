@@ -15,15 +15,11 @@ import {
 } from "react-router-dom";
 
 import {buildBatch} from '../helpers/signing';
-import {selectPublicKey} from '../redux/authSlice'
-import { useSelector } from 'react-redux';
-import { buildAddress } from '../helpers/signing'
+import { buildAddress } from '../helpers/signing';
 
 const TRANSACTION_FAMILY = "intkey";
 const TRANSACTION_FAMILY_VERSION = "1.0";
 const address = buildAddress(TRANSACTION_FAMILY);
-
-const { ethers } = require("ethers");
 
 import axios from 'axios';
 
@@ -41,7 +37,6 @@ function CreateItem(){
 
   let [ elem, setElem ] = useState(null);
   let [ elemQueried, setElemQueried ] = useState(false);
-  const publicKey = useSelector(selectPublicKey);
 
   useEffect(()=>{
     axios.get('/api/'+id)
@@ -72,7 +67,6 @@ function CreateItem(){
         };
   
         let batch = await buildBatch(
-          publicKey,
           TRANSACTION_FAMILY, 
           TRANSACTION_FAMILY_VERSION,
           [address(id)],
