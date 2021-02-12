@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const { TransactionProcessor } = require('sawtooth-sdk/processor')
 const TPHandler = require('./handler')
+const TPKeyHandler = require('./TPKeyHandler');
 
 if (typeof process.env.VALIDATOR === 'undefined') {
   console.log('missing a validator address')
@@ -13,7 +14,7 @@ console.log(process.env.VALIDATOR)
 
 const transactionProcessor = new TransactionProcessor(process.env.VALIDATOR)
 
-transactionProcessor.addHandler(new TPHandler())
+transactionProcessor.addHandler(new (TPKeyHandler(TPHandler)))
 
 transactionProcessor.start()
 
