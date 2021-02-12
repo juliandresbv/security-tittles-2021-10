@@ -14,6 +14,15 @@ import {
   useParams
 } from "react-router-dom";
 
+import {buildBatch} from '../helpers/signing';
+import {selectPublicKey} from '../redux/authSlice'
+import { useSelector } from 'react-redux';
+import { buildAddress } from '../helpers/signing'
+
+const TRANSACTION_FAMILY = "intkey";
+const TRANSACTION_FAMILY_VERSION = "1.0";
+const address = buildAddress(TRANSACTION_FAMILY);
+
 const { ethers } = require("ethers");
 
 import axios from 'axios';
@@ -32,6 +41,7 @@ function CreateItem(){
 
   let [ elem, setElem ] = useState(null);
   let [ elemQueried, setElemQueried ] = useState(false);
+  const publicKey = useSelector(selectPublicKey);
 
   useEffect(()=>{
     axios.get('/api/'+id)
@@ -47,31 +57,29 @@ function CreateItem(){
 
   const formik = useFormik({
     initialValues: {
-      text: (elem)? elem.value.text: '',
+      text: (elem)? elem.value: '',
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
       text: Yup.string().required('Required')
     }),
     onSubmit: async (values, {setStatus}) => {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
     
-      let payload = JSON.stringify({
-        function: 'intkey/1.0/put', 
-        args: {
-          id: elem.key,
-          text: values.text, 
-        }
-      });
       try{
-        const signature = await signer.signMessage(payload);
-        
-        const hashEthers = ethers.utils.hashMessage(payload);
-        const fromEthersToEthersRecoveredPubKeyUncompressed = ethers.utils.recoverPublicKey(hashEthers, signature);
-        const fromEthersToEthersRecoveredPubKey = ethers.utils.computePublicKey(fromEthersToEthersRecoveredPubKeyUncompressed, true);
-
-        await axios.put('/api/' + id, {payload, signature, publickey: fromEthersToEthersRecoveredPubKey});
+        const payload = {
+          func: "put",
+          params: {id: id, value: values.text}
+        };
+  
+        let batch = await buildBatch(
+          publicKey,
+          TRANSACTION_FAMILY, 
+          TRANSACTION_FAMILY_VERSION,
+          [address(id)],
+          [address(id)],
+          payload);
+  
+        await axios.post('/api/', {batch});
         history.replace('/dashboard');
       }
       catch(e){

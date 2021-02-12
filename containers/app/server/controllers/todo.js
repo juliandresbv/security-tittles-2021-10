@@ -23,6 +23,14 @@ const getAddress = (transactionFamily, varName) => {
   return INT_KEY_NAMESPACE + hash512(varName).slice(-64)
 }
 
+function buildAddress(transactionFamily){
+  return (key) => {
+    return getAddress(transactionFamily, key);
+  }
+}
+
+const address = buildAddress(TRANSACTION_FAMILY);
+
 module.exports.getAllToDo = async function(req, res) {
 
   let params = {
@@ -38,12 +46,6 @@ module.exports.getAllToDo = async function(req, res) {
       return base;
     })
     .flatten()
-    .map((d) => {
-      return {
-        id: d.key,
-        text: d.value
-      }
-    })
     .value();
 
   res.json(allTodos);
@@ -52,8 +54,7 @@ module.exports.getAllToDo = async function(req, res) {
 
 module.exports.getToDo = async function(req, res) {
   try{
-    const address = getAddress(TRANSACTION_FAMILY, req.params.id + "");
-    let values = await queryState(address);
+    let values = await queryState(address(req.params.id + ""));
     let value = _.find(values, v => v.key == req.params.id + "");
     if(!value){
       return res.status(404).json("not found"); 

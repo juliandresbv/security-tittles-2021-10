@@ -48,7 +48,7 @@ function Dashboard(){
   }, []);
 
   function handleItemClick(e){
-    history.push('/editItem/'+ e.id);
+    history.push('/editItem/'+ e.key);
   }
 
   return (
@@ -63,11 +63,11 @@ function Dashboard(){
         <Grid item xs={12} md={6}>
           <List component="nav" aria-label="main mailbox folders">
             {todos.map((e) => 
-              <ListItem button key={e.id} onClick={() => {handleItemClick(e)}}>
+              <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
                 <ListItemIcon>
                   <EditIcon />
                 </ListItemIcon>
-                <ListItemText primary={e.text} />
+                <ListItemText primary={e.value} />
               </ListItem>
             )}
           </List>
