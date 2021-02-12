@@ -16,9 +16,13 @@ const address = (key) => {
   return TP_NAMESPACE + hash512(key).slice(-64)
 }
 
+const keyState = require('./helpers/keyState');
+
+const {getState, putState} = keyState(address);
+
 
 const handlers = {
-  async put({id, value}, context, {getState, putState}){
+  async put(context, {id, value}){
     
     await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
 
@@ -42,4 +46,4 @@ const handlers = {
   }
 }
 
-module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, address, handlers}
+module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers}

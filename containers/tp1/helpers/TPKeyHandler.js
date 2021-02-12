@@ -5,11 +5,7 @@ const {
   InvalidTransaction
 } = require('sawtooth-sdk/processor/exceptions')
 
-const keyState = require('./keyState');
-
-
-module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, address, handlers}){
-  const {getState, putState} = keyState(address);
+module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers}){
 
   class TPHandler extends TransactionHandler {
     constructor () {
@@ -25,7 +21,7 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, address, handler
         throw new InvalidTransaction('Function does not exist')
       }
   
-      await handlers[func].call(this, params, context, {getState, putState})
+      await handlers[func](context, params);
     }
   }
   return TPHandler;
