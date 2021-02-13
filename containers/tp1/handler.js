@@ -16,10 +16,6 @@ const address = (key) => {
   return TP_NAMESPACE + hash512(key).slice(-64)
 }
 
-const keyState = require('./helpers/keyState');
-
-const {getState, putState} = keyState(address);
-
 
 const handlers = {
   async put(context, {id, value}){
@@ -34,16 +30,16 @@ const handlers = {
       throw new InvalidTransaction('value is required')
     }
 
-    let stateValue = await getState(context, id + "");
+    let stateValue = await context.getState(id + "");
     if (!stateValue) {
       stateValue = null;
     }
   
     stateValue = value;
   
-    await putState(context, id+"", stateValue);
+    await context.putState(id+"", stateValue);
     return;
   }
-}
+};
 
-module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers}
+module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, address}
