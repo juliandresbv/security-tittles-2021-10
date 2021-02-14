@@ -124,8 +124,11 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
         deleteState: function(key){
           return deleteState(context, address, key);
         },
-        addEvent: function(evetnType, attributes, data, timout){
-          return context.addEvent(evetnType, attributes, data, timout);
+        addEvent: function(){
+          return context.addEvent.apply(context, [...arguments])
+        },
+        addReceiptData: function(){
+          return context.addReceiptData.apply(context, [...arguments])
         },
         context
       }
