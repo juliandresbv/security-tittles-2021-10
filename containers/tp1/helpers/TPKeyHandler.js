@@ -7,8 +7,8 @@ const {
   InternalError
 } = require('sawtooth-sdk/processor/exceptions')
 
-async function getRawState(context, addressRaw){
-  let possibleAddressValues = await context.getState([addressRaw])
+async function getRawState(context, addressRaw, timeout){
+  let possibleAddressValues = await context.getState([addressRaw], timeout)
   let stateValueRep = possibleAddressValues[addressRaw]
 
   if (!stateValueRep || stateValueRep.length == 0) {
@@ -17,8 +17,8 @@ async function getRawState(context, addressRaw){
   return stateValueRep;
 }
 
-async function getState(context, address, key){
-  const rawState = await getRawState(context, address(key));
+async function getState(context, address, key, timeout){
+  const rawState = await getRawState(context, address(key), timeout);
   if(_.isUndefined(rawState)){
     return;
   }
@@ -38,8 +38,8 @@ async function getState(context, address, key){
 }
 
 
-async function putState(context, address, key, value){
-  const rawState = await getRawState(context, address(key));
+async function putState(context, address, key, value, timeout){
+  const rawState = await getRawState(context, address(key), timeout);
   let toSave;
   if(_.isUndefined(rawState)){
     toSave = [{key, value}] 
@@ -66,33 +66,39 @@ async function putState(context, address, key, value){
 
   let addresses = await context.setState({
     [address(key)]: Buffer.from(JSON.stringify(toSave), 'utf8')
-  })
+  }, timeout)
 
   if(addresses.length === 0){
     throw new InternalError('State Error!')
   }
 }
 
-async function deleteState(context, address, key, value){
-  const rawState = await getRawState(context, address(key));
-  let toSave;
+async function deleteState(context, address, key, timeout){
+  const rawState = await getRawState(context, address(key), timeout);
   if(_.isUndefined(rawState)){
-    toSave = [{key, value}] 
+    return;
   }
-  else{
-    let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
-    if(!_.isArray(values)){
-      throw new InvalidTransaction('State Error')
+  
+  let toSave;
+  let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
+  if(!_.isArray(values)){
+    throw new InvalidTransaction('State Error')
+  }
+  toSave = _.filter(values, (v) => {
+    v.key === key;
+  });
+
+  if(toSave.length > 0){
+    let addresses = await context.setState({
+      [address(key)]: Buffer.from(JSON.stringify(toSave), 'utf8')
+    }, timeout)
+  
+    if(addresses.length === 0){
+      throw new InternalError('State Error!')
     }
-    toSave = _.filter(values, (v) => {
-      v.key === key;
-    });
   }
-
-  let addresses = await context.setState({
-    [address]: Buffer.from(JSON.stringify(toSave), 'utf8')
-  })
-
+  
+  let addresses = await context.deleteState([address(key)], timeout);
   if(addresses.length === 0){
     throw new InternalError('State Error!')
   }
@@ -115,14 +121,14 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
       }
   
       const ctx = {
-        getState: function(key){
-          return getState(context, address, key);
+        getState: function(key, timeout){
+          return getState(context, address, key, timeout);
         },
-        putState: function(key, value){
-          return putState(context, address, key, value);
+        putState: function(key, value, timeout){
+          return putState(context, address, key, value, timeout);
         },
-        deleteState: function(key){
-          return deleteState(context, address, key);
+        deleteState: function(key, timeout){
+          return deleteState(context, address, key, timeout);
         },
         addEvent: function(){
           return context.addEvent.apply(context, [...arguments])
@@ -130,7 +136,9 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
         addReceiptData: function(){
           return context.addReceiptData.apply(context, [...arguments])
         },
-        context
+        //Addition attributes just in case
+        context,
+        transactionProcessRequest
       }
       
       await handlers[func](ctx, params);
