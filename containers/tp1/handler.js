@@ -37,8 +37,8 @@ const handlers = {
   
     stateValue = value;
   
-    // await context.putState(id+"", stateValue);
-    await context.deleteState(id+"");
+    await context.putState(id+"", stateValue);
+    // await context.deleteState(id+"");
 
     return;
   }
