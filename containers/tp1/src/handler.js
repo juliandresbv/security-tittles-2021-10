@@ -20,7 +20,7 @@ const addressIntKey = (key) => {
 
 const handlers = {
   async put([context], {id, value}){
-    
+
     await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
 
     if (!id) {

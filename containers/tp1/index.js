@@ -19,6 +19,12 @@ transactionProcessor.addHandler(new (TPKeyHandler(TPHandler)))
 transactionProcessor.start()
 
 
+//Gracefull shutdown with nodemon
+process.once('SIGUSR2', function () {
+  transactionProcessor._handleShutdown();
+  process.kill(process.pid, 'SIGUSR2');
+});
+
 /**
  * Copyright 2016 Intel Corporation
  *
