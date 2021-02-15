@@ -86,10 +86,8 @@ export default function SignIn() {
     }),
     onSubmit: async (values, {setStatus}) => {
       try{
-        dispatch(signinAsync(values.email, values.password))
-          .then(() =>{
-            history.replace(from);
-          });
+        await dispatch(signinAsync(values.email, values.password));
+        history.replace(from);
       }
       catch(e){
         let error;
@@ -100,6 +98,7 @@ export default function SignIn() {
         }
         setStatus({error});
       }
+      
     },
   });
 
@@ -155,7 +154,7 @@ export default function SignIn() {
             /> */}
             { formik.isSubmitting &&
               <Grid container justify='center' >
-                <Grid item xs={12}>
+                <Grid item xs={1}>
                   <CircularProgress />
                 </Grid>
               </Grid>

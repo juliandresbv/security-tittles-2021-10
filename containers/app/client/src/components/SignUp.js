@@ -10,6 +10,7 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 import Navbar from './Navbar';
 
@@ -73,11 +74,10 @@ export default function SignUp() {
       password: Yup.string().required('Required')
     }),
     onSubmit: async (values, {setStatus}) => {
+
       try{
-        dispatch(signupAsync(values.email, values.firstName, values.password))
-          .then(() => {
-            history.replace('/dashboard');
-          });
+        await dispatch(signupAsync(values.email, values.firstName, values.password));
+        history.replace('/dashboard');
       }
       catch(e){
         let error;
@@ -88,6 +88,7 @@ export default function SignUp() {
         }
         setStatus({error});
       }
+      
     },
   });
 
@@ -179,6 +180,13 @@ export default function SignUp() {
               </Grid> */}
             </Grid>
 
+            { formik.isSubmitting &&
+              <Grid container justify='center' >
+                <Grid item xs={1}>
+                  <CircularProgress />
+                </Grid>
+              </Grid>
+            }
             { formik.status &&
               <Grid container justify='center' >
                 <Grid item xs={12}>
