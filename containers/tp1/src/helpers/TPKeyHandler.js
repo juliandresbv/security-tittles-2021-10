@@ -88,7 +88,7 @@ async function deleteState(context, address, key, timeout){
     throw new InternalError('State Error')
   }
   toSave = _.filter(values, (v) => {
-    v.key === key;
+    return v.key !== key;
   });
 
   if(toSave.length > 0){
@@ -99,6 +99,7 @@ async function deleteState(context, address, key, timeout){
     if(addresses.length === 0){
       throw new InternalError('State Error!')
     }
+    return;
   }
   
   let addresses = await context.deleteState([address(key)], timeout);
@@ -163,5 +164,9 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
   }
   return TPHandler;
 };
+
+module.exports.getState = getState;
+module.exports.putState = putState;
+module.exports.deleteState = deleteState;
 
 
