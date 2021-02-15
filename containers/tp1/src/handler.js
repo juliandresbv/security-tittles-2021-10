@@ -12,13 +12,13 @@ const hash512 = (x) =>
 
 const TP_NAMESPACE = hash512(TP_FAMILY).substring(0, 6)
 
-const address = (key) => {
+const addressIntKey = (key) => {
   return TP_NAMESPACE + hash512(key).slice(-64)
 }
 
 
 const handlers = {
-  async put(context, {id, value}){
+  async put([context], {id, value}){
     
     await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
 
@@ -44,4 +44,4 @@ const handlers = {
   }
 };
 
-module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, address}
+module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses:[addressIntKey]};

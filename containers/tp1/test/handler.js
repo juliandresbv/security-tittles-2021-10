@@ -14,16 +14,17 @@ describe('simple', ()=>{
   })
 
   it('address works', ()=>{
-    assert.equal(TPHandler.address('some key').length, 70);
-    assert.equal(TPHandler.address('some key').slice(0,6), TPHandler.TP_NAMESPACE);
+    assert.equal(TPHandler.addresses.length, 1);
+    assert.equal(TPHandler.addresses[0]('some key').length, 70);
+    assert.equal(TPHandler.addresses[0]('some key').slice(0,6), TPHandler.TP_NAMESPACE);
   })
 });
 
 describe('put handler', ()=>{
   it('no id', async ()=>{
-    let context = contextMock();
+    let contexts = [contextMock()];
     try{
-      await TPHandler.handlers.put(context, {value:'value1'})
+      await TPHandler.handlers.put(contexts, {value:'value1'})
       assert.fail('Should Throw');
     }
     catch(e){
@@ -32,9 +33,9 @@ describe('put handler', ()=>{
   })
 
   it('no value', async ()=>{
-    let context = contextMock();
+    let contexts = [contextMock()];
     try{
-      await TPHandler.handlers.put(context, {id: 'id1'})
+      await TPHandler.handlers.put(contexts, {id: 'id1'})
       assert.fail('Should Throw');
     }
     catch(e){
@@ -43,10 +44,10 @@ describe('put handler', ()=>{
   })
 
   it('ok', async ()=>{
-    let context = contextMock();
-    await  TPHandler.handlers.put(context, {id:"key1", value:'value1'})
-    assert.equal(context._state['key1'], 'value1');
-    assert.deepEqual(context._events[0].slice(0,3), ["myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8")]);
+    let contexts = [contextMock()];
+    await  TPHandler.handlers.put(contexts, {id:"key1", value:'value1'})
+    assert.equal(contexts[0]._state['key1'], 'value1');
+    assert.deepEqual(contexts[0]._events[0].slice(0,3), ["myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8")]);
   })
 
 });

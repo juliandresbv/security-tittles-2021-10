@@ -104,7 +104,7 @@ async function deleteState(context, address, key, timeout){
   }
 }
 
-module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, address}){
+module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses}){
 
   class TPHandler extends TransactionHandler {
     constructor () {
@@ -120,28 +120,29 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
         throw new InvalidTransaction('Function does not exist')
       }
   
-      const ctx = {
-        getState: function(key, timeout){
-          return getState(context, address, key, timeout);
-        },
-        putState: function(key, value, timeout){
-          return putState(context, address, key, value, timeout);
-        },
-        deleteState: function(key, timeout){
-          return deleteState(context, address, key, timeout);
-        },
-        addEvent: function(){
-          return context.addEvent.apply(context, [...arguments])
-        },
-        addReceiptData: function(){
-          return context.addReceiptData.apply(context, [...arguments])
-        },
-        //Addition attributes just in case
-        context,
-        transactionProcessRequest
-      }
-      
-      await handlers[func](ctx, params);
+      const contexts = _.map(addresses, (address) => {
+        return {
+          getState: function(key, timeout){
+            return getState(context, address, key, timeout);
+          },
+          putState: function(key, value, timeout){
+            return putState(context, address, key, value, timeout);
+          },
+          deleteState: function(key, timeout){
+            return deleteState(context, address, key, timeout);
+          },
+          addEvent: function(){
+            return context.addEvent.apply(context, [...arguments])
+          },
+          addReceiptData: function(){
+            return context.addReceiptData.apply(context, [...arguments])
+          },
+          //Addition attributes just in case
+          context,
+          transactionProcessRequest
+        }
+      });      
+      await handlers[func](contexts, params);
 
     }
   }
