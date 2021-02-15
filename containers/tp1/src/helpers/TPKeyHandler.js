@@ -2,6 +2,9 @@
 
 const _ = require('underscore')
 const { TransactionHandler } = require('sawtooth-sdk/processor/handler')
+//https://sawtooth.hyperledger.org/faq/transaction-processing/#my-tp-throws-an-exception-of-type-internalerror-but-the-apply-method-gets-stuck-in-an-endless-loop
+//InternalErrors are transient errors, are retried, 
+//InvalidTransactions are not retired
 const {
   InvalidTransaction,
   InternalError
@@ -25,7 +28,7 @@ async function getState(context, address, key, timeout){
 
   let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
   if(!_.isArray(values)){
-    throw new InvalidTransaction('State Error')
+    throw new InternalError('State Error')
   }
 
   let f = _.find(values, (v) => {
@@ -47,7 +50,7 @@ async function putState(context, address, key, value, timeout){
   else{
     let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
     if(!_.isArray(values)){
-      throw new InvalidTransaction('State Error')
+      throw new InternalError('State Error')
     }
 
     let existed = false;
@@ -82,7 +85,7 @@ async function deleteState(context, address, key, timeout){
   let toSave;
   let values = JSON.parse(Buffer.from(rawState, 'utf8').toString())
   if(!_.isArray(values)){
-    throw new InvalidTransaction('State Error')
+    throw new InternalError('State Error')
   }
   toSave = _.filter(values, (v) => {
     v.key === key;
@@ -141,8 +144,20 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
           context,
           transactionProcessRequest
         }
-      });      
-      await handlers[func](contexts, params);
+      });
+      if(process.env.NODE_ENV === 'dev'){
+        try{
+          await handlers[func](contexts, params);
+        } 
+        catch(e){
+          //Catch InternalError and don't make the TP unavailable
+          console.log(e);
+        }
+      }
+      else{
+        await handlers[func](contexts, params);
+      }
+      
 
     }
   }

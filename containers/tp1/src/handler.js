@@ -1,7 +1,8 @@
 const crypto = require('crypto')
 
 const {
-  InvalidTransaction
+  InvalidTransaction,
+  InternalError
 } = require('sawtooth-sdk/processor/exceptions');
 
 const TP_FAMILY = 'intkey';
