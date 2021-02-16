@@ -24,8 +24,7 @@ import { signinAsync } from '../redux/authSlice';
 
 import { useStore } from 'react-redux';
 
-import { getPublicKey } from '../helpers/signing';
-
+import {selectMetamaskMessage} from '../redux/authSlice';
 
 function Copyright() {
   return (
@@ -65,11 +64,14 @@ export default function SignIn() {
 
   const { from } = location.state || { from: { pathname: "/dashboard" } };
 
-  const store = useStore();
+  const state = useStore().getState();
+
+  const metamaskMessage = selectMetamaskMessage(state);
+
   const classes = useStyles();
   const history = useHistory();
 
-  if(store.getState().auth.username){
+  if(state.auth.username){
     history.replace(from);
   }
   
@@ -115,6 +117,18 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
+          {metamaskMessage &&
+            <Typography variant="body1" color="error">
+              {(metamaskMessage == 'Please install MetaMask!')? 
+                <Link href="https://metamask.io/">
+                  To use this app please install Metamask. Click here to Install. 
+                </Link>
+                :
+                metamaskMessage
+              }
+            </Typography>
+          }
+
           <form className={classes.form} noValidate onSubmit={formik.handleSubmit}>
             <TextField
               variant="outlined"
@@ -130,7 +144,7 @@ export default function SignIn() {
               onChange={formik.handleChange}
               error={formik.touched.email && Boolean(formik.errors.email)}
               helperText={formik.touched.email && formik.errors.email}
-              disabled={formik.isSubmitting}
+              disabled={formik.isSubmitting || metamaskMessage}
             />
             <TextField
               variant="outlined"
@@ -146,7 +160,7 @@ export default function SignIn() {
               onChange={formik.handleChange}
               error={formik.touched.password && Boolean(formik.errors.password)}
               helperText={formik.touched.password && formik.errors.password}
-              disabled={formik.isSubmitting}
+              disabled={formik.isSubmitting || metamaskMessage}
             />
             {/* <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
@@ -176,15 +190,15 @@ export default function SignIn() {
               variant="contained"
               color="primary"
               className={classes.submit}
-              disabled={formik.isSubmitting}
+              disabled={formik.isSubmitting || metamaskMessage}
             >
               Sign In
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="#" variant="body2">
+                {/* <Link href="#" variant="body2">
                   Forgot password?
-                </Link>
+                </Link> */}
               </Grid>
               <Grid item>
                 <Link href="#" variant="body2" onClick={() => {history.push('/signup')}}>

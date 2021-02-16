@@ -6,6 +6,7 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState: {
     metamaskEnabled: false,
+    metamaskMessage: null,
     accounts: {}, //{account, email}
     currentAccount: null
   },
@@ -27,12 +28,15 @@ export const authSlice = createSlice({
     },
     setCurrentAccount: (state, action) =>{
       state.currentAccount = action.payload
+    },
+    setMetamaskMessage: (state, action) =>{
+      state.metamaskMessage = action.payload 
     }
   },
 });
 
 export const { 
-  init, addAccount, removeAccount, removeAllAccounts, setCurrentAccount 
+  init, addAccount, removeAccount, removeAllAccounts, setCurrentAccount, setMetamaskMessage
 } = authSlice.actions;
 
 function localSaveAccounts(accounts, currentAccount){
@@ -78,7 +82,7 @@ export const initAsync = () => async (dispatch) =>{
   dispatch(init({metamaskEnabled, accounts, currentAccount}))
 }
 
-export const signupAsync = (email, username, password) => async (dispatch, getState) => {
+export const signupAsync = (email) => async (dispatch, getState) => {
   let {accounts, currentAccount} = getState().auth;
   accounts = _.clone(accounts);
   if(!currentAccount){
@@ -93,7 +97,7 @@ export const signupAsync = (email, username, password) => async (dispatch, getSt
   dispatch(addAccount(newAccount));
 } 
 
-export const signinAsync = (email, password) => async (dispatch, getState) => {
+export const signinAsync = (email) => async (dispatch, getState) => {
   let {accounts, currentAccount} = getState().auth;
   accounts = _.clone(accounts);
   if(!currentAccount){
@@ -126,6 +130,9 @@ export const setCurrentAccountAsync = (account) => async (dispatch) =>{
 }
 
 export const selectUsername = state => {
+  if(state.auth.metamaskMessage || !state.auth.metamaskEnabled){
+    return null;
+  }
   if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
     return state.auth.accounts[state.auth.currentAccount].email;
   }
@@ -133,10 +140,17 @@ export const selectUsername = state => {
 };
 
 export const selectPublicKey = state => {
+  if(state.auth.metamaskMessage || !state.auth.metamaskEnabled){
+    return null;
+  }
   if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
     return state.auth.accounts[state.auth.currentAccount].publicKey;
   }
   return null;
+};
+
+export const selectMetamaskMessage = state => {
+  return state.auth && state.auth.metamaskMessage;
 };
 
 export default authSlice.reducer;

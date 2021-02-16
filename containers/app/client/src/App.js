@@ -18,7 +18,7 @@ import CreateItem from './components/CreateItem';
 import EditItem from './components/EditItem';
 import detectEthereumProvider from '@metamask/detect-provider';
 
-const { setCurrentAccountAsync } = require("./redux/authSlice");
+const { setCurrentAccountAsync, setMetamaskMessage } = require("./redux/authSlice");
 
 
 function App() {
@@ -26,18 +26,21 @@ function App() {
   const dispatch = useDispatch();
 
   const [, setAcc] = useState(null);
+  const [, setMM] = useState(null);
 
   useEffect(async ()=>{
     //https://docs.metamask.io/guide/ethereum-provider.html#using-the-provider
     const provider = await detectEthereumProvider();
     let currentAccount;
     if (!provider) {
-      console.log('Please install MetaMask!');
+      dispatch(setMetamaskMessage('Please install MetaMask!'));
+      setMM('Please install MetaMask!');  //Force refresh
       return;
     }
 
     if (provider !== window.ethereum) {
-      console.error('Do you have multiple wallets installed?');  
+      dispatch(setMetamaskMessage('Do you have multiple wallets installed?'));
+      setMM('Do you have multiple wallets installed?');  //Force refresh
       return;
     }
 
@@ -51,7 +54,8 @@ function App() {
 
     function handleAccountsChanged(accounts){
       if (accounts.length === 0) {
-        console.log('Please connect to MetaMask.');
+        dispatch(setMetamaskMessage('Please connect to MetaMask and refresh page.'))
+        setMM('Please connect to MetaMask.');  //Force refresh
       } else if (accounts[0] !== currentAccount) {
         currentAccount = accounts[0];
         dispatch(setCurrentAccountAsync(currentAccount));
