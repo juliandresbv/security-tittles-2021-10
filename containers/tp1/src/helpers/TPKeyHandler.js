@@ -130,24 +130,34 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
   
     async apply (transactionProcessRequest, context) {    
       
-      const {signature, payload} = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());
-      const {func, args} = JSON.parse(payload);
-      const f = func.split('/');
-
-      const publicKey = getPublicKey(payload, signature);
-
-      if(f[0] !== TP_FAMILY){
-        throw new InvalidTransaction('Wrong TP_FAMILY');
-      }
-
-      if(f[1] !== TP_VERSION){
-        throw new InvalidTransaction('Unssuported TP Version');
-      }
-
-      if(!handlers[f[2]]){
-        throw new InvalidTransaction('Function does not exist')
-      }
+      let publicKey;
+      let args;
+      let func;
+      try{
+        const {signature, payload} = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());
+        const p_j = JSON.parse(payload);
+        const f = p_j.func.split('/');
+        args = p_j.args;
   
+        publicKey = getPublicKey(payload, signature);
+  
+        if(f[0] !== TP_FAMILY){
+          throw new InvalidTransaction('Wrong TP_FAMILY');
+        }
+  
+        if(f[1] !== TP_VERSION){
+          throw new InvalidTransaction('Unssuported TP Version');
+        }
+  
+        if(!handlers[f[2]]){
+          throw new InvalidTransaction('Function does not exist')
+        }
+        func = f[2];
+      }
+      catch(err){
+        throw new InvalidTransaction('Bad transaction Format');
+      }
+      
       const contexts = _.map(addresses, (address) => {
         return {
           getState: function(key, timeout){
@@ -173,7 +183,7 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
       });
       if(process.env.NODE_ENV === 'dev'){
         try{
-          await handlers[f[2]](contexts, args);
+          await handlers[func](contexts, args);
         } 
         catch(e){
           //Catch InternalError and don't make the TP unavailable
@@ -181,7 +191,7 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
         }
       }
       else{
-        await handlers[f[2]](contexts, args);
+        await handlers[func](contexts, args);
       }
       
 
