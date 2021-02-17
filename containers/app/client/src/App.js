@@ -51,6 +51,7 @@ function App() {
         console.error(err);
       });
 
+    window.ethereum.on('accountsChanged', handleAccountsChanged);
 
     function handleAccountsChanged(accounts){
       if (accounts.length === 0) {
