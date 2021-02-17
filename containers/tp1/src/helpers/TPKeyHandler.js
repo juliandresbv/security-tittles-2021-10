@@ -9,6 +9,8 @@ const {
   InvalidTransaction,
   InternalError
 } = require('sawtooth-sdk/processor/exceptions')
+const { ethers } = require("ethers");
+const secp256k1 = require('secp256k1');
 
 async function getRawState(context, addressRaw, timeout){
   let possibleAddressValues = await context.getState([addressRaw], timeout)
@@ -108,6 +110,17 @@ async function deleteState(context, address, key, timeout){
   }
 }
 
+function getPublicKey(payload, signature){
+  const wrapped = "\x19Ethereum Signed Message:\n" + payload.length + payload;
+  const hashSecp256 = ethers.utils.keccak256('0x' + Buffer.from(wrapped).toString('hex'));
+  const pubKey = secp256k1.ecdsaRecover(
+    Uint8Array.from(Buffer.from(signature.slice(2,-2), 'hex')), 
+    parseInt(signature.slice(-2), 16) - 27, 
+    Buffer.from(hashSecp256.slice(2), 'hex'), true);
+
+  return Buffer.from(pubKey).toString('hex');
+}
+
 module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses}){
 
   class TPHandler extends TransactionHandler {
@@ -117,10 +130,21 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
   
     async apply (transactionProcessRequest, context) {    
       
-      let payload = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());   
-      const {func, params} = payload;
-  
-      if(!handlers[func]){
+      const {signature, payload} = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());
+      const {func, args} = JSON.parse(payload);
+      const f = func.split('/');
+
+      const publicKey = getPublicKey(payload, signature);
+
+      if(f[0] !== TP_FAMILY){
+        throw new InvalidTransaction('Wrong TP_FAMILY');
+      }
+
+      if(f[1] !== TP_VERSION){
+        throw new InvalidTransaction('Unssuported TP Version');
+      }
+
+      if(!handlers[f[2]]){
         throw new InvalidTransaction('Function does not exist')
       }
   
@@ -143,12 +167,13 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
           },
           //Addition attributes just in case
           context,
-          transactionProcessRequest
+          transactionProcessRequest,
+          publicKey
         }
       });
       if(process.env.NODE_ENV === 'dev'){
         try{
-          await handlers[func](contexts, params);
+          await handlers[f[2]](contexts, args);
         } 
         catch(e){
           //Catch InternalError and don't make the TP unavailable
@@ -156,7 +181,7 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
         }
       }
       else{
-        await handlers[func](contexts, params);
+        await handlers[f[2]](contexts, args);
       }
       
 
