@@ -11,14 +11,9 @@ import { useHistory } from "react-router-dom";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 
-import {buildBatch} from '../helpers/signing';
+import {buildTransaction} from '../helpers/signing';
 
 import axios from 'axios';
-import { buildAddress } from '../helpers/signing'
-
-const TRANSACTION_FAMILY = "intkey";
-const TRANSACTION_FAMILY_VERSION = "1.0";
-const address = buildAddress(TRANSACTION_FAMILY);
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -52,18 +47,13 @@ function CreateItem(){
         let ID = Math.floor(Math.random() * 10000) + ""; //Should probably use another
         
         const payload = {
-          func: "put",
-          params: {id: ID, value: values.text}
+          func: "intkey/1.0/put",
+          args: {id: ID, value: values.text}
         };
 
-        let batch = await buildBatch(
-          TRANSACTION_FAMILY, 
-          TRANSACTION_FAMILY_VERSION,
-          [address(ID)],
-          [address(ID)],
-          payload);
+        let transaction = await buildTransaction(payload);
                 
-        await axios.post('/api/', {batch});
+        await axios.post('/api/', {transaction});
 
         await sleep(1000);
 

@@ -14,12 +14,8 @@ import {
   useParams
 } from "react-router-dom";
 
-import {buildBatch} from '../helpers/signing';
-import { buildAddress } from '../helpers/signing';
+import {buildTransaction} from '../helpers/signing';
 
-const TRANSACTION_FAMILY = "intkey";
-const TRANSACTION_FAMILY_VERSION = "1.0";
-const address = buildAddress(TRANSACTION_FAMILY);
 
 import axios from 'axios';
 
@@ -68,21 +64,19 @@ function CreateItem(){
     }),
     onSubmit: async (values, {setStatus}) => {
     
+
       try{
         const payload = {
-          func: "put",
-          params: {id: id, value: values.text}
+          func: "intkey/1.0/put",
+          args: {id: id, value: values.text}
         };
   
-        let batch = await buildBatch(
-          TRANSACTION_FAMILY, 
-          TRANSACTION_FAMILY_VERSION,
-          [address(id)],
-          [address(id)],
-          payload);
+        let transaction = await buildTransaction(payload);
+                
+        await axios.post('/api/', {transaction});
   
-        await axios.post('/api/', {batch});        
         await sleep(1000);
+  
         history.replace('/dashboard');
       }
       catch(e){
