@@ -68,7 +68,7 @@ function Dashboard(){
                 <ListItemIcon>
                   <EditIcon />
                 </ListItemIcon>
-                <ListItemText primary={e.value} />
+                <ListItemText primary={e.value.value} />
               </ListItem>
             )}
           </List>

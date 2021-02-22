@@ -24,12 +24,28 @@ export async function getPublicKey() {
   return publicKey;
 }
 
+
+//Inspired by:
+//https://developer.bitcoin.org/reference/transactions.html#:~:text=Bitcoin%20transactions%20are%20broadcast%20between,part%20of%20the%20consensus%20rules.
+// let t = {
+//   txid:"",//signed hash of txn
+//   transaction:{
+//     input: {
+//       txid: ""    
+//     },
+//     output:{
+//       value: 1
+//     }
+//   }
+// };
+
+
 export async function buildTransaction(payload){
   let p = JSON.stringify(payload);
   let signature = await signString(p); 
   return {
-    signature: signature,  // Hex string
-    payload: p
+    txid: signature,  // Hex string
+    transaction: p
   }
 }
 

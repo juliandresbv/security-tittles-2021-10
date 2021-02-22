@@ -56,7 +56,8 @@ function CreateItem(){
 
   const formik = useFormik({
     initialValues: {
-      text: (elem)? elem.value: '',
+      text: (elem)? elem.value.value: '',
+      owner: (elem)? elem.value.owner: ''
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
@@ -67,13 +68,20 @@ function CreateItem(){
 
       try{
         const payload = {
-          func: "intkey/1.0/put",
-          args: {id: id, value: values.text}
+          type: 'todo',
+          
+          input: id,
+          output:{
+            value: elem.value.value,
+            owner: values.owner
+          }
         };
-  
+ 
+        console.log(payload.output)
+
         let transaction = await buildTransaction(payload);
                 
-        await axios.post('/api/', {transaction});
+        await axios.put('/api/', transaction);
   
         await sleep(1000);
   
@@ -98,7 +106,7 @@ function CreateItem(){
       <form noValidate autoComplete="off" onSubmit={formik.handleSubmit}>
         <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center">
           <Grid item>
-            <Typography variant="h4">
+            <Typography variant="body1">
               Id: {id} {(elemQueried && !elem)? ', Not found': ''}
             </Typography>
           </Grid>
@@ -110,6 +118,20 @@ function CreateItem(){
               onChange={formik.handleChange}
               error={formik.touched.text && Boolean(formik.errors.text)}
               helperText={formik.touched.text && formik.errors.text}
+              // disabled={formik.isSubmitting || !elem}
+              disabled={true}
+              autoFocus
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField 
+              id="owner" 
+              label="owner" 
+              value={formik.values.owner}
+              onChange={formik.handleChange}
+              error={formik.touched.text && Boolean(formik.errors.owner)}
+              helperText={formik.touched.owner && formik.errors.owner}
               disabled={formik.isSubmitting || !elem}
               autoFocus
             />

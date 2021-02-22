@@ -1,12 +1,13 @@
 var express = require('express');
 var router = express.Router();
 const toDoController = require('../controllers/todo');
-const {authTransactionMiddleware, postTransaction} = require('../controllers/transaction');
+const {authTransactionMiddleware, postTransaction, putTransaction} = require('../controllers/transaction');
 
 
 router.get('/', toDoController.getAllToDo);
 router.get('/:id', toDoController.getToDo);
 router.post('/', authTransactionMiddleware, postTransaction);
+router.put('/', authTransactionMiddleware, putTransaction);
 
 
 router.use('/*', function(req, res){

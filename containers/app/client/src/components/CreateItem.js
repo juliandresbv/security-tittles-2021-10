@@ -12,6 +12,8 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 
 import {buildTransaction} from '../helpers/signing';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectPublicKey } from '../redux/authSlice';
 
 import axios from 'axios';
 
@@ -32,6 +34,9 @@ function sleep(time){
 
 function CreateItem(){
   const classes = useStyles();
+
+  const publicKey = useSelector(selectPublicKey);
+
   const history = useHistory();
   const formik = useFormik({
     initialValues: {
@@ -47,13 +52,19 @@ function CreateItem(){
         let ID = Math.floor(Math.random() * 10000) + ""; //Should probably use another
         
         const payload = {
-          func: "intkey/1.0/put",
-          args: {id: ID, value: values.text}
+          type: 'todo',
+          id: ID,
+          
+          input: null,
+          output:{
+            value: values.text,
+            owner: publicKey
+          }
         };
 
         let transaction = await buildTransaction(payload);
                 
-        await axios.post('/api/', {transaction});
+        await axios.post('/api/', transaction);
 
         await sleep(1000);
 

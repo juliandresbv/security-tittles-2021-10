@@ -5,7 +5,7 @@ const {
   InternalError
 } = require('sawtooth-sdk/processor/exceptions');
 
-const TP_FAMILY = 'intkey';
+const TP_FAMILY = 'todos';
 const TP_VERSION = '1.0';
 
 const hash512 = (x) =>
@@ -19,27 +19,58 @@ const addressIntKey = (key) => {
 
 
 const handlers = {
-  async put([context], {id, value}){
+  async post([context], {transaction, txid}){
 
-    await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
+    // await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
+    const {type, id, input, output} = JSON.parse(transaction);
+    
+    if (!type || type !== 'todo') {
+      throw new InvalidTransaction('type is required')
+    }
 
     if (!id) {
       throw new InvalidTransaction('id is required')
     }
 
-    if (!value) {
-      throw new InvalidTransaction('value is required')
+    if(input != null){
+      throw new InvalidTransaction('input must be null')
     }
 
-    let stateValue = await context.getState(id + "");
-    if (!stateValue) {
-      stateValue = null;
-    }
+    await context.putState(txid, output);
+
+
+    // let stateValue = await context.getState(id + "");
+    // if (!stateValue) {
+    //   stateValue = null;
+    // }
   
-    stateValue = value;
+    // stateValue = value;
   
-    await context.putState(id+"", stateValue);
     // await context.deleteState(id+"");
+
+    return;
+  },
+  async put([context], {transaction, txid}){
+
+    // await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
+    const {type, input, output} = JSON.parse(transaction);
+    
+    if (!type || type !== 'todo') {
+      throw new InvalidTransaction('type is required')
+    }
+
+    if(input == null){
+      throw new InvalidTransaction('input must not be null')
+    }
+
+    let stateValue = await context.getState(input);
+
+    if(stateValue.owner !== "0x"+context.publicKey){
+      throw new InvalidTransaction('not owner of UTXO')
+    }
+
+    await context.deleteState(input);
+    await context.putState(txid, output);
 
     return;
   }

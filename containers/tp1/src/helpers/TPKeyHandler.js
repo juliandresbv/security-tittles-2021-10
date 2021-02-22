@@ -134,25 +134,12 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
       let args;
       let func;
       try{
-        const {signature, payload} = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());
-        const p_j = JSON.parse(payload);
-        const f = p_j.func.split('/');
-        args = p_j.args;
-  
-        publicKey = getPublicKey(payload, signature);
-  
-        if(f[0] !== TP_FAMILY){
-          throw new InvalidTransaction('Wrong TP_FAMILY');
-        }
-  
-        if(f[1] !== TP_VERSION){
-          throw new InvalidTransaction('Unssuported TP Version');
-        }
-  
-        if(!handlers[f[2]]){
-          throw new InvalidTransaction('Function does not exist')
-        }
-        func = f[2];
+        const payload = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());
+        func = payload.func;
+        args = payload.args;
+
+        let {transaction, txid} = args;
+        publicKey = getPublicKey(transaction, txid);  
       }
       catch(err){
         throw new InvalidTransaction('Bad transaction Format');
