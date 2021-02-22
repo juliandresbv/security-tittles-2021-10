@@ -14,7 +14,7 @@ import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
 import { useHistory } from "react-router-dom";
 import axios from 'axios';
-
+import { Box } from '@material-ui/core'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,13 +49,19 @@ function Dashboard(){
   return (
     <div>
       <Navbar />
-      <Grid container className={classes.root} spacing={2}>
+      <Grid container className={classes.root} spacing={2} justify="center">
         <Grid item xs={12}>
-          <Typography variant="h2">
-            ToDo&apos;s
-          </Typography>
+          <Box 
+            display="flex" 
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Typography variant="h2">
+              ToDo&apos;s
+            </Typography>
+          </Box>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
           <List component="nav" aria-label="main mailbox folders">
             {todos.map((e) => 
               <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
@@ -66,15 +72,20 @@ function Dashboard(){
               </ListItem>
             )}
           </List>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            startIcon={<AddIcon />}
-            onClick={()=>{history.push('/createItem')}}
+          <Box display="flex" 
+            alignItems="center"
+            justifyContent="center"
           >
-            Add
-          </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.button}
+              startIcon={<AddIcon />}
+              onClick={()=>{history.push('/createItem')}}
+            >
+              Add
+            </Button>
+          </Box>
         </Grid>
       </Grid>
 
