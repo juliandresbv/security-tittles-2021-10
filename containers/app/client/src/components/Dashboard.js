@@ -15,6 +15,7 @@ import Button from '@material-ui/core/Button';
 import { useHistory } from "react-router-dom";
 import axios from 'axios';
 import { Box } from '@material-ui/core'
+import Paper from '@material-ui/core/Paper';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -50,42 +51,48 @@ function Dashboard(){
     <div>
       <Navbar />
       <Grid container className={classes.root} spacing={2} justify="center">
-        <Grid item xs={12}>
-          <Box 
-            display="flex" 
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Typography variant="h2">
-              ToDo&apos;s
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <List component="nav" aria-label="main mailbox folders">
-            {todos.map((e) => 
-              <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
-                <ListItemIcon>
-                  <EditIcon />
-                </ListItemIcon>
-                <ListItemText primary={e.value.value} />
-              </ListItem>
-            )}
-          </List>
-          <Box display="flex" 
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              startIcon={<AddIcon />}
-              onClick={()=>{history.push('/createItem')}}
-            >
-              Add
-            </Button>
-          </Box>
+        <Grid item lg={4} md={6} xs={12}>
+          <Paper elevation={1}>
+            <Grid container spacing={1} justify="center">
+              <Grid item xs={12}>
+                <Box 
+                  display="flex" 
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Typography variant="h2">
+                    My ToDo&apos;s
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12}>
+                <List component="nav" aria-label="main mailbox folders">
+                  {todos.map((e) => 
+                    <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
+                      <ListItemIcon>
+                        <EditIcon />
+                      </ListItemIcon>
+                      <ListItemText primary={e.value.value} />
+                    </ListItem>
+                  )}
+                </List>
+                <Box display="flex" 
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    className={classes.button}
+                    startIcon={<AddIcon />}
+                    onClick={()=>{history.push('/createItem')}}
+                  >
+                    Add
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
         </Grid>
       </Grid>
 
