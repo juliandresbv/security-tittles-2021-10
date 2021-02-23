@@ -16,6 +16,10 @@ import { useHistory } from "react-router-dom";
 import axios from 'axios';
 import { Box } from '@material-ui/core'
 import Paper from '@material-ui/core/Paper';
+import _ from 'underscore';
+import PropTypes from 'prop-types';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectPublicKey } from '../redux/authSlice';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -36,10 +40,15 @@ function Dashboard(){
 
   let [todos, setTodos] = useState([]);
 
+
   useEffect(()=>{
     axios.get('/api/')
-      .then((res) => {
-        setTodos(res.data)
+      .then((res) => {        
+        let t = _.groupBy(res.data, (e)=>{
+          return e.value.owner;
+        })
+        setTodos(t);
+
       })
   }, []);
 
@@ -51,49 +60,22 @@ function Dashboard(){
     <div>
       <Navbar />
       <Grid container className={classes.root} spacing={2} justify="center">
-        <Grid item lg={4} md={6} xs={12}>
-          <Paper elevation={1}>
-            <Grid container spacing={1} justify="center">
-              <Grid item xs={12}>
-                <Box 
-                  display="flex" 
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Typography variant="h2">
-                    My ToDo&apos;s
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <List component="nav" aria-label="main mailbox folders">
-                  {todos.map((e) => 
-                    <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
-                      <ListItemIcon>
-                        <EditIcon />
-                      </ListItemIcon>
-                      <ListItemText primary={e.value.value} />
-                    </ListItem>
-                  )}
-                </List>
-                <Box display="flex" 
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    className={classes.button}
-                    startIcon={<AddIcon />}
-                    onClick={()=>{history.push('/createItem')}}
-                  >
-                    Add
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
+        {_.chain(todos)
+          .keys()
+          .map((k) => {
+            // return (
+            //   <div key={k}>
+            //     {k}
+            //   </div>
+            // );
+            return (
+              <AccountTodos owner={k} key={k}>
+
+              </AccountTodos>
+            )
+          })
+          .value()
+        }
       </Grid>
 
       <Fab color="primary" aria-label="add" className={classes.fab} onClick={()=>{history.push('/createItem')}}>
@@ -103,6 +85,69 @@ function Dashboard(){
       
     </div>
   );
+}
+
+
+function AccountTodos(props){
+
+  const publicKey = useSelector(selectPublicKey);
+
+
+  return (
+    <Grid item lg={4} md={6} xs={12} key={props.owner}>
+      <Paper elevation={1}>
+        <Grid container spacing={1} justify="center">
+          <Grid item xs={12}>
+            <Box 
+              display="flex" 
+              alignItems="center"
+              justifyContent="center"
+            >
+              {(publicKey == props.owner)?
+                <Typography noWrap variant="h4">
+                  My ToDo&apos;s
+                </Typography>
+                :
+                <Typography noWrap variant="h4">
+                  {props.owner}
+                </Typography>
+              }
+            </Box>
+          </Grid>
+          <Grid item xs={12}>
+            {/* <List component="nav" aria-label="main mailbox folders">
+              {todos.map((e) => 
+                <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
+                  <ListItemIcon>
+                    <EditIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={e.value.value} />
+                </ListItem>
+              )}
+            </List> */}
+            <Box display="flex" 
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Button
+                variant="contained"
+                color="primary"
+                // className={classes.button}
+                // startIcon={<AddIcon />}
+                // onClick={()=>{history.push('/createItem')}}
+              >
+                Add
+              </Button>
+            </Box>
+          </Grid>
+        </Grid>
+      </Paper>
+    </Grid>
+  );
+}
+
+AccountTodos.propTypes = {
+  owner: PropTypes.string
 }
 
 export default Dashboard;
