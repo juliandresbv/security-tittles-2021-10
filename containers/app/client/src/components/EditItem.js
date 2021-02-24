@@ -105,12 +105,17 @@ function CreateItem(){
       <Navbar />
       <form noValidate autoComplete="off" onSubmit={formik.handleSubmit}>
         <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center">
-          <Grid item>
-            <Typography variant="body1">
-              Id: {id} {(elemQueried && !elem)? ', Not found': ''}
+          <Grid item xs={12} md={4} style={{width:"100%", display: 'flex', flexDirection: 'column', alignItems: "center"}} >
+            <Typography noWrap variant="h4">
+              ToDo
             </Typography>
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} md={4} style={{width:"100%"}}>
+            <Typography variant="body1" noWrap>
+              {id} {(elemQueried && !elem)? ', Not found': ''}
+            </Typography>
+          </Grid>
+          <Grid item xs={12} md={4} style={{width:"100%"}}>
             <TextField 
               id="text" 
               label="Text" 
@@ -121,10 +126,11 @@ function CreateItem(){
               // disabled={formik.isSubmitting || !elem}
               disabled={true}
               autoFocus
+              fullWidth
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item xs={12} md={4} style={{width:"100%"}}>
             <TextField 
               id="owner" 
               label="owner" 
@@ -134,6 +140,7 @@ function CreateItem(){
               helperText={formik.touched.owner && formik.errors.owner}
               disabled={formik.isSubmitting || !elem}
               autoFocus
+              fullWidth
             />
           </Grid>
 

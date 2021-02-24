@@ -86,9 +86,10 @@ function CreateItem(){
   return (
     <React.Fragment>
       <Navbar />
-      <form noValidate autoComplete="off" onSubmit={formik.handleSubmit}>
-        <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center">
-          <Grid item xs={12}>
+
+      <form noValidate autoComplete="off" onSubmit={formik.handleSubmit} >
+        <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center" >         
+          <Grid item xs={4} style={{width:"100%"}}>
             <TextField 
               id="text" 
               label="Text" 
@@ -98,6 +99,7 @@ function CreateItem(){
               helperText={formik.touched.text && formik.errors.text}
               disabled={formik.isSubmitting}
               autoFocus
+              fullWidth
             />
           </Grid>
 
