@@ -198,6 +198,7 @@ module.exports.sendTransactionWithAwait = async function (
   
       try{
         let batchStatus;
+        let batchData;
         let retries = 0;
         while(batchStatus !== "COMMITTED" && retries < 20){
           if(finished){
@@ -216,6 +217,7 @@ module.exports.sendTransactionWithAwait = async function (
             value.data.data && 
             value.data.data[0])
           {
+            batchData = value.data;
             batchStatus = value.data.data[0].status;
             if(batchStatus === 'INVALID'){
               break;
@@ -226,7 +228,9 @@ module.exports.sendTransactionWithAwait = async function (
         //https://sawtooth.hyperledger.org/docs/core/nightly/1-1/rest_api/endpoint_specs.html
         if(batchStatus !== "COMMITTED"){
           if(batchStatus === 'INVALID'){
-            return respond(new Error('Invalid transaction'));
+            let e = new Error('Invalid transaction');
+            e.data = batchData;
+            return respond(e);
           }
           else if(batchStatus === 'PENDING'){
             let err = new Error('PENDING transaction');

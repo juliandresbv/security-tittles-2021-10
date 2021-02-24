@@ -173,8 +173,13 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
           await handlers[func](contexts, args);
         } 
         catch(e){
-          //Catch InternalError and don't make the TP unavailable
-          console.log(e);
+          if(e instanceof InternalError){
+            //Catch InternalError and don't make the TP unavailable
+            console.log(e);
+          }
+          else{
+            throw e;
+          }
         }
       }
       else{

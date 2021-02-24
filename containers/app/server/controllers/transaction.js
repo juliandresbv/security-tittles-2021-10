@@ -1,7 +1,7 @@
 var _ = require('underscore');
 const { ethers } = require("ethers");
 const secp256k1 = require('secp256k1');
-const { sendTransaction, getAddress } = require('../sawtooth/sawtooth-helpers')
+const { sendTransaction, getAddress, sendTransactionWithAwait } = require('../sawtooth/sawtooth-helpers')
 
 module.exports.authTransactionMiddleware = async function(req, res, next){
   const {transaction, txid} = req.body;
@@ -68,17 +68,38 @@ module.exports.putTransaction = async function(req, res) {
   const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
   
   try{
-    await sendTransaction(
+    // let a  = await sendTransaction(
+    //   transactionFamily, 
+    //   transactionFamilyVersion,
+    //   [input, address],
+    //   [input, address],
+    //   payload);
+    
+    await sendTransactionWithAwait(
       transactionFamily, 
       transactionFamilyVersion,
       [input, address],
       [input, address],
       payload);
-    
     return res.json({msg:'ok'});
+
   }
   catch(err){
-    console.log(err.data);
-    return res.status(500).json({err});
+    let errMsg;
+    if(err.data){
+      errMsg = err.data;
+      if(err.message == 'Invalid transaction'){
+        errMsg = "Invalid Transaction: " + err.data.data[0].invalid_transactions[0].message;
+      }
+      else {
+        errMsg = err;
+      }
+    }
+    else{
+      errMsg = err;
+    }
+    return res.status(500).json({msg: errMsg});
+
+
   }
 };
