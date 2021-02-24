@@ -77,8 +77,6 @@ function CreateItem(){
           }
         };
  
-        console.log(payload.output)
-
         let transaction = await buildTransaction(payload);
                 
         await axios.put('/api/', transaction);

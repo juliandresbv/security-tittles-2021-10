@@ -18,7 +18,7 @@ import { Box } from '@material-ui/core'
 import Paper from '@material-ui/core/Paper';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { selectPublicKey } from '../redux/authSlice';
 
 const useStyles = makeStyles((theme) => ({
@@ -51,7 +51,7 @@ function Dashboard(){
           return e.value.owner;
         })
 
-        setMyToDos(t[publicKey]);
+        setMyToDos(t[publicKey] || []);
         setToDos(_.omit(t, publicKey));
       })
   }, []);
@@ -64,17 +64,16 @@ function Dashboard(){
     <div>
       <Navbar />
       <Grid container className={classes.root} spacing={2} justify="center">
-        {myToDos[0] &&
-          <AccountTodos 
-            toDos={myToDos} 
-            key={myToDos[0].value.owner} 
-            handleItemClick={handleItemClick} />
-        }
+        <AccountTodos 
+          toDos={myToDos} 
+          key={publicKey} 
+          owner={publicKey}
+          handleItemClick={handleItemClick} />
         {_.chain(toDos)
           .keys()
           .map((k) => {
             return (
-              <AccountTodos toDos={toDos[k]} key={k} handleItemClick={handleItemClick}/>
+              <AccountTodos toDos={toDos[k]} owner={toDos[k][0].value.owner} key={k} handleItemClick={handleItemClick}/>
             )
           })
           .value()
@@ -102,8 +101,6 @@ function AccountTodos(props){
     history.push('/editItem/'+ e.key);
   }
 
-  const owner = props.toDos[0].value.owner;
-
   return (
     <Grid item lg={4} md={6} xs={12}>
       <Paper elevation={1}>
@@ -114,7 +111,7 @@ function AccountTodos(props){
               alignItems="center"
               justifyContent="center"
             >
-              {(publicKey == owner)?
+              {(publicKey == props.owner)?
                 (
                   <Typography noWrap variant="h4">
                     My ToDo&apos;s
@@ -134,7 +131,7 @@ function AccountTodos(props){
               justifyContent="center"
             >
               <Typography noWrap variant="subtitle1">
-                {owner}
+                {props.owner}
               </Typography>
             </Box>
           </Grid>
@@ -160,7 +157,7 @@ function AccountTodos(props){
                 className={classes.button}
                 startIcon={<AddIcon />}
                 onClick={()=>{history.push('/createItem')}}
-                disabled={publicKey !== owner}
+                disabled={publicKey !== props.owner}
               >
                 Add
               </Button>
@@ -174,6 +171,7 @@ function AccountTodos(props){
 
 AccountTodos.propTypes = {
   toDos: PropTypes.object,
+  owner: PropTypes.string,
   handleItemClick: PropTypes.func
 }
 
