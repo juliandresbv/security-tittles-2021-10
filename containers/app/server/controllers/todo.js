@@ -1,10 +1,10 @@
 var _ = require('underscore');
 const protobuf = require('sawtooth-sdk/protobuf');
+const { sendTransaction, 
+  getAddress, 
+  sendTransactionWithAwait, 
+  queryState } = require('../sawtooth/sawtooth-helpers')
 
-const {
-  sendTransactionWithAwait,
-  queryState, 
-} = require('../sawtooth/sawtooth-helpers');
 const TRANSACTION_FAMILY = 'todos';
 const TRANSACTION_FAMILY_VERSION = '1.0';
 
@@ -16,11 +16,6 @@ const hash512 = (x) =>
 
 const hash256 = (x) =>
   crypto.createHash('sha256').update(x).digest('hex');
-
-const getAddress = (transactionFamily, varName) => {
-  const INT_KEY_NAMESPACE = hash512(transactionFamily).substring(0, 6)
-  return INT_KEY_NAMESPACE + hash512(varName).slice(-64)
-}
 
 function buildAddress(transactionFamily){
   return (key) => {
@@ -68,5 +63,75 @@ module.exports.getToDo = async function(req, res) {
   }
 }
 
+
+module.exports.postToDo = async function(req, res) {
+  const {transaction, txid} = req.body;
+  const transactionFamily = 'todos';
+  const transactionFamilyVersion = '1.0';
+  const address = getAddress(transactionFamily, txid);
+
+  const payload = JSON.stringify({func: 'post', args:{transaction, txid}});
+  
+  try{
+    await sendTransaction(
+      transactionFamily, 
+      transactionFamilyVersion,
+      [address],
+      [address],
+      payload);
+    
+    return res.json({msg:'ok'});
+  }
+  catch(err){
+    console.log(err.data);
+    return res.status(500).json({err});
+  }
+};
+
+module.exports.putToDo = async function(req, res) {
+  const {transaction, txid} = req.body;
+  const transactionFamily = 'todos';
+  const transactionFamilyVersion = '1.0';
+
+  const input = getAddress(transactionFamily, JSON.parse(transaction).input);
+  const address = getAddress(transactionFamily, txid);
+
+  const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
+  
+  try{
+    // let a  = await sendTransaction(
+    //   transactionFamily, 
+    //   transactionFamilyVersion,
+    //   [input, address],
+    //   [input, address],
+    //   payload);
+    
+    await sendTransactionWithAwait(
+      transactionFamily, 
+      transactionFamilyVersion,
+      [input, address],
+      [input, address],
+      payload);
+    return res.json({msg:'ok'});
+
+  }
+  catch(err){
+    let errMsg;
+    if(err.data){
+      errMsg = err.data;
+      if(err.message == 'Invalid transaction'){
+        errMsg = "Invalid Transaction: " + err.data.data[0].invalid_transactions[0].message;
+      }
+      else {
+        errMsg = err;
+      }
+    }
+    else{
+      errMsg = err;
+    }
+    console.log(err);
+    return res.status(500).json({msg: errMsg});
+  }
+};
 
 
