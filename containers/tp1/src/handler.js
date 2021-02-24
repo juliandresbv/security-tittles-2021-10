@@ -1,8 +1,7 @@
 const crypto = require('crypto')
 
 const {
-  InvalidTransaction,
-  InternalError
+  InvalidTransaction
 } = require('sawtooth-sdk/processor/exceptions');
 
 const TP_FAMILY = 'todos';
@@ -25,7 +24,7 @@ const handlers = {
     const {type, id, input, output} = JSON.parse(transaction);
     
     if (!type || type !== 'todo') {
-      throw new InvalidTransaction('type is required')
+      throw new InvalidTransaction('type must be "todo"')
     }
 
     if (!id) {
@@ -38,25 +37,14 @@ const handlers = {
 
     await context.putState(txid, output);
 
-
-    // let stateValue = await context.getState(id + "");
-    // if (!stateValue) {
-    //   stateValue = null;
-    // }
-  
-    // stateValue = value;
-  
-    // await context.deleteState(id+"");
-
     return;
   },
   async put([context], {transaction, txid}){
 
-    // await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
     const {type, input, output} = JSON.parse(transaction);
     
     if (!type || type !== 'todo') {
-      throw new InvalidTransaction('type is required')
+      throw new InvalidTransaction('type must be "todo"')
     }
 
     if(input == null){
