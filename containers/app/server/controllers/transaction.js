@@ -98,6 +98,7 @@ module.exports.putTransaction = async function(req, res) {
     else{
       errMsg = err;
     }
+    console.log(err);
     return res.status(500).json({msg: errMsg});
 
 

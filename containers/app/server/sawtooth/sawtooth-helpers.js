@@ -249,20 +249,22 @@ module.exports.sendTransactionWithAwait = async function (
       catch(e){
         return respond(e);
       }
+
+      return respond(null, "ok")
+
+      // // Should you query the state (which one)??
+      // if(finished){
+      //   return;
+      // }
   
-  
-      if(finished){
-        return;
-      }
-  
-      try{
-        
-        let value = await module.exports.queryState(inputs[0], axiosSource.token);
-        return respond(null, value);
-      }
-      catch(e){
-        return respond(e);
-      }
+      // try{
+      //   let value = await module.exports.queryState(inputs[0], axiosSource.token);
+      //   return respond(null, value);
+      // }
+      // catch(e){
+      //   return respond(e);
+      // }
+
     })();
   });
 }
