@@ -38,7 +38,10 @@ function Dashboard(){
   const classes = useStyles();
   const history = useHistory();
 
-  let [todos, setTodos] = useState([]);
+  const publicKey = useSelector(selectPublicKey);
+
+  let [myToDos, setMyToDos] = useState([]);
+  let [toDos, setToDos] = useState([]);
 
 
   useEffect(()=>{
@@ -47,8 +50,9 @@ function Dashboard(){
         let t = _.groupBy(res.data, (e)=>{
           return e.value.owner;
         })
-        setTodos(t);
 
+        setMyToDos(t[publicKey]);
+        setToDos(_.omit(t, publicKey));
       })
   }, []);
 
@@ -60,18 +64,17 @@ function Dashboard(){
     <div>
       <Navbar />
       <Grid container className={classes.root} spacing={2} justify="center">
-        {_.chain(todos)
+        {myToDos[0] &&
+          <AccountTodos 
+            toDos={myToDos} 
+            key={myToDos[0].value.owner} 
+            handleItemClick={handleItemClick} />
+        }
+        {_.chain(toDos)
           .keys()
           .map((k) => {
-            // return (
-            //   <div key={k}>
-            //     {k}
-            //   </div>
-            // );
             return (
-              <AccountTodos owner={k} key={k}>
-
-              </AccountTodos>
+              <AccountTodos toDos={toDos[k]} key={k} handleItemClick={handleItemClick}/>
             )
           })
           .value()
@@ -92,9 +95,17 @@ function AccountTodos(props){
 
   const publicKey = useSelector(selectPublicKey);
 
+  const classes = useStyles();
+  const history = useHistory();
+
+  function handleItemClick(e){
+    history.push('/editItem/'+ e.key);
+  }
+
+  const owner = props.toDos[0].value.owner;
 
   return (
-    <Grid item lg={4} md={6} xs={12} key={props.owner}>
+    <Grid item lg={4} md={6} xs={12}>
       <Paper elevation={1}>
         <Grid container spacing={1} justify="center">
           <Grid item xs={12}>
@@ -103,20 +114,34 @@ function AccountTodos(props){
               alignItems="center"
               justifyContent="center"
             >
-              {(publicKey == props.owner)?
-                <Typography noWrap variant="h4">
-                  My ToDo&apos;s
-                </Typography>
+              {(publicKey == owner)?
+                (
+                  <Typography noWrap variant="h4">
+                    My ToDo&apos;s
+                  </Typography>
+                )
                 :
                 <Typography noWrap variant="h4">
-                  {props.owner}
+                  Other Account
                 </Typography>
               }
             </Box>
           </Grid>
           <Grid item xs={12}>
-            {/* <List component="nav" aria-label="main mailbox folders">
-              {todos.map((e) => 
+            <Box 
+              display="flex" 
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Typography noWrap variant="subtitle1">
+                {owner}
+              </Typography>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12}>
+            <List component="nav" aria-label="main mailbox folders">
+              {props.toDos.map((e) => 
                 <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
                   <ListItemIcon>
                     <EditIcon />
@@ -124,7 +149,7 @@ function AccountTodos(props){
                   <ListItemText primary={e.value.value} />
                 </ListItem>
               )}
-            </List> */}
+            </List>
             <Box display="flex" 
               alignItems="center"
               justifyContent="center"
@@ -132,9 +157,10 @@ function AccountTodos(props){
               <Button
                 variant="contained"
                 color="primary"
-                // className={classes.button}
-                // startIcon={<AddIcon />}
-                // onClick={()=>{history.push('/createItem')}}
+                className={classes.button}
+                startIcon={<AddIcon />}
+                onClick={()=>{history.push('/createItem')}}
+                disabled={publicKey !== owner}
               >
                 Add
               </Button>
@@ -147,7 +173,8 @@ function AccountTodos(props){
 }
 
 AccountTodos.propTypes = {
-  owner: PropTypes.string
+  toDos: PropTypes.object,
+  handleItemClick: PropTypes.func
 }
 
 export default Dashboard;
