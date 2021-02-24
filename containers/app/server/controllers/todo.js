@@ -83,7 +83,6 @@ module.exports.postToDo = async function(req, res) {
     return res.json({msg:'ok'});
   }
   catch(err){
-    console.log(err.data);
     return res.status(500).json({err});
   }
 };
@@ -99,13 +98,6 @@ module.exports.putToDo = async function(req, res) {
   const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
   
   try{
-    // let a  = await sendTransaction(
-    //   transactionFamily, 
-    //   transactionFamilyVersion,
-    //   [input, address],
-    //   [input, address],
-    //   payload);
-    
     await sendTransactionWithAwait(
       transactionFamily, 
       transactionFamilyVersion,
@@ -129,7 +121,6 @@ module.exports.putToDo = async function(req, res) {
     else{
       errMsg = err;
     }
-    console.log(err);
     return res.status(500).json({msg: errMsg});
   }
 };

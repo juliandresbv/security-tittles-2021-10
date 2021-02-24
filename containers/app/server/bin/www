@@ -60,7 +60,7 @@ process.once('SIGUSR2', function(){
     return;
   })
     .then(() => {
-      console.log('hey>>>>');
+      console.log('kill');
       process.kill(process.pid, 'SIGUSR2');
     });
 });
