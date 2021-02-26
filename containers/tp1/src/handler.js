@@ -53,7 +53,7 @@ const handlers = {
 
     let stateValue = await context.getState(input);
 
-    if(stateValue.owner !== "0x"+context.publicKey){
+    if(stateValue.owner !== context.publicKey){
       throw new InvalidTransaction('not owner of UTXO')
     }
 

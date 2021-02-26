@@ -19,8 +19,7 @@ export async function getPublicKey() {
 
   const hashEthers = ethers.utils.hashMessage(payload);
   const recoveredPubKeyUncompressed = ethers.utils.recoverPublicKey(hashEthers, signature);
-  const publicKey = ethers.utils.computePublicKey(recoveredPubKeyUncompressed, true);
-
+  const publicKey = ethers.utils.computePublicKey(recoveredPubKeyUncompressed, true).slice(2);
   return publicKey;
 }
 

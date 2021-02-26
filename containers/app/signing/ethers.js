@@ -1,6 +1,5 @@
 const { ethers } = require("ethers");
 const secp256k1 = require('secp256k1')
-const { randomBytes } = require('crypto')
 
 const CryptoJS = require('crypto-js')
 
@@ -47,10 +46,10 @@ async function main(){
   console.log('hashEthers == hashSecp256?')
   console.log(hashEthers == hashSecp256)
 
-  sinatureSecp = secp256k1.ecdsaSign(
+  let sinatureSecp = secp256k1.ecdsaSign(
     Uint8Array.from(Buffer.from(hashSecp256.substr(2), 'hex')),
     privKey
-    );
+  );
 
   console.log('signatureEthers == sinatureSecp?')
   console.log(signatureEthers.slice(2, -2) == Buffer.from(sinatureSecp.signature).toString('hex'))
