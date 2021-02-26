@@ -15,6 +15,7 @@ const TP_NAMESPACE = hash512(TP_FAMILY).substring(0, 6)
 const addressIntKey = (key) => {
   return TP_NAMESPACE + hash512(key).slice(-64)
 }
+addressIntKey.keysCanCollide = true;
 
 
 const handlers = {
@@ -67,4 +68,4 @@ const handlers = {
   }
 };
 
-module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses:[addressIntKey], keysCanCollide: true};
+module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses:[addressIntKey]};

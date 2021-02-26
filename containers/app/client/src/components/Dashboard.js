@@ -170,7 +170,7 @@ function AccountTodos(props){
 }
 
 AccountTodos.propTypes = {
-  toDos: PropTypes.object,
+  toDos: PropTypes.array,
   owner: PropTypes.string,
   handleItemClick: PropTypes.func
 }
