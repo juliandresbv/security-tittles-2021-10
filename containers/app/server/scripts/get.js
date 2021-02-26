@@ -29,7 +29,7 @@ const INT_KEY_NAMESPACE = hash512(TRANSACTION_FAMILY).substring(0, 6);
       return base;
     })
     .flatten()
-    .map(d => d.value)
+    // .map(d => d.value)
     .value();
 
   console.log(allTodos);
