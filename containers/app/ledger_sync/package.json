@@ -4,15 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon ./index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.21.1",
     "dotenv": "^8.2.0",
     "sawtooth-sdk": "^1.0.5",
-    "underscore": "^1.12.0",
     "secp256k1": "^4.0.2",
-    "axios": "^0.21.1"
+    "underscore": "^1.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
   }
 }

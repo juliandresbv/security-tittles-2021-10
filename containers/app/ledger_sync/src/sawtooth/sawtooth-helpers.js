@@ -304,69 +304,57 @@ console.log('connecting to ', VALIDATOR_HOST);
 const stream = new Stream(VALIDATOR_HOST);
 
 
-module.exports.subscribeToSawtoothEvents = () =>{
+module.exports.subscribeToSawtoothEvents = (handlers) =>{
   return new Promise((resolve)=>{
     stream.connect(()=>{
-      stream.onReceive(handleEvent);
-      subscribe().then(resolve);
+      stream.onReceive(handleEvent(handlers));
+      subscribe(handlers).then(resolve);
       console.log('Connected');
     });
   })
 }
 
-const handleEvent = msg => {
-  // const mmm = EventList.decode(msg.content).events
-  // console.log('events', mmm);
+const handleEvent = handlers => msg => {
   if (msg.messageType === Message.MessageType.CLIENT_EVENTS) {
     const events = EventList.decode(msg.content).events;
-    // console.log(events)
     _.forEach(events, e => {
-      if(e.eventType == 'myevent'){
-        // console.log(e)
-        // console.log('EVENT - data:', Buffer.from(e.data, 'utf8').toString('utf8'))
-      }
-      else if(e.eventType === 'sawtooth/block-commit'){
-        // console.log(e);
-      }
-      else if(e.eventType === 'sawtooth/state-delta'){
-        // let a = protobuf.StateChangeList.decode(e.data);
-        // console.log(a.stateChanges[0].value.toString('utf8'));
-
+      if(handlers[e.eventType]){
+        handlers[e.eventType](e);
       }
     })
-    // deltas.handle(getBlock(events), getChanges(events))
   } else {
     console.warn('Received message of unknown type:', msg.messageType)
   }
 }
 
 
-const subscribe = () => {
-  const blockSub = EventSubscription.create({
-    eventType: 'sawtooth/block-commit'
-  })
-  const deltaSub = EventSubscription.create({
-    eventType: 'sawtooth/state-delta',
-    filters: [EventFilter.create({
-      key: 'address',
-      matchString: `^${PREFIX}.*`,
-      filterType: EventFilter.FilterType.REGEX_ANY
-    })]
-  })
+const subscribe = (handlers) => {
 
-  const mySub = EventSubscription.create({
-    eventType: 'myevent'
-  })
+  const subscriptions = _.chain(handlers)
+    .keys()
+    .map(k => {
+      if(k === 'sawtooth/state-delta'){
+        return EventSubscription.create({
+          eventType: 'sawtooth/state-delta',
+          filters: [EventFilter.create({
+            key: 'address',
+            matchString: `^${PREFIX}.*`,
+            filterType: EventFilter.FilterType.REGEX_ANY
+          })]
+        });
+      }
+
+      return EventSubscription.create({
+        eventType: k
+      });
+    })
+    .value();
 
   return stream.send(
     Message.MessageType.CLIENT_EVENTS_SUBSCRIBE_REQUEST,
     ClientEventsSubscribeRequest.encode({
       lastKnownBlockIds: [NULL_BLOCK_ID],
-      subscriptions: [
-        blockSub, 
-        deltaSub, 
-        mySub
-      ]
+      subscriptions: subscriptions
     }).finish()
   )
     .then(response => ClientEventsSubscribeResponse.decode(response))
