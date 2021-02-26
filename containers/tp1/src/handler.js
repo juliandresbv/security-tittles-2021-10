@@ -53,6 +53,9 @@ const handlers = {
 
     let stateValue = await context.getState(input);
 
+    if(!stateValue){
+      throw new InvalidTransaction('UTXO does not exist')
+    }
     if(stateValue.owner !== context.publicKey){
       throw new InvalidTransaction('not owner of UTXO')
     }
