@@ -67,4 +67,4 @@ const handlers = {
   }
 };
 
-module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses:[addressIntKey]};
+module.exports = {TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses:[addressIntKey], keysCanCollide: true};

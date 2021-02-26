@@ -121,7 +121,27 @@ function getPublicKey(payload, signature){
   return Buffer.from(pubKey).toString('hex');
 }
 
-module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses}){
+module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addresses, keysCanCollide}){
+  let _getState, _putState, _deleteState;
+  if(keysCanCollide){
+    _getState = getState;
+    _putState = putState;
+    _deleteState = deleteState;
+  }
+  else{
+    _getState = async (context, address, key, timeout) => {
+      let state = await getRawState(context, address(key), timeout);
+      if(!state){
+        return;
+      }
+      console.log('state: ', state)
+      return JSON.parse(Buffer.from(state).toString('utf8'));
+    }
+    _putState = (context, address, key, value, timeout) => context.setState({
+      [address(key)]: Buffer.from(JSON.stringify(value), 'utf8')
+    }, timeout);
+    _deleteState = (context, address, key, timeout) => context.deleteState([address(key)], timeout);
+  }
 
   class TPHandler extends TransactionHandler {
     constructor () {
@@ -148,13 +168,13 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
       const contexts = _.map(addresses, (address) => {
         return {
           getState: function(key, timeout){
-            return getState(context, address, key, timeout);
+            return _getState(context, address, key, timeout);
           },
           putState: function(key, value, timeout){
-            return putState(context, address, key, value, timeout);
+            return _putState(context, address, key, value, timeout);
           },
           deleteState: function(key, timeout){
-            return deleteState(context, address, key, timeout);
+            return _deleteState(context, address, key, timeout);
           },
           addEvent: function(){
             return context.addEvent.apply(context, [...arguments])

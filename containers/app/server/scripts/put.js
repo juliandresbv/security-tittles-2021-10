@@ -44,7 +44,7 @@ if(process.argv[3]){
 }
 else{
   console.log('Use:');
-  console.log('node ./scripts/post.js 1 0xhashoftransaction');
+  console.log('node ./scripts/put.js 1 0xhashoftransaction');
   return;
 }
 
@@ -71,6 +71,7 @@ const publicKey2 = Buffer.from(pubKey2).toString('hex');
 
   let transaction = JSON.stringify(payload);
   const txid = await wallet1.signMessage(transaction)
+  console.log('txid:', txid)
 
   const input = getAddress(TRANSACTION_FAMILY, JSON.parse(transaction).input);
   const address = getAddress(TRANSACTION_FAMILY, txid);
