@@ -15,17 +15,15 @@ const {
 let blocks = [];
 let state = {};
 
-function manageFork(){
+// const NULL_BLOCK_ID = '0000000000000000';
+const NULL_BLOCK_ID = 'b1f997190939a985f841d5452bd2f06dae884b194a5641c13e77953f4546480d1e7cd3baaea2f522d109ac4fe56dacee64b07bb05fe2ff462852aed17f2d7df3';
 
-}
-
-function parseEvent(e){
-  return {
-    ...e, value: e.value.toString('utf-8')
-  }
-}
+let lastBlock = NULL_BLOCK_ID;
 
 function blockCommitHandler(block, events){
+  console.log(block);
+
+  // console.log(block);
 
   //https://github.com/hyperledger-archives/sawtooth-supply-chain/blob/master/ledger_sync/db/blocks.js
   // If the blockNum did not already exist, or had the same id
@@ -36,24 +34,14 @@ function blockCommitHandler(block, events){
     //No fork
     if(!blockByNum){
       blocks.push(block);
+      lastBlock = block.block_id;
     }
     
-    //Add events
-    _.forEach(events, (e) => {      
-      let prev = state[e.address];
-      if(!prev){
-        state[e.address] = []
-      }
-      state[e.address].push({
-        address: e.address,
-        block_num: block.block_num,
-        value: e.value.toString('utf-8'),
-        type: e.type
-      });
-    })
   }
   else{
-    // Fork, fix it
+    // Fork
+    
+    //Remove bad blocks
     blocks = _.filter(blocks, (b) => {
       b.block_num < block.block_num
     });
@@ -63,9 +51,26 @@ function blockCommitHandler(block, events){
         e.block_num < block.block_num
       });
     });
+
+    //Add events
+    blocks.push(block);
+    lastBlock = block.block_id;
   }
 
-  console.log(state);
+  // console.log(state);
+  //Add events
+  _.forEach(events, (e) => {      
+    let prev = state[e.address];
+    if(!prev){
+      state[e.address] = []
+    }
+    state[e.address].push({
+      address: e.address,
+      block_num: block.block_num,
+      value: e.value.toString('utf-8'),
+      type: e.type
+    });
+  });
 
 }
 
@@ -94,7 +99,7 @@ const handlers = [
   // }
 ]
 
-subscribeToSawtoothEvents(handlers)
+subscribeToSawtoothEvents(handlers, lastBlock)
 
 
 

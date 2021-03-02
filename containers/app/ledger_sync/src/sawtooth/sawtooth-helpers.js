@@ -305,11 +305,11 @@ console.log('connecting to ', VALIDATOR_HOST);
 const stream = new Stream(VALIDATOR_HOST);
 
 
-module.exports.subscribeToSawtoothEvents = (handlers) =>{
+module.exports.subscribeToSawtoothEvents = (handlers, lastKnownBlocks) =>{
   return new Promise((resolve)=>{
     stream.connect(()=>{
       stream.onReceive(handleEvent(handlers));
-      subscribe(handlers).then(resolve);
+      subscribe(handlers, lastKnownBlocks).then(resolve);
       console.log('Connected');
     });
   })
@@ -394,7 +394,7 @@ const handleEvent = handlers => msg => {
 }
 
 
-const subscribe = (handlers) => {
+const subscribe = (handlers, lastKnownBlocks) => {
 
   const subscriptions = _.chain(handlers)
     .map(h => {
@@ -408,7 +408,7 @@ const subscribe = (handlers) => {
   return stream.send(
     Message.MessageType.CLIENT_EVENTS_SUBSCRIBE_REQUEST,
     ClientEventsSubscribeRequest.encode({
-      lastKnownBlockIds: [NULL_BLOCK_ID],
+      lastKnownBlockIds: [lastKnownBlocks],
       subscriptions: subscriptions
     }).finish()
   )
