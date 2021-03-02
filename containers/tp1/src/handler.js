@@ -21,22 +21,27 @@ addressIntKey.keysCanCollide = true;
 const handlers = {
   async post([context], {transaction, txid}){
 
-    // await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
-    const {type, id, input, output} = JSON.parse(transaction);
+    await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
+    await context.addEvent("myevent", [['name', 'handlerCalled']], Buffer.from("event", "utf8"));
+
+    // const {type, id, input, output} = JSON.parse(transaction);
     
-    if (!type || type !== 'todo') {
-      throw new InvalidTransaction('type must be "todo"')
-    }
+    // if (!type || type !== 'todo') {
+    //   throw new InvalidTransaction('type must be "todo"')
+    // }
 
-    if (!id) {
-      throw new InvalidTransaction('id is required')
-    }
+    // if (!id) {
+    //   throw new InvalidTransaction('id is required')
+    // }
 
-    if(input != null){
-      throw new InvalidTransaction('input must be null')
-    }
+    // if(input != null){
+    //   throw new InvalidTransaction('input must be null')
+    // }
 
-    await context.putState(txid, output);
+    // await context.putState(txid, output);
+    await context.putState("1", "hello1");
+    // await context.deleteState("1");
+
 
     return;
   },

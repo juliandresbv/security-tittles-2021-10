@@ -76,8 +76,8 @@ const publicKey = Buffer.from(pubKey).toString('hex');
     await sendTransaction(
       TRANSACTION_FAMILY, 
       TRANSACTION_FAMILY_VERSION,
-      [address],
-      [address],
+      [address.slice(0,4)],
+      [address.slice(0,4)],
       pl);
     
     console.log('txid:', txid);

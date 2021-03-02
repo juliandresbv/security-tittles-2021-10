@@ -289,13 +289,14 @@ const {
   EventList,
   EventSubscription,
   EventFilter,
-  // StateChangeList,
+  StateChangeList,
   ClientEventsSubscribeRequest,
-  ClientEventsSubscribeResponse
+  ClientEventsSubscribeResponse,
+  StateChange
 } = require('sawtooth-sdk/protobuf')
 
 
-const PREFIX = hash512("intkey").substring(0, 6);
+const PREFIX = hash512("todos").substring(0, 6);
 const NULL_BLOCK_ID = '0000000000000000'
 
 const VALIDATOR_HOST = process.env.VALIDATOR_HOST;
@@ -314,14 +315,79 @@ module.exports.subscribeToSawtoothEvents = (handlers) =>{
   })
 }
 
+function getBlock(events){
+  const block = _.chain(events)
+    .find(e => e.eventType === 'sawtooth/block-commit')
+    .get('attributes')
+    .map(a => [a.key, a.value])
+    .object()
+    .value()
+
+  return {
+    block_num: parseInt(block.block_num),
+    block_id: block.block_id,
+    state_root_hash: block.state_root_hash,
+    previous_block_id: block.previous_block_id
+  }
+}
+
+function getChanges(events){
+
+  return _.chain(events)
+    .filter(e => {
+      return e.eventType === 'sawtooth/state-delta'
+    })
+    .map(e => {
+      let dec = StateChangeList.decode(e.data);
+      return _.map(dec.stateChanges, s =>{
+        let type;
+        if(s.type == StateChange.Type.SET){
+          type = 'SET';
+        }
+        else if(s.type == StateChange.Type.TYPE_UNSET){
+          type = 'TYPE_UNSET';
+        }
+        else if(s.type == StateChange.Type.DELETE){
+          type = 'DELETE';
+        }
+        return {
+          address: s.address,
+          value: s.value,
+          type
+        }
+      });
+      
+    })
+    .flatten()
+    .value();
+}
+
+function getOtherEvents(events){
+  return _.chain(events)
+    .filter(e => {
+      return e.eventType !== 'sawtooth/state-delta' && e.eventType !== 'sawtooth/block-commit';
+    })
+    .map(e => {
+      return StateChangeList.decode(e.data);
+    })
+    .value();
+}
+
 const handleEvent = handlers => msg => {
   if (msg.messageType === Message.MessageType.CLIENT_EVENTS) {
     const events = EventList.decode(msg.content).events;
-    _.forEach(events, e => {
-      if(handlers[e.eventType]){
-        handlers[e.eventType](e);
+    //Aparently every eventlist with sawtooth/state-delta has a corresponding sawtooth/block-commit
+    const block = getBlock(events);
+    const changes = getChanges(events);
+    const others = getOtherEvents(events);
+
+    // console.log('---',block.blockNum, changes.length, others.length)
+    _.forEach(handlers, (h)=>{
+      if(h.eventType == 'sawtooth/block-commit'){
+        h.handle(block, changes);
       }
     })
+
   } else {
     console.warn('Received message of unknown type:', msg.messageType)
   }
@@ -331,22 +397,11 @@ const handleEvent = handlers => msg => {
 const subscribe = (handlers) => {
 
   const subscriptions = _.chain(handlers)
-    .keys()
-    .map(k => {
-      if(k === 'sawtooth/state-delta'){
-        return EventSubscription.create({
-          eventType: 'sawtooth/state-delta',
-          filters: [EventFilter.create({
-            key: 'address',
-            matchString: `^${PREFIX}.*`,
-            filterType: EventFilter.FilterType.REGEX_ANY
-          })]
-        });
-      }
-
+    .map(h => {
       return EventSubscription.create({
-        eventType: k
-      });
+        eventType: h.eventType,
+        filters: _.map(h.filters, (f) => EventFilter.create(f))
+      })
     })
     .value();
 
