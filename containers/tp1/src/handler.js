@@ -25,22 +25,22 @@ const handlers = {
 
     const {type, id, input, output} = JSON.parse(transaction);
     
-    // if (!type || type !== 'todo') {
-    //   throw new InvalidTransaction('type must be "todo"')
-    // }
+    if (!type || type !== 'todo') {
+      throw new InvalidTransaction('type must be "todo"')
+    }
 
-    // if (!id) {
-    //   throw new InvalidTransaction('id is required')
-    // }
+    if (!id) {
+      throw new InvalidTransaction('id is required')
+    }
 
-    // if(input != null){
-    //   throw new InvalidTransaction('input must be null')
-    // }
+    if(input != null){
+      throw new InvalidTransaction('input must be null')
+    }
 
-    // await context.putState(txid, output);
+    await context.putState(txid, output);
 
-    console.log(output.value);
-    await context.putState("1", output.value);
+    // console.log(output.value);
+    // await context.putState("1", output.value);
     // await context.deleteState("1");
 
 

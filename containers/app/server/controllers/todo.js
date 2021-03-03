@@ -1,7 +1,8 @@
 var _ = require('underscore');
 const crypto = require('crypto');
 const protobuf = require('sawtooth-sdk/protobuf');
-const { sendTransaction, 
+const { 
+  sendTransaction, 
   getAddress, 
   sendTransactionWithAwait, 
   queryState } = require('../sawtooth/sawtooth-helpers')
@@ -14,6 +15,7 @@ const TRANSACTION_FAMILY_VERSION = '1.0';
 const INT_KEY_NAMESPACE = hash512(TRANSACTION_FAMILY).substring(0, 6)
 
 const { default: axios } = require("axios");
+const fs = require('fs');
 
 function buildAddress(transactionFamily){
   return (key) => {
@@ -68,13 +70,13 @@ module.exports.postToDo = async function(req, res) {
   const payload = JSON.stringify({func: 'post', args:{transaction, txid}});
   
   try{
-    await sendTransaction(
-      TRANSACTION_FAMILY, 
-      TRANSACTION_FAMILY_VERSION,
-      [address],
-      [address],
-      payload);
-    
+    await sendTransaction([{
+      transactionFamily: TRANSACTION_FAMILY, 
+      transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
+      inputs: [address],
+      outputs: [address],
+      payload
+    }]);
     return res.json({msg:'ok'});
   }
   catch(err){
@@ -91,12 +93,15 @@ module.exports.putToDo = async function(req, res) {
   const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
   
   try{
-    await sendTransactionWithAwait(
-      TRANSACTION_FAMILY, 
-      TRANSACTION_FAMILY_VERSION,
-      [input, address],
-      [input, address],
-      payload);
+    await sendTransactionWithAwait([
+      {
+        transactionFamily: TRANSACTION_FAMILY, 
+        transactionFamilyVersion: TRANSACTION_FAMILY_VERSION, 
+        inputs: [input, address],
+        outputs: [input, address],
+        payload
+      }
+    ]);
     return res.json({msg:'ok'});
 
   }
@@ -119,3 +124,82 @@ module.exports.putToDo = async function(req, res) {
 };
 
 
+
+function readFile(file){
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, (err, data) =>{
+      if(err){
+        resolve(null);
+      }
+      try{
+        let p = JSON.parse(data);
+        return resolve(p);
+      }
+      catch(e){
+        resolve(null);
+      }
+    });
+  });
+}
+
+module.exports.getToDoHistory = async function(req, res) {
+  let blocks = await readFile('./data/blocks.json');
+
+
+  let transactions = _.chain(blocks)
+    .map(block => {
+      return _.chain(block.batches)
+        .map(b => {
+          return _.map(b.transactions, t => {
+            let payload;
+            try{
+              payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
+            }
+            catch(err){
+              payload = Buffer.from(t.payload, 'base64').toString('utf-8');
+            }
+            return {
+              // block_id: block.block_id,
+              block_num: block.block_num,
+              // batch_id: b.header_signature,
+              // transaction_id: t.header_signature,
+              payload: payload,
+              family_name: t.header.family_name
+            };
+          });
+        })
+        .flatten()
+        .value();
+    })
+    .flatten()
+    .filter(t => t.family_name === 'todos')
+    .value();
+
+  
+  // let transactions = _.chain(blocks)
+  //   .map(b => b.batches)
+  //   .flatten()
+  //   .map(b => {
+  //     return _.map(b.transactions, t => {
+  //       let payload;
+  //       try{
+  //         payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
+  //       }
+  //       catch(err){
+  //         payload = Buffer.from(t.payload, 'base64').toString('utf-8');
+  //       }
+  //       return {
+  //         // block_num: block.block_num,
+  //         family_name: t.header.family_name,
+  //         txid: t.header_signature,
+  //         batchid: b.header_signature,
+  //         payload
+  //       };
+  //     })
+  //   })
+  //   .flatten()
+  //   .filter(t => t.family_name === 'todos')
+  //   .value();
+
+  return res.json(transactions);
+}

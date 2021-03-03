@@ -1,3 +1,6 @@
+data/
+!data/.gitignore
+
 .vscode/
 public/
 .env

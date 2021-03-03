@@ -43,14 +43,15 @@ function CreateItem(){
   let [ elemQueried, setElemQueried ] = useState(false);
 
   useEffect(()=>{
-    axios.get('/api/'+id)
-      .then((res) => {
-        setElem(res.data);
-        setElemQueried(true);
-      })
-      .catch(()=>{
-        setElemQueried(false);
-      });
+    (async () => {
+      let res1 = await axios.get('/api/'+id);
+      let res2 = await axios.get('/api/'+id + '/history');
+
+      console.log(res2.data);
+      setElem(res1.data);
+      setElemQueried(true);
+    })();
+    
 
   }, [id]);
 

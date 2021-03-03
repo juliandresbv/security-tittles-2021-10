@@ -140,12 +140,7 @@ module.exports.sendTransaction = async function ( transactions, cancelToken /*Op
 
 const TIMEOUT = 1000*10;
 
-module.exports.sendTransactionWithAwait = async function (
-  transactionFamily, 
-  transactionFamilyVersion, 
-  inputs,
-  outputs,
-  payload){
+module.exports.sendTransactionWithAwait = async function (transactions){
   return new Promise((resolve, reject) => {
     let timeoutTimer = undefined;
     let timer1 = undefined;
@@ -191,11 +186,7 @@ module.exports.sendTransactionWithAwait = async function (
       try{
 
         let response = await module.exports.sendTransaction(
-          transactionFamily, 
-          transactionFamilyVersion , 
-          inputs,
-          outputs, 
-          payload, 
+          transactions, 
           axiosSource.token);
   
         if(!response.data || !response.data.link){

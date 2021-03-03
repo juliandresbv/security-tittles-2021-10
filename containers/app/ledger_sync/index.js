@@ -16,8 +16,8 @@ const { default: axios } = require('axios');
 const { reject } = require('underscore');
 const { resolve } = require('path');
 
-const BLOCKS_FILE = './data/blocks.json';
-const STATE_FILE = './data/state.json';
+const BLOCKS_FILE = '../server/data/blocks.json';
+const STATE_FILE = '../server/data/state.json';
 
 
 let blocks = [];
@@ -90,29 +90,8 @@ async function blockCommitHandler(block, events){
 
   });
 
-  // let transactions = _.chain(block.batches)
-  //   .map(b => {
-  //     return _.map(b.transactions, t => {
-  //       let payload;
-  //       try{
-  //         payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
-  //       }
-  //       catch(err){
-  //         payload = Buffer.from(t.payload, 'base64').toString('utf-8');
-  //       }
-  //       return {
-  //         // block_num: block.block_num,
-  //         family_name: t.header.family_name,
-  //         txid: t.header_signature,
-  //         batchid: b.header_signature,
-  //         payload
-  //       };
-  //     })
-  //   })
-  //   .flatten()
-  //   .filter(t => t.family_name === 'todos')
-  //   .value();
-  
+  await writeFile(BLOCKS_FILE, blocks);
+  await writeFile(STATE_FILE, state);
 }
 
 /*
