@@ -141,9 +141,9 @@ const handleEvent = handlers => msg => {
     })
 
   }
-  else {
-    console.warn('Received message of unknown type:', msg.messageType)
-  }
+  // else {
+  //   console.warn('Received message of unknown type:', msg.messageType)
+  // }
 }
 
 

@@ -20,7 +20,8 @@ let state = {};
 let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
 
 function blockCommitHandler(block, events){
-  console.log(block);
+  // console.log(block);
+
   //https://github.com/hyperledger-archives/sawtooth-supply-chain/blob/master/ledger_sync/db/blocks.js
   // If the blockNum did not already exist, or had the same id
   // there is no fork, return the block
@@ -65,7 +66,17 @@ function blockCommitHandler(block, events){
       value: e.value.toString('utf-8'),
       type: e.type
     });
+
+    console.log({
+      address: e.address,
+      block_num: block.block_num,
+      value: e.value.toString('utf-8'),
+      type: e.type
+    });
+
   });
+
+  // console.log(state);
 
 }
 
