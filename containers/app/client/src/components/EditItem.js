@@ -13,9 +13,12 @@ import { Typography } from '@material-ui/core';
 import {
   useParams
 } from "react-router-dom";
-
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
 import {buildTransaction} from '../helpers/signing';
-
+import _ from 'underscore';
 
 import axios from 'axios';
 
@@ -40,6 +43,8 @@ function CreateItem(){
   let { id } = useParams();
 
   let [ elem, setElem ] = useState(null);
+  let [ hist, setHist ] = useState(null);
+
   let [ elemQueried, setElemQueried ] = useState(false);
 
   useEffect(()=>{
@@ -47,8 +52,19 @@ function CreateItem(){
       let res1 = await axios.get('/api/'+id);
       let res2 = await axios.get('/api/'+id + '/history');
 
-      console.log(res2.data);
       setElem(res1.data);
+      
+
+      let h = _.map(res2.data, t => {
+        let s = JSON.parse(t.payload.args.transaction);
+        let owner = s.output.owner? s.output.owner: '';
+        return {
+          block_num: t.block_num,
+          owner: owner
+        };
+      });
+      console.log(h);
+      setHist(h);
       setElemQueried(true);
     })();
     
@@ -188,6 +204,24 @@ function CreateItem(){
           </Grid>
         </Grid>
       </form>
+      <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center">
+        
+        <Grid item xs={12} md={4} style={{width:"100%", display: 'flex', flexDirection: 'column', alignItems: "center"}} >
+          <Typography noWrap variant="h4">
+            History
+          </Typography>
+        </Grid>
+
+        <Grid item xs={4}>
+          <List component="nav" aria-label="main mailbox folders">
+            {hist && _.map(hist, (e, k) => 
+              <ListItem key={k}>
+                <ListItemText primary={'BlockNum: ' + e.block_num} secondary={'Owner: ' + e.owner}/>
+              </ListItem>
+            )}
+          </List>
+        </Grid>
+      </Grid>
     </React.Fragment>
   );
 }

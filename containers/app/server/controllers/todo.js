@@ -182,7 +182,7 @@ module.exports.getToDoHistory = async function(req, res) {
   while(current != null){
     let p = JSON.parse(current.payload.args.transaction);
     current = transactions[p.input];
-    if(r != null){
+    if(current != null){
       r.push(current);
     }
   }
