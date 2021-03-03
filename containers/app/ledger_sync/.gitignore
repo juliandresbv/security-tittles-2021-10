@@ -1,3 +1,6 @@
+data/
+!data/.gitingore
+
 .vscode/
 public/
 .env

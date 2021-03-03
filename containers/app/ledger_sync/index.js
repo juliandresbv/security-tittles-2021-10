@@ -1,5 +1,6 @@
 require('dotenv').config()
 const _ = require('underscore');
+const fs = require('fs');
 
 const sawtoothHelper = require('./src/sawtooth/sawtooth-helpers');
 
@@ -12,14 +13,25 @@ const {
   EventFilter,  
 } = require('sawtooth-sdk/protobuf');
 const { default: axios } = require('axios');
+const { reject } = require('underscore');
+const { resolve } = require('path');
+
+const BLOCKS_FILE = './data/blocks.json';
+const STATE_FILE = './data/state.json';
+
 
 let blocks = [];
 let state = {};
-let transactionsByBlock = {};
 
-// let lastBlock =  'b1f997190939a985f841d5452bd2f06dae884b194a5641c13e77953f4546480d1e7cd3baaea2f522d109ac4fe56dacee64b07bb05fe2ff462852aed17f2d7df3';
+(async () => {
+  blocks = await readFile(BLOCKS_FILE) || [];
+  state = await readFile(STATE_FILE) || {};
 
-let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
+  const lastBlock = (blocks.length > 0)? blocks[blocks.length - 1].block_id: sawtoothHelper.NULL_BLOCK_ID;
+
+  sawtoothHelper.subscribeToSawtoothEvents(handlers, lastBlock);
+})();
+
 
 async function blockCommitHandler(block, events){
   // console.log(block);
@@ -128,8 +140,33 @@ const handlers = [
   // }
 ]
 
-sawtoothHelper.subscribeToSawtoothEvents(handlers, lastBlock)
+function writeFile(file, jsonObject){
+  return new Promise((resolve, reject) => {
+    fs.writeFile(file, JSON.stringify(jsonObject, null, 4), (err) => {
+      if(err){
+        return reject(err);
+      }
+      return resolve();
+    });
+  })
+}
 
+function readFile(file){
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, (err, data) =>{
+      if(err){
+        resolve(null);
+      }
+      try{
+        let p = JSON.parse(data);
+        return resolve(p);
+      }
+      catch(e){
+        resolve(null);
+      }
+    });
+  });
+}
 
 
 
@@ -138,8 +175,11 @@ sawtoothHelper.subscribeToSawtoothEvents(handlers, lastBlock)
 
 
 async function shutdown(){
+  await writeFile(BLOCKS_FILE, blocks);
+  await writeFile(STATE_FILE, state);
+  
   await sawtoothHelper.close();
-  return console.log('shutdown');
+  return console.log('shutdown');  
 }
 
 process.on('SIGINT', async () => {
