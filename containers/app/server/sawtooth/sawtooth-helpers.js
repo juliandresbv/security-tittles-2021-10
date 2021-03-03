@@ -108,11 +108,13 @@ function buildBatch(
 
 
 module.exports.sendTransaction = async function (
-  transactionFamily, 
-  transactionFamilyVersion, 
-  inputs,
-  outputs,
-  payload, 
+  {
+    transactionFamily, 
+    transactionFamilyVersion, 
+    inputs,
+    outputs,
+    payload, 
+  },
   cancelToken /*Optional*/){
 
   const batchListBytes = buildBatch(transactionFamily, transactionFamilyVersion, inputs, outputs, payload);
