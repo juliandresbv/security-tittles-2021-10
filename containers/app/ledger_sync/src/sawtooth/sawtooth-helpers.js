@@ -68,7 +68,7 @@ module.exports.subscribeToSawtoothEvents = (handlers, lastKnownBlocks) =>{
   })
 }
 
-function getBlock(events){
+async function getBlock(events){
   const block = _.chain(events)
     .find(e => e.eventType === 'sawtooth/block-commit')
     .get('attributes')
@@ -76,11 +76,14 @@ function getBlock(events){
     .object()
     .value()
 
+  let req = await axios.get(`${process.env.SAWTOOTH_REST}/blocks/${block.block_id}`);
+
   return {
     block_num: parseInt(block.block_num),
     block_id: block.block_id,
     state_root_hash: block.state_root_hash,
-    previous_block_id: block.previous_block_id
+    previous_block_id: block.previous_block_id,
+    batches: req.data.data.batches
   }
 }
 
@@ -126,11 +129,11 @@ function getOtherEvents(events){
     .value();
 }
 
-const handleEvent = handlers => msg => {
+const handleEvent = handlers => async (msg) => {
   if (msg.messageType === Message.MessageType.CLIENT_EVENTS) {
     const events = EventList.decode(msg.content).events;
     //Aparently every eventlist with sawtooth/state-delta has a corresponding sawtooth/block-commit
-    const block = getBlock(events);
+    const block = await getBlock(events);
     const changes = getChanges(events);
     const others = getOtherEvents(events);
 

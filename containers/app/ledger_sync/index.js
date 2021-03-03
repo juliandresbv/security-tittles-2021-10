@@ -10,16 +10,18 @@ const PREFIX = hash512("todos").substring(0, 6);
 
 const {
   EventFilter,  
-} = require('sawtooth-sdk/protobuf')
+} = require('sawtooth-sdk/protobuf');
+const { default: axios } = require('axios');
 
 let blocks = [];
 let state = {};
+let transactionsByBlock = {};
 
 // let lastBlock =  'b1f997190939a985f841d5452bd2f06dae884b194a5641c13e77953f4546480d1e7cd3baaea2f522d109ac4fe56dacee64b07bb05fe2ff462852aed17f2d7df3';
 
 let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
 
-function blockCommitHandler(block, events){
+async function blockCommitHandler(block, events){
   // console.log(block);
 
   //https://github.com/hyperledger-archives/sawtooth-supply-chain/blob/master/ledger_sync/db/blocks.js
@@ -76,8 +78,29 @@ function blockCommitHandler(block, events){
 
   });
 
-  // console.log(state);
-
+  // let transactions = _.chain(block.batches)
+  //   .map(b => {
+  //     return _.map(b.transactions, t => {
+  //       let payload;
+  //       try{
+  //         payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
+  //       }
+  //       catch(err){
+  //         payload = Buffer.from(t.payload, 'base64').toString('utf-8');
+  //       }
+  //       return {
+  //         // block_num: block.block_num,
+  //         family_name: t.header.family_name,
+  //         txid: t.header_signature,
+  //         batchid: b.header_signature,
+  //         payload
+  //       };
+  //     })
+  //   })
+  //   .flatten()
+  //   .filter(t => t.family_name === 'todos')
+  //   .value();
+  
 }
 
 /*
@@ -124,7 +147,6 @@ process.on('SIGINT', async () => {
   await shutdown();
   // process.kill(process.pid, 'SIGUSR2');
   process.exit(0);
-
 });
 
 process.on('SIGTERM', async () => {
