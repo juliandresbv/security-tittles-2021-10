@@ -173,33 +173,18 @@ module.exports.getToDoHistory = async function(req, res) {
     })
     .flatten()
     .filter(t => t.family_name === 'todos')
+    .indexBy(t => t.payload.args.txid)
     .value();
 
-  
-  // let transactions = _.chain(blocks)
-  //   .map(b => b.batches)
-  //   .flatten()
-  //   .map(b => {
-  //     return _.map(b.transactions, t => {
-  //       let payload;
-  //       try{
-  //         payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
-  //       }
-  //       catch(err){
-  //         payload = Buffer.from(t.payload, 'base64').toString('utf-8');
-  //       }
-  //       return {
-  //         // block_num: block.block_num,
-  //         family_name: t.header.family_name,
-  //         txid: t.header_signature,
-  //         batchid: b.header_signature,
-  //         payload
-  //       };
-  //     })
-  //   })
-  //   .flatten()
-  //   .filter(t => t.family_name === 'todos')
-  //   .value();
+  let current = transactions[req.params.id];
+  let r = [current];
 
-  return res.json(transactions);
+  while(current != null){
+    let p = JSON.parse(current.payload.args.transaction);
+    current = transactions[p.input];
+    if(r != null){
+      r.push(current);
+    }
+  }
+  return res.json(r);
 }
