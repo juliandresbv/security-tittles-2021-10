@@ -1,7 +1,7 @@
 require('dotenv').config()
 const _ = require('underscore');
 
-const {subscribeToSawtoothEvents} = require('./src/sawtooth/sawtooth-helpers');
+const sawtoothHelper = require('./src/sawtooth/sawtooth-helpers');
 
 const crypto = require('crypto');
 const hash512 = (x) =>
@@ -15,10 +15,9 @@ const {
 let blocks = [];
 let state = {};
 
-// const NULL_BLOCK_ID = '0000000000000000';
-const NULL_BLOCK_ID = 'b1f997190939a985f841d5452bd2f06dae884b194a5641c13e77953f4546480d1e7cd3baaea2f522d109ac4fe56dacee64b07bb05fe2ff462852aed17f2d7df3';
+// let lastBlock =  'b1f997190939a985f841d5452bd2f06dae884b194a5641c13e77953f4546480d1e7cd3baaea2f522d109ac4fe56dacee64b07bb05fe2ff462852aed17f2d7df3';
 
-let lastBlock = NULL_BLOCK_ID;
+let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
 
 function blockCommitHandler(block, events){
   console.log(block);
@@ -99,7 +98,7 @@ const handlers = [
   // }
 ]
 
-subscribeToSawtoothEvents(handlers, lastBlock)
+sawtoothHelper.subscribeToSawtoothEvents(handlers, lastBlock)
 
 
 
@@ -109,24 +108,25 @@ subscribeToSawtoothEvents(handlers, lastBlock)
 
 
 async function shutdown(){
+  await sawtoothHelper.close();
   return console.log('shutdown');
 }
 
 process.on('SIGINT', async () => {
-  await console.log('SIGINT')
-  shutdown();
+  // await console.log('SIGINT')
+  await shutdown();
   process.kill(process.pid, 'SIGUSR2');
 
 });
 
-process.on('SIGTERM', () => {
-  shutdown();
+process.on('SIGTERM', async () => {
+  await shutdown();
   process.kill(process.pid, 'SIGUSR2');
 
 });
 
 process.once('SIGUSR2', async () => {
-  shutdown();
+  await shutdown();
   console.log('kill');
   process.kill(process.pid, 'SIGUSR2');
 });
