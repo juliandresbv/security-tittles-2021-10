@@ -21,9 +21,6 @@ let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
 
 function blockCommitHandler(block, events){
   console.log(block);
-
-  // console.log(block);
-
   //https://github.com/hyperledger-archives/sawtooth-supply-chain/blob/master/ledger_sync/db/blocks.js
   // If the blockNum did not already exist, or had the same id
   // there is no fork, return the block
@@ -56,7 +53,6 @@ function blockCommitHandler(block, events){
     lastBlock = block.block_id;
   }
 
-  // console.log(state);
   //Add events
   _.forEach(events, (e) => {      
     let prev = state[e.address];
@@ -115,18 +111,20 @@ async function shutdown(){
 process.on('SIGINT', async () => {
   // await console.log('SIGINT')
   await shutdown();
-  process.kill(process.pid, 'SIGUSR2');
+  // process.kill(process.pid, 'SIGUSR2');
+  process.exit(0);
 
 });
 
 process.on('SIGTERM', async () => {
   await shutdown();
-  process.kill(process.pid, 'SIGUSR2');
-
+  // process.kill(process.pid, 'SIGUSR2');
+  process.exit(0);
 });
 
 process.once('SIGUSR2', async () => {
   await shutdown();
   console.log('kill');
-  process.kill(process.pid, 'SIGUSR2');
+  // process.kill(process.pid, 'SIGUSR2');
+  process.exit(0);
 });

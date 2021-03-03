@@ -134,7 +134,6 @@ const handleEvent = handlers => msg => {
     const changes = getChanges(events);
     const others = getOtherEvents(events);
 
-    // console.log('---',block.blockNum, changes.length, others.length)
     _.forEach(handlers, (h)=>{
       if(h.eventType == 'sawtooth/block-commit'){
         h.handle(block, changes);
@@ -198,6 +197,6 @@ module.exports.close = function close(){
     stream.close();
     console.log('Unsubscribed to socket');
   });
-  
+
   return closingPromise;
 }

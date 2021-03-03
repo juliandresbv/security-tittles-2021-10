@@ -33,7 +33,7 @@ const sign = (dataBytes, privKey) => {
 
 module.exports.getAddress = getAddress;
 
-function buildBatch(
+function buildTransaction(
   transactionFamily, 
   transactionFamilyVersion,
   inputs,
@@ -70,30 +70,32 @@ function buildBatch(
     headerSignature: signature,
     payload: payloadBytes
   })
+  return transaction;
+}
+
+function buildBatch(transactions)
+{
+  
   
   //--------------------------------------
   //Optional
   //If sending to sign outside
   
-  const txnListBytes = protobuf.TransactionList.encode({transactions:[
-    transaction
-  ]}).finish()
+  // const txnListBytes = protobuf.TransactionList.encode({transactions}).finish()
   
   //const txnBytes2 = transaction.finish()
   
-  let transactions = protobuf.TransactionList.decode(txnListBytes).transactions;
+  // let transactions = protobuf.TransactionList.decode(txnListBytes).transactions;
   
   //----------------------------------------
-  
-  //transactions = [transaction]
-  
+    
   const batchHeaderBytes = protobuf.BatchHeader.encode({
     signerPublicKey: publicKeyHex,
     transactionIds: transactions.map((txn) => txn.headerSignature),
   }).finish()
   
   
-  signature = sign(batchHeaderBytes, privateKey);
+  const signature = sign(batchHeaderBytes, privateKey);
   
   const batch = protobuf.Batch.create({
     header: batchHeaderBytes,
@@ -107,17 +109,25 @@ function buildBatch(
 }
 
 
-module.exports.sendTransaction = async function (
-  {
-    transactionFamily, 
-    transactionFamilyVersion, 
-    inputs,
-    outputs,
-    payload, 
-  },
-  cancelToken /*Optional*/){
+module.exports.sendTransaction = async function ( transactions, cancelToken /*Optional*/){
 
-  const batchListBytes = buildBatch(transactionFamily, transactionFamilyVersion, inputs, outputs, payload);
+  const txs = _.map(transactions, (t) => {
+    const {
+      transactionFamily, 
+      transactionFamilyVersion, 
+      inputs,
+      outputs,
+      payload, 
+    } = t;
+    return buildTransaction(
+      transactionFamily, 
+      transactionFamilyVersion, 
+      inputs,
+      outputs,
+      payload);
+  });
+
+  const batchListBytes = buildBatch(txs);
   
   let params = {
     headers: {'Content-Type': 'application/octet-stream'}
