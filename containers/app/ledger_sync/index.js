@@ -153,12 +153,36 @@ function readFile(file){
 //=============================================
 
 
+let startshutdown = false;
 async function shutdown(){
-  await writeFile(BLOCKS_FILE, blocks);
-  await writeFile(STATE_FILE, state);
-  
-  await sawtoothHelper.close();
-  return console.log('shutdown');  
+  if(startshutdown){
+    return;
+  }
+  startshutdown = true;
+
+  return new Promise((resolve, reject) => {
+    let end = false;
+    const finish = (err) => {
+      if(!end){
+        if(err){
+          console.log(err.message);
+          resolve();
+        }
+        console.log('shut down normally');
+        resolve();
+      }
+      end = true;
+    };
+
+    (async () => {
+      await writeFile(BLOCKS_FILE, blocks);
+      await writeFile(STATE_FILE, state);
+      await sawtoothHelper.close();
+      finish();
+    })();
+
+    setTimeout(() => finish(new Error('Timeout')), 2000);
+  });  
 }
 
 process.on('SIGINT', async () => {
