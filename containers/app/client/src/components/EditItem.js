@@ -56,14 +56,13 @@ function CreateItem(){
       
 
       let h = _.map(res2.data, t => {
-        let s = JSON.parse(t.payload.args.transaction);
-        let owner = s.output.owner? s.output.owner: '';
+        let s = JSON.parse(t.payload);
         return {
           block_num: t.block_num,
-          owner: owner
+          owner: s.output.owner
         };
       });
-      console.log(h);
+      h.reverse();
       setHist(h);
       setElemQueried(true);
     })();

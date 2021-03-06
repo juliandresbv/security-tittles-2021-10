@@ -143,48 +143,10 @@ function readFile(file){
 }
 
 module.exports.getToDoHistory = async function(req, res) {
-  let blocks = await readFile('./data/blocks.json');
+  let state = await readFile('./data/current_state.json');
 
-
-  let transactions = _.chain(blocks)
-    .map(block => {
-      return _.chain(block.batches)
-        .map(b => {
-          return _.map(b.transactions, t => {
-            let payload;
-            try{
-              payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
-            }
-            catch(err){
-              payload = Buffer.from(t.payload, 'base64').toString('utf-8');
-            }
-            return {
-              // block_id: block.block_id,
-              block_num: block.block_num,
-              // batch_id: b.header_signature,
-              // transaction_id: t.header_signature,
-              payload: payload,
-              family_name: t.header.family_name
-            };
-          });
-        })
-        .flatten()
-        .value();
-    })
-    .flatten()
-    .filter(t => t.family_name === 'todos')
-    .indexBy(t => t.payload.args.txid)
-    .value();
-
-  let current = transactions[req.params.id];
-  let r = [current];
-
-  while(current != null){
-    let p = JSON.parse(current.payload.args.transaction);
-    current = transactions[p.input];
-    if(current != null){
-      r.push(current);
-    }
+  if(!(req.params.id in state)){
+    return res.status(404).json('not found');
   }
-  return res.json(r);
+  return res.json(state[req.params.id]);
 }

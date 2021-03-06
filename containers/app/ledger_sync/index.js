@@ -25,15 +25,12 @@ let blocks = [];
 let state = {};
 let current_state = {}; //If forks never happen, this might be the only data necessary to store.
 
-
-let transactions = {};
-
 (async () => {
   blocks = await readFile(BLOCKS_FILE) || [];
   state = await readFile(STATE_FILE) || {};
 
-  // const lastBlock = (blocks.length > 0)? blocks[blocks.length - 1].block_id: sawtoothHelper.NULL_BLOCK_ID;
-  const lastBlock = sawtoothHelper.NULL_BLOCK_ID;
+  const lastBlock = (blocks.length > 0)? blocks[blocks.length - 1].block_id: sawtoothHelper.NULL_BLOCK_ID;
+  // const lastBlock = sawtoothHelper.NULL_BLOCK_ID;
 
   sawtoothHelper.subscribeToSawtoothEvents(handlers, lastBlock);
 })();
@@ -50,22 +47,15 @@ async function blockCommitHandler(block, events){
   if(!blockByNum || blockByNum.block_id === block.block_id ){
     //No fork
     if(!blockByNum){
-      transactions = _.extend(transactions, getTransactions(block));
-      addState(block, events);
-      // updateCurrentState(block, events);
-      current_state = recalculateCurrentState(blocks, transactions);
+      state = addState(block, events);
+      current_state = updateCurrentState(current_state, block);
 
       blocks.push(block);
       lastBlock = block.block_id;
     }
     else{
-      transactions = _.extend(transactions, getTransactions(block));
-      addState(block, events);
-      // updateCurrentState(block, events);
-      current_state = recalculateCurrentState(blocks, transactions);
-
-      // recalculateCurrentState(blocks);
-
+      state = addState(block, events);
+      current_state = updateCurrentState(current_state, block);
     }
   }
   else{
@@ -81,11 +71,13 @@ async function blockCommitHandler(block, events){
         e.block_num < block.block_num
       });
     });
-    transactions = recalculateTransactions(blocks);
-    // current_state = recalculateCurrentState(transactions);
 
-    transactions = _.extend(transactions, getTransactions(block));
-    addState(block, events);
+
+    state = addState(block, events);
+    current_state = {};
+    _.forEach(blocks, (b) => {
+      current_state = updateCurrentState(current_state, b);
+    });
 
     blocks.push(block);
     lastBlock = block.block_id;
@@ -126,44 +118,8 @@ const handlers = [
   // }
 ]
 
-function transactionsInOrder(allBlocks){
-  return _.chain(allBlocks)
-  .map(block => {
-    return _.chain(block.batches)
-      .map(b => {
-        return _.map(b.transactions, t => {
-          let payload;
-          try {
-            payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
-          }
-          catch (err) {
-            payload = Buffer.from(t.payload, 'base64').toString('utf-8');
-          }
-          return {
-            block_id: block.block_id,
-            block_num: block.block_num,
-            // batch_id: b.header_signature,
-            // transaction_id: t.header_signature,
-            payload: payload,
-            family_name: t.header.family_name
-          };
-        });
-      })
-      .flatten()
-      .value();
-  })
-  .flatten()
-  .filter(t => t.family_name === 'todos')
-  .value();
-}
 
-function recalculateTransactions(allBlocks) {
-  transactionsInOrder(allBlocks)
-    .indexBy(t => t.payload.args.txid)
-    .value();
-}
-
-function getTransactions(block) {
+function getSawtoothTransactionsFromBlock(block) {
   return _.chain(block.batches)
     .map(b => {
       return _.map(b.transactions, t => {
@@ -177,8 +133,8 @@ function getTransactions(block) {
         return {
           block_id: block.block_id,
           block_num: block.block_num,
-          // batch_id: b.header_signature,
-          // transaction_id: t.header_signature,
+          batch_id: b.header_signature,
+          transaction_id: t.header_signature,
           payload: payload,
           family_name: t.header.family_name
         };
@@ -186,8 +142,44 @@ function getTransactions(block) {
     })
     .flatten()
     .filter(t => t.family_name === 'todos')
-    .indexBy(t => t.payload.args.txid)
+    // .indexBy(t => t.payload.args.txid)
     .value();
+}
+
+
+function getSawtoothTransactions(allBlocks){
+  return _.chain(allBlocks)
+  .map(block => {
+    return getSawtoothTransactionsFromBlock(block);
+  })
+  .flatten()
+  // .filter(t => t.family_name === 'todos')
+  .value();
+}
+
+function getTransactionsFromBlock(block){
+  const sawtoothT = getSawtoothTransactionsFromBlock(block);
+  return _.map(sawtoothT, sawtoothTransactionToTransaction);
+}
+
+function getTransactions(allBlocks){
+  const sawtoothT = getSawtoothTransactions(allBlocks);
+  return _.map(sawtoothT, sawtoothTransactionToTransaction);
+}
+
+function sawtoothTransactionToTransaction(t){
+  const payload = t.payload.args.transaction;
+  const txid = t.payload.args.txid;
+  return {
+    payload,
+    txid,
+
+    // block_id: t.block_id,
+    block_num: t.block_num,
+    // batch_id: t.batch_id,
+    // transaction_id: t.transaction_id,
+    // family_name: t.family_name
+  };
 }
 
 function addState(block, events){
@@ -203,84 +195,36 @@ function addState(block, events){
       type: e.type
     });
   });
+  return state;
 }
 
 
-function updateCurrentState(_current_state, block, events){
-  _.forEach(events, (e) => {    
-  
-    if(e.type === 'SET'){
-      try{
-        const jlist = JSON.parse(e.value);
-        _.forEach(jlist, j => {
-          
-          let current = j.key;
-          let history = [transactions[current]];
+function updateCurrentState(_current_state, block){
 
-          while(current != null){
-            let p = JSON.parse(transactions[current].payload.args.transaction);
-            current = p.input;
+  let transactions = getTransactionsFromBlock(block);
+  _.forEach(transactions, t => { 
+    let history = [t];
 
-            if(current != null){
-              if(_current_state[current]){
-                history = _current_state[current].history.concat(history)
-                delete _current_state[current];
-                break;
-              }
+    let current = JSON.parse(t.payload).input;
 
-              history.unshift(transactions[current]);
-            }
-          }
-
-          _current_state[j.key] = {
-            value: j.value,
-            block_id: block.block_id,
-            history
-          };
-        })
+    while(current != null){
+      if(_current_state[current]){
+        history = _current_state[current].concat(history)
+        delete _current_state[current];
+        break;
       }
-      catch(err){
-        return;
-      }
+
+      history.unshift(_current_state[current]);
+
+      current = JSON.parse(
+        _current_state[current][_current_state[current].length - 1].payalod
+      ).input;
     }
-    else if(e.type === 'DELETE'){
-      //Ignoring this because in the todo app every DELETE comes with a SET
-    }
+
+    _current_state[t.txid] = history;
   });
-
-  return _current_state;
-}
-
-function recalculateCurrentState(allBlocks, allTransactions){
-  let _current_state = {};
-  let orderedTransactions = transactionsInOrder(allBlocks);
-  _.forEach(orderedTransactions, (t) => {
-      let current = t.payload.args.txid;
-      
-      let history = [allTransactions[current]];
-      while(current != null){
-        let p = JSON.parse(allTransactions[current].payload.args.transaction);
-        current = p.input;
-
-        if(current != null){
-          if(_current_state[current]){
-            history = _current_state[current].history.concat(history)
-            delete _current_state[current];
-            break;
-          }
-
-          history.unshift(allTransactions[current]);
-        }
-      }
-
-      _current_state[t.payload.args.txid] = {
-        value: j.value,
-        block_id: block.block_id,
-        history
-      };
-
-    });
-
+  
+  
   return _current_state;
 }
 
