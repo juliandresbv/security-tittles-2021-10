@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 require('dotenv').config()
+const mongo = require('../mongodb/mongo');
 
 /**
  * Module dependencies.
@@ -37,7 +38,7 @@ var server = http.createServer(app);
 function onSignal(){
   console.log('Release db connections, etc');
   return Promise.all([
-    Promise.resolve()
+    mongo.close()
   ]);
 }
 

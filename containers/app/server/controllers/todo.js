@@ -1,5 +1,6 @@
 var _ = require('underscore');
 const crypto = require('crypto');
+const mongo = require('../mongodb/mongo')
 const protobuf = require('sawtooth-sdk/protobuf');
 const { 
   sendTransaction, 
@@ -26,6 +27,9 @@ function buildAddress(transactionFamily){
 const address = buildAddress(TRANSACTION_FAMILY);
 
 module.exports.getAllToDo = async function(req, res) {
+
+  // const mongoClient = await mongo.client;
+  // mongoClient.db('mydb').collection("customers").insertOne({'data': 'data'});
 
   let params = {
     headers: {'Content-Type': 'application/json'}

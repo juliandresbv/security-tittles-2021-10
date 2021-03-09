@@ -1,6 +1,7 @@
 require('dotenv').config()
 const _ = require('underscore');
 const fs = require('fs');
+const mongo = require('./src/mongodb/mongo')
 
 const sawtoothHelper = require('./src/sawtooth/sawtooth-helpers');
 
@@ -284,6 +285,7 @@ async function shutdown(){
     };
 
     (async () => {
+      await mongo.close();
       await writeFile(BLOCKS_FILE, blocks);
       await writeFile(STATE_FILE, state);
       await sawtoothHelper.close();
