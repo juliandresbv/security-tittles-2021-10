@@ -15,6 +15,18 @@ let clientPromise = (async () => {
   return client;
 })();
 
+
+//Create indexes:
+(async () =>  {
+  const client = await clientPromise;
+  const db = client.db('mydb');
+
+  await db.collection('blocks').createIndex({block_num: 1});
+  await db.collection('transactions').createIndex({block_num: 1});
+  await db.collection('transactions').createIndex({head_id: 1, idx: -1});
+})();
+
+
 module.exports.client = () => {
   if(!closed){
     return clientPromise;
