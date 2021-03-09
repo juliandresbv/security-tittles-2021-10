@@ -28,7 +28,7 @@ const address = buildAddress(TRANSACTION_FAMILY);
 
 module.exports.getAllToDo = async function(req, res) {
 
-  // const mongoClient = await mongo.client;
+  // const mongoClient = await mongo.client();
   // mongoClient.db('mydb').collection("customers").insertOne({'data': 'data'});
 
   let params = {

@@ -6,7 +6,7 @@ console.log('uri:', uri);
 
 // Create a new MongoClient
 
-const clientPromise = (async () => {
+let clientPromise = (async () => {
   const client = new MongoClient(uri);
   await client.connect();
 
@@ -15,32 +15,17 @@ const clientPromise = (async () => {
   return client;
 })();
 
-module.exports.client = clientPromise;
-
-module.exports.close = async function(){
-  const client = await clientPromise;
-  await client.close();
-  console.log('Diconnected MongoDB');
+module.exports.client = () => {
+  if(!closed){
+    return clientPromise;
+  }
+  return Promise.reject(new Error('MongoDB closed'));
 }
 
-
-
-// async function run() {
-//   try {
-//     // Connect the client to the server
-//     await client.connect();
-
-//     // Establish and verify connection
-//     await client.db("admin").command({ ping: 1 });
-//     console.log("Connected successfully to server");
-  
-//     await client.db('mydb').collection("customers").insertOne({'data': 'data'});
-//     d = await client.db('mydb').collection("customers").findOne({'data': 'data'});
-
-//     console.log(d);
-//   } finally {
-//     // Ensures that the client will close when you finish/error
-//     await client.close();
-//   }
-// }
-// run().catch(console.dir);
+let closed = false;
+module.exports.close = async function(){
+  closed = true;
+  const client = await clientPromise;
+  await client.close();
+  console.log('Close MongoDB');
+}

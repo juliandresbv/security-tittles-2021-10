@@ -5,7 +5,7 @@ const mongo = require('./src/mongodb/mongo');
 
 
 // mongoClient.db('mydb').collection("customers").insertOne({'data': 'data'});
-const blockCollectionPromise = mongo.client.then((client) => {
+const blockCollectionPromise = mongo.client().then((client) => {
   return client.db('mydb').collection('blocks');
 });
 
