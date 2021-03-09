@@ -1,7 +1,14 @@
 require('dotenv').config()
 const _ = require('underscore');
 const fs = require('fs');
-const mongo = require('./src/mongodb/mongo')
+const mongo = require('./src/mongodb/mongo');
+
+
+// mongoClient.db('mydb').collection("customers").insertOne({'data': 'data'});
+const blockCollectionPromise = mongo.client.then((client) => {
+  return client.db('mydb').collection('blocks');
+});
+
 
 const sawtoothHelper = require('./src/sawtooth/sawtooth-helpers');
 
@@ -30,14 +37,16 @@ let current_state = {}; //If forks never happen, this might be the only data nec
   blocks = await readFile(BLOCKS_FILE) || [];
   state = await readFile(STATE_FILE) || {};
 
-  const lastBlock = (blocks.length > 0)? blocks[blocks.length - 1].block_id: sawtoothHelper.NULL_BLOCK_ID;
-  // const lastBlock = sawtoothHelper.NULL_BLOCK_ID;
+  // const lastBlock = (blocks.length > 0)? blocks[blocks.length - 1].block_id: sawtoothHelper.NULL_BLOCK_ID;
+  const lastBlock = sawtoothHelper.NULL_BLOCK_ID;
 
   sawtoothHelper.subscribeToSawtoothEvents(handlers, lastBlock);
 })();
 
 
 async function blockCommitHandler(block, events){
+  const blockCollection = await blockCollectionPromise;
+
   // console.log(block);
 
   //https://github.com/hyperledger-archives/sawtooth-supply-chain/blob/master/ledger_sync/db/blocks.js
@@ -52,6 +61,7 @@ async function blockCommitHandler(block, events){
       current_state = updateCurrentState(current_state, block);
 
       blocks.push(block);
+      await blockCollection.insertOne({_id: block.block_id, ...block});
       lastBlock = block.block_id;
     }
     else{
@@ -81,6 +91,7 @@ async function blockCommitHandler(block, events){
     });
 
     blocks.push(block);
+    await blockCollection.insertOne({_id: block.block_id, ...block});
     lastBlock = block.block_id;
   }
 
