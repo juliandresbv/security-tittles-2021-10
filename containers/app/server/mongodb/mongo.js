@@ -21,9 +21,19 @@ let clientPromise = (async () => {
   const client = await clientPromise;
   const db = client.db('mydb');
 
-  await db.collection('blocks').createIndex({block_num: 1});
-  await db.collection('transactions').createIndex({block_num: 1});
-  await db.collection('transactions').createIndex({head_id: 1, idx: -1});
+  try{
+    await db.collection('block').createIndex({block_num: 1});
+    await db.collection('transaction').createIndex({block_num: 1});
+    await db.collection('transaction').createIndex({head_id: 1, idx: -1});
+
+    await db.collection('state').createIndex({address: 1, key: 1, block_num: 1}, {unique: true});
+
+  }
+  catch(err){
+    console.log(err);
+  }
+  
+
 })();
 
 

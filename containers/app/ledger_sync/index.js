@@ -6,9 +6,16 @@ const mongo = require('./src/mongodb/mongo');
 
 // mongoClient.db('mydb').collection("customers").insertOne({'data': 'data'});
 const blockCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('blocks');
+  return client.db('mydb').collection('block');
 });
 
+const transactionCollectionPromise = mongo.client().then((client) => {
+  return client.db('mydb').collection('transaction');
+});
+
+const stateCollectionPromise = mongo.client().then((client) => {
+  return client.db('mydb').collection('state');
+});
 
 const sawtoothHelper = require('./src/sawtooth/sawtooth-helpers');
 
@@ -45,37 +52,25 @@ let current_state = {}; //If forks never happen, this might be the only data nec
 
 
 async function blockCommitHandler(block, events){
-  const blockCollection = await blockCollectionPromise;
-
   // console.log(block);
 
   //https://github.com/hyperledger-archives/sawtooth-supply-chain/blob/master/ledger_sync/db/blocks.js
   // If the blockNum did not already exist, or had the same id
   // there is no fork, return the block
   
-  let blockByNum = _.find(blocks, (b)=> b.block_num === block.block_num);
-  if(!blockByNum || blockByNum.block_id === block.block_id ){
-    //No fork
-    if(!blockByNum){
-      state = addState(block, events);
-      current_state = updateCurrentState(current_state, block);
+  let blockByNum = await findBlockByNum(block.block_num);
+  
+  if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
+    await addState(block, events);
+    current_state = updateCurrentState(current_state, block);
 
-      blocks.push(block);
-      await blockCollection.insertOne({_id: block.block_id, ...block});
-      lastBlock = block.block_id;
-    }
-    else{
-      state = addState(block, events);
-      current_state = updateCurrentState(current_state, block);
-    }
+    await addTransactions(block);
   }
-  else{
-    // Fork
-    
+  else{ // Fork
+    console.log('FORK!!')
     //Remove invalid data
-    blocks = _.filter(blocks, (b) => {
-      b.block_num < block.block_num
-    });
+    await removeTransactionsAfterBlockNumInclusive(block.block_num);
+    await removeStateAfterBlockNumInclusive(block.block_num);
 
     state = _.mapObject(state, (v, k) => {
       return _.filter(v, e => {
@@ -90,20 +85,75 @@ async function blockCommitHandler(block, events){
       current_state = updateCurrentState(current_state, b);
     });
 
-    blocks.push(block);
-    await blockCollection.insertOne({_id: block.block_id, ...block});
-    lastBlock = block.block_id;
+    await addTransactions(block);
   }
 
   await writeFile(BLOCKS_FILE, blocks);
   await writeFile(STATE_FILE, state);
   await writeFile(CURRENT_STATE_FILE, current_state);
+}
 
+async function findBlockByNum(block_num){
+  const blockCollection = await blockCollectionPromise;
+  return await blockCollection.findOne({block_num});
+
+  // let blockByNum = _.find(blocks, (b)=> b.block_num === block.block_num);
 }
 
 
+async function addTransactions(block){
+
+  const blockCollection = await blockCollectionPromise;
+  const txCollection = await transactionCollectionPromise;
+
+  const tb = getTransactionsFromBlock(block);
+
+  for(n = 0; n < tb.length; n++){
+    const t = tb[n];
+    let p = JSON.parse(t.payload);
+
+    let t_new = _.clone(t);
+    t_new._id = t_new.txid;
+
+    if(p.input){
+      let prev = await txCollection.findOne({_id: p.input});
+      t_new.input = prev._id;
+      t_new.root = prev.root;
+      t_new.idx = prev.idx + 1;
+    }
+    else{
+      t_new.input = null;
+      t_new.root = t_new.txid;
+      t_new.idx = 0;
+    }
+    await txCollection.updateOne({_id: t_new._id}, {$set: t_new}, {upsert: true});
+    
+  }
+
+  await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
+  blocks.push(block);
+  lastBlock = block.block_id;
+
+}
+
+async function removeTransactionsAfterBlockNumInclusive(block_num){
+  const blockCollection = await blockCollectionPromise;
+  const txCollection = await transactionCollectionPromise;
+
+  await blockCollection.deleteMany({block_num: {$gte: block_num}});
+  await blockCollection.deleteMany({block_num: {$gte: block_num}});
+
+  blocks = _.filter(blocks, (b) => {
+    b.block_num < block.block_num
+  });
+}
 
 
+async function removeStateAfterBlockNumInclusive(block_num){
+  const stateCollection = await stateCollectionPromise;
+  await stateCollection.deleteMany({block_num: {$gte: block_num}});
+
+}
 
 /*
 'sawtooth/state-delta' must be used with 'sawtooth/block-commit'
@@ -186,28 +236,89 @@ function sawtoothTransactionToTransaction(t){
     payload,
     txid,
 
-    // block_id: t.block_id,
+    block_id: t.block_id,
     block_num: t.block_num,
-    // batch_id: t.batch_id,
-    // transaction_id: t.transaction_id,
+    batch_id: t.batch_id,
+    transaction_id: t.transaction_id,
     // family_name: t.family_name
   };
 }
 
-function addState(block, events){
-  _.forEach(events, (e) => {      
-    let prev = state[e.address];
-    if(!prev){
-      state[e.address] = []
-    }
-    state[e.address].push({
-      address: e.address,
-      block_num: block.block_num,
-      value: e.value.toString('utf-8'),
-      type: e.type
+// function addState(block, events){
+//   _.forEach(events, (e) => {      
+//     let prev = state[e.address];
+//     if(!prev){
+//       state[e.address] = []
+//     }
+//     state[e.address].push({
+//       address: e.address,
+//       block_num: block.block_num,
+//       value: e.value.toString('utf-8'),
+//       type: e.type
+//     });
+//   });
+//   return state;
+// }
+
+async function addState(block, events){
+
+  const stateCollection = await stateCollectionPromise;
+
+  for(n = 0; n < events.length; n++){
+    const e = events[n];
+    const address = e.address;
+
+    let prevState = {};
+    const cursor = await stateCollection.find({address}).sort({block_num: -1}).limit(1);
+    await new Promise((resolve, reject) => {
+      cursor.forEach((doc)=>{
+        prevState[doc.address] = doc;
+      }, 
+      resolve)
     });
-  });
-  return state;
+
+    let toDelete = [];
+
+    if(e.type == 'DELETE'){
+      toDelete = _.keys(prevState);
+    }
+    else if(e.type == 'SET'){
+      const p = JSON.parse(e.value.toString('utf-8'));
+      let updates = {}
+      for(m = 0; m < p.length; m++){
+        const {key, value} = p[m];
+        updates[key] = value;
+  
+        await stateCollection.updateOne({address, key, block_num: block.block_num}, {$set: {
+          address,
+          key,
+          block_num: block.block_num,
+          value,
+          type: 'SET'
+        }}, 
+        {upsert: true});
+      }
+  
+      toDelete = _.difference(_.keys(prevState), _.keys(updates));
+      console.log(toDelete);
+    }
+    else{
+      //
+    }
+
+    for(m = 0; m < toDelete.length; m ++){
+      const k = toDelete[m];
+      await stateCollection.updateOne({address, key:k, block_num: block.block_num}, {$set: {
+        address,
+        key:k,
+        block_num: block.block_num,
+        value: null,
+        type: 'DELETE'
+      }}, 
+      {upsert: true});
+    }
+
+  }
 }
 
 

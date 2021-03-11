@@ -1,7 +1,6 @@
 var _ = require('underscore');
 const crypto = require('crypto');
 const mongo = require('../mongodb/mongo')
-const protobuf = require('sawtooth-sdk/protobuf');
 const { 
   sendTransaction, 
   getAddress, 
@@ -27,9 +26,6 @@ function buildAddress(transactionFamily){
 const address = buildAddress(TRANSACTION_FAMILY);
 
 module.exports.getAllToDo = async function(req, res) {
-
-  // const mongoClient = await mongo.client();
-  // mongoClient.db('mydb').collection("customers").insertOne({'data': 'data'});
 
   let params = {
     headers: {'Content-Type': 'application/json'}
@@ -127,30 +123,29 @@ module.exports.putToDo = async function(req, res) {
   }
 };
 
-
-
-function readFile(file){
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, (err, data) =>{
-      if(err){
-        resolve(null);
-      }
-      try{
-        let p = JSON.parse(data);
-        return resolve(p);
-      }
-      catch(e){
-        resolve(null);
-      }
-    });
-  });
-}
-
 module.exports.getToDoHistory = async function(req, res) {
-  let state = await readFile('./data/current_state.json');
 
-  if(!(req.params.id in state)){
-    return res.status(404).json('not found');
+  const mongoClient = await mongo.client();
+  const transactionCollection = mongoClient.db('mydb').collection("transaction");
+  const stateCollection = mongoClient.db('mydb').collection("state");
+
+  const st = await stateCollection.findOne({key: req.params.id});
+  if(!st){
+    return res.status(404).json({msg: "not UTXO"});
   }
-  return res.json(state[req.params.id]);
+
+  const tx = await transactionCollection.findOne({_id: req.params.id});
+  if(!tx){
+    return res.status(404).json({msg: "not found"});
+  }
+
+  let history = [];
+  const cursor = await transactionCollection.find({root: tx.root}).sort({block_num: -1});
+  await new Promise((resolve, reject) => {
+    cursor.forEach((doc)=>{
+      history.push(doc);
+    }, 
+    resolve)
+  });
+  return res.json(history);
 }

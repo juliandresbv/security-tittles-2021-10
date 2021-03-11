@@ -62,7 +62,6 @@ function CreateItem(){
           owner: s.output.owner
         };
       });
-      h.reverse();
       setHist(h);
       setElemQueried(true);
     })();

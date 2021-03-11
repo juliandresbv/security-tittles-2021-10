@@ -6,6 +6,16 @@ const mongo = require('../mongodb/mongo');
 
   const mongoClient = await mongo.client();
   await mongoClient.db('mydb')
-    .collection("blocks")
-    .remove({});
+    .collection("block")
+    .deleteMany({});
+
+  await mongoClient.db('mydb')
+    .collection("transaction")
+    .deleteMany({});
+
+  await mongoClient.db('mydb')
+    .collection("state")
+    .deleteMany({});
+
+  await mongo.close();
 })();
