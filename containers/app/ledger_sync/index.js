@@ -1,10 +1,7 @@
 require('dotenv').config()
 const _ = require('underscore');
-const fs = require('fs');
 const mongo = require('./src/mongodb/mongo');
 
-
-// mongoClient.db('mydb').collection("customers").insertOne({'data': 'data'});
 const blockCollectionPromise = mongo.client().then((client) => {
   return client.db('mydb').collection('block');
 });
@@ -28,24 +25,19 @@ const {
   EventFilter,  
 } = require('sawtooth-sdk/protobuf');
 const { default: axios } = require('axios');
-const { reject } = require('underscore');
-const { resolve } = require('path');
-
-const BLOCKS_FILE = '../server/data/blocks.json';
-const STATE_FILE = '../server/data/state.json';
-const CURRENT_STATE_FILE = '../server/data/current_state.json';
-
-
-let blocks = [];
-let state = {};
-let current_state = {}; //If forks never happen, this might be the only data necessary to store.
 
 (async () => {
-  blocks = await readFile(BLOCKS_FILE) || [];
-  state = await readFile(STATE_FILE) || {};
 
-  // const lastBlock = (blocks.length > 0)? blocks[blocks.length - 1].block_id: sawtoothHelper.NULL_BLOCK_ID;
-  const lastBlock = sawtoothHelper.NULL_BLOCK_ID;
+  let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
+
+  const blockCollection = await blockCollectionPromise;
+  const cursor = await blockCollection.find({}).sort({block_num: -1}).limit(1);
+  await new Promise((resolve, reject) => {
+    cursor.forEach((doc)=>{
+      lastBlock = doc.block_id
+    }, 
+    resolve)
+  });
 
   sawtoothHelper.subscribeToSawtoothEvents(handlers, lastBlock);
 })();
@@ -62,8 +54,6 @@ async function blockCommitHandler(block, events){
   
   if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
     await addState(block, events);
-    current_state = updateCurrentState(current_state, block);
-
     await addTransactions(block);
   }
   else{ // Fork
@@ -72,32 +62,14 @@ async function blockCommitHandler(block, events){
     await removeTransactionsAfterBlockNumInclusive(block.block_num);
     await removeStateAfterBlockNumInclusive(block.block_num);
 
-    state = _.mapObject(state, (v, k) => {
-      return _.filter(v, e => {
-        e.block_num < block.block_num
-      });
-    });
-
-
-    state = addState(block, events);
-    current_state = {};
-    _.forEach(blocks, (b) => {
-      current_state = updateCurrentState(current_state, b);
-    });
-
+    await addState(block, events);
     await addTransactions(block);
   }
-
-  await writeFile(BLOCKS_FILE, blocks);
-  await writeFile(STATE_FILE, state);
-  await writeFile(CURRENT_STATE_FILE, current_state);
 }
 
 async function findBlockByNum(block_num){
   const blockCollection = await blockCollectionPromise;
   return await blockCollection.findOne({block_num});
-
-  // let blockByNum = _.find(blocks, (b)=> b.block_num === block.block_num);
 }
 
 
@@ -209,25 +181,11 @@ function getSawtoothTransactionsFromBlock(block) {
 }
 
 
-function getSawtoothTransactions(allBlocks){
-  return _.chain(allBlocks)
-  .map(block => {
-    return getSawtoothTransactionsFromBlock(block);
-  })
-  .flatten()
-  // .filter(t => t.family_name === 'todos')
-  .value();
-}
-
 function getTransactionsFromBlock(block){
   const sawtoothT = getSawtoothTransactionsFromBlock(block);
   return _.map(sawtoothT, sawtoothTransactionToTransaction);
 }
 
-function getTransactions(allBlocks){
-  const sawtoothT = getSawtoothTransactions(allBlocks);
-  return _.map(sawtoothT, sawtoothTransactionToTransaction);
-}
 
 function sawtoothTransactionToTransaction(t){
   const payload = t.payload.args.transaction;
@@ -243,22 +201,6 @@ function sawtoothTransactionToTransaction(t){
     // family_name: t.family_name
   };
 }
-
-// function addState(block, events){
-//   _.forEach(events, (e) => {      
-//     let prev = state[e.address];
-//     if(!prev){
-//       state[e.address] = []
-//     }
-//     state[e.address].push({
-//       address: e.address,
-//       block_num: block.block_num,
-//       value: e.value.toString('utf-8'),
-//       type: e.type
-//     });
-//   });
-//   return state;
-// }
 
 async function addState(block, events){
 
@@ -321,67 +263,6 @@ async function addState(block, events){
   }
 }
 
-
-function updateCurrentState(_current_state, block){
-
-  let transactions = getTransactionsFromBlock(block);
-  _.forEach(transactions, t => { 
-    let history = [t];
-
-    let current = JSON.parse(t.payload).input;
-
-    while(current != null){
-      if(_current_state[current]){
-        history = _current_state[current].concat(history)
-        delete _current_state[current];
-        break;
-      }
-
-      history.unshift(_current_state[current]);
-
-      current = JSON.parse(
-        _current_state[current][_current_state[current].length - 1].payalod
-      ).input;
-    }
-
-    _current_state[t.txid] = history;
-  });
-  
-  
-  return _current_state;
-}
-
-function writeFile(file, jsonObject){
-  return new Promise((resolve, reject) => {
-    fs.writeFile(file, JSON.stringify(jsonObject, null, 4), (err) => {
-      if(err){
-        return reject(err);
-      }
-      return resolve();
-    });
-  })
-}
-
-function readFile(file){
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, (err, data) =>{
-      if(err){
-        resolve(null);
-      }
-      try{
-        let p = JSON.parse(data);
-        return resolve(p);
-      }
-      catch(e){
-        resolve(null);
-      }
-    });
-  });
-}
-
-
-
-
 //=============================================
 
 
@@ -408,8 +289,6 @@ async function shutdown(){
 
     (async () => {
       await mongo.close();
-      await writeFile(BLOCKS_FILE, blocks);
-      await writeFile(STATE_FILE, state);
       await sawtoothHelper.close();
       finish();
     })();
