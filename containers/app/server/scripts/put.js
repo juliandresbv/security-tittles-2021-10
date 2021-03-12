@@ -69,39 +69,16 @@ const publicKey2 = Buffer.from(pubKey2).toString('hex');
     }
   };
 
-  let transaction = JSON.stringify(payload);
-  const txid = await wallet1.signMessage(transaction)
-  console.log('txid:', txid)
+  let transaction1 = JSON.stringify(payload);
+  const txid1 = await wallet1.signMessage(transaction1);
+  console.log('txid:', txid1)
 
-  const input = getAddress(TRANSACTION_FAMILY, JSON.parse(transaction).input);
-  const address = getAddress(TRANSACTION_FAMILY, txid);
-
-  const pl = JSON.stringify({func: 'put', args:{transaction, txid}});
-  
   try{
-    await sendTransactionWithAwait(
-      TRANSACTION_FAMILY, 
-      TRANSACTION_FAMILY_VERSION,
-      [input, address],
-      [input, address],
-      pl);
-    console.log('ok');
+    let res = await axios.put(`http://localhost:3001/api/`, {transaction: transaction1, txid: txid1});
+    console.log(res.data);
   }
   catch(err){
-    let errMsg;
-    if(err.data){
-      errMsg = err.data;
-      if(err.message == 'Invalid transaction'){
-        errMsg = "Invalid Transaction: " + err.data.data[0].invalid_transactions[0].message;
-      }
-      else {
-        errMsg = err;
-      }
-    }
-    else{
-      errMsg = err;
-    }
-    console.log(errMsg);
+    console.log(err);
   }
 
 })();
