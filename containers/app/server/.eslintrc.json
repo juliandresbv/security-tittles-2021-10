@@ -9,7 +9,8 @@
   },
   "env": {
     "node": true,
-    "es2017": true
+    "es2017": true,
+    "mocha": true
   },
   "parserOptions": {
     "ecmaVersion": 8,
