@@ -26,6 +26,31 @@ const {
 } = require('sawtooth-sdk/protobuf');
 const { default: axios } = require('axios');
 
+/*
+'sawtooth/state-delta' must be used with 'sawtooth/block-commit'
+*/
+const handlers = [
+  {
+    eventType: 'sawtooth/state-delta',
+    filters: [{
+      key: 'address',
+      matchString: `^${PREFIX}.*`,
+      filterType: EventFilter.FilterType.REGEX_ANY
+    }],
+    handle: null,
+  },
+  {
+    eventType: 'sawtooth/block-commit',
+    filters: [],
+    handle: blockCommitHandler
+  },
+  // {
+  //   eventType: 'myevent',
+  //   filters: [],
+  //   handle: (e) => console.log(e) 
+  // }
+];
+
 (async () => {
 
   let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
@@ -103,8 +128,6 @@ async function addTransactions(block){
   }
 
   await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
-  blocks.push(block);
-  lastBlock = block.block_id;
 
 }
 
@@ -115,9 +138,6 @@ async function removeTransactionsAfterBlockNumInclusive(block_num){
   await blockCollection.deleteMany({block_num: {$gte: block_num}});
   await blockCollection.deleteMany({block_num: {$gte: block_num}});
 
-  blocks = _.filter(blocks, (b) => {
-    b.block_num < block.block_num
-  });
 }
 
 
@@ -126,31 +146,6 @@ async function removeStateAfterBlockNumInclusive(block_num){
   await stateCollection.deleteMany({block_num: {$gte: block_num}});
 
 }
-
-/*
-'sawtooth/state-delta' must be used with 'sawtooth/block-commit'
-*/
-const handlers = [
-  {
-    eventType: 'sawtooth/state-delta',
-    filters: [{
-      key: 'address',
-      matchString: `^${PREFIX}.*`,
-      filterType: EventFilter.FilterType.REGEX_ANY
-    }],
-    handle: null,
-  },
-  {
-    eventType: 'sawtooth/block-commit',
-    filters: [],
-    handle: blockCommitHandler
-  },
-  // {
-  //   eventType: 'myevent',
-  //   filters: [],
-  //   handle: (e) => console.log(e) 
-  // }
-]
 
 
 function getSawtoothTransactionsFromBlock(block) {
@@ -202,9 +197,10 @@ function sawtoothTransactionToTransaction(t){
   };
 }
 
-async function addState(block, events){
-
+async function getStateDeltas(block, events){
   const stateCollection = await stateCollectionPromise;
+
+  let deltas = [];
 
   for(n = 0; n < events.length; n++){
     const e = events[n];
@@ -231,14 +227,13 @@ async function addState(block, events){
         const {key, value} = p[m];
         updates[key] = value;
   
-        await stateCollection.updateOne({address, key, block_num: block.block_num}, {$set: {
+        deltas.push({
           address,
           key,
           block_num: block.block_num,
           value,
           type: 'SET'
-        }}, 
-        {upsert: true});
+        });
       }
   
       toDelete = _.difference(_.keys(prevState), _.keys(updates));
@@ -250,16 +245,35 @@ async function addState(block, events){
 
     for(m = 0; m < toDelete.length; m ++){
       const k = toDelete[m];
-      await stateCollection.updateOne({address, key:k, block_num: block.block_num}, {$set: {
+      deltas.push({
         address,
         key:k,
         block_num: block.block_num,
         value: null,
         type: 'DELETE'
-      }}, 
-      {upsert: true});
+      });
     }
 
+  }
+  return deltas;
+}
+
+
+async function addState(block, events){
+
+  const stateCollection = await stateCollectionPromise;
+
+  const deltas = await getStateDeltas(block, events);
+
+  for(n = 0; n < deltas.length; n++){
+    const u = deltas[n];
+    await stateCollection.updateOne({
+        address: u.address, 
+        key:u.key, 
+        block_num: u.block_num
+      }, 
+      {$set: u}, 
+      {upsert: true});
   }
 }
 
