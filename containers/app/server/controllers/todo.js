@@ -129,14 +129,14 @@ module.exports.getToDoHistory = async function(req, res) {
   const transactionCollection = mongoClient.db('mydb').collection("transaction");
   const stateCollection = mongoClient.db('mydb').collection("state");
 
-  const st = await stateCollection.findOne({key: req.params.id});
+  const st = await stateCollection.findOne({_id: req.params.id});
   if(!st){
     return res.status(404).json({msg: "not UTXO"});
   }
 
   const tx = await transactionCollection.findOne({_id: req.params.id});
   if(!tx){
-    return res.status(404).json({msg: "not found"});
+    return res.status(404).json({msg: "Transaction not found"});
   }
 
   let history = [];
