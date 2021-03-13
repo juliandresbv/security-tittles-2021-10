@@ -24,11 +24,6 @@ describe('POST /', ()=>{
     mongo.close();
   });
 
-
-  it('constants are defined', async ()=>{
-    return assert.equal('1', '1');
-  });
-
   it('success', async ()=>{
     const msg = "hi there" + Math.random();
 
