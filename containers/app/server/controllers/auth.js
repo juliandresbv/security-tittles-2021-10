@@ -36,7 +36,10 @@ module.exports.signin = async function(req, res){
   }
 
   try{
-    await jwtVerify(toSign.slice("Signin:".length));
+    let r = await jwtVerify(toSign.slice("Signin:".length));
+    if((Date.now() - (new Date(r.challange).getTime())) > 60*1000){
+      return res.status(401).json('Old Challange');
+    }
   }
   catch(err){
     return res.status(401).json(err.message);
@@ -64,7 +67,10 @@ module.exports.signup = async function(req, res){
   }
 
   try{
-    await jwtVerify(toSign.slice("Signin:".length));
+    let r = await jwtVerify(toSign.slice("Signin:".length));
+    if((Date.now() - (new Date(r.challange).getTime())) > 60*1000){
+      return res.status(401).json('Old Challange');
+    }
   }
   catch(err){
     return res.status(401).json(err.message);
@@ -75,7 +81,7 @@ module.exports.signup = async function(req, res){
   }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
   
 
-  console.log('signup', req.body)
+  console.log('signin', req.body)
   return res.json({token});
 }
 

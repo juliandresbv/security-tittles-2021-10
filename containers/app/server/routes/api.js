@@ -12,9 +12,9 @@ const {authTransactionMiddleware} = require('../controllers/transaction');
 const {jwtMiddleware} = require('../controllers/auth');
 
 router.get('/', jwtMiddleware, getAllToDo);
-router.get('/:id', getToDo);
-router.post('/', authTransactionMiddleware, postToDo);
-router.put('/', authTransactionMiddleware, putToDo);
+router.get('/:id', jwtMiddleware, getToDo);
+router.post('/', jwtMiddleware, authTransactionMiddleware, postToDo);
+router.put('/', jwtMiddleware, authTransactionMiddleware, putToDo);
 
 
 router.get('/:id/:history', getToDoHistory)
