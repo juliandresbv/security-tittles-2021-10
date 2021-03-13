@@ -93,7 +93,7 @@ module.exports.jwtMiddleware = async function(req, res, next){
   }
 
   try{
-    await jwtVerify(token);
+    await jwtVerify(token.slice('Bearer '.length));
     next();
   }
   catch(err){

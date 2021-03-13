@@ -19,7 +19,7 @@ import Paper from '@material-ui/core/Paper';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
-import { selectPublicKey } from '../redux/authSlice';
+import { selectPublicKey, selectJWTHeader } from '../redux/authSlice';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -39,13 +39,14 @@ function Dashboard(){
   const history = useHistory();
 
   const publicKey = useSelector(selectPublicKey);
+  const jwtHeader = useSelector(selectJWTHeader);
 
   let [myToDos, setMyToDos] = useState([]);
   let [toDos, setToDos] = useState([]);
 
 
   useEffect(()=>{
-    axios.get('/api/')
+    axios.get('/api/', jwtHeader)
       .then((res) => {        
         let t = _.groupBy(res.data, (e)=>{
           return e.value.owner;

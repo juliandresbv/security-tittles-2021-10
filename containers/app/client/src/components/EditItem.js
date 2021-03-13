@@ -19,6 +19,9 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import {buildTransaction} from '../helpers/signing';
 import _ from 'underscore';
+import { useSelector } from 'react-redux';
+import { selectJWTHeader } from '../redux/authSlice';
+
 
 import axios from 'axios';
 
@@ -40,6 +43,8 @@ const useStyles = makeStyles(() => ({
 function CreateItem(){
   const classes = useStyles();
   const history = useHistory();
+  const jwtHeader = useSelector(selectJWTHeader);
+
   let { id } = useParams();
 
   let [ elem, setElem ] = useState(null);
@@ -49,8 +54,8 @@ function CreateItem(){
 
   useEffect(()=>{
     (async () => {
-      let res1 = await axios.get('/api/'+id);
-      let res2 = await axios.get('/api/'+id + '/history');
+      let res1 = await axios.get('/api/'+id, jwtHeader);
+      let res2 = await axios.get('/api/'+id + '/history', jwtHeader);
 
       setElem(res1.data);
       

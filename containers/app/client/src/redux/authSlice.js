@@ -96,8 +96,9 @@ export const signupAsync = (email) => async (dispatch, getState) => {
   let newAccount = {account: currentAccount, email, publicKey};
 
   res = await axios.post('/auth/signup', {email, publicKey, toSign, signature});
-  newAccount.token = res.data.token;
+  newAccount.jwt = res.data.token;
 
+  accounts[newAccount.account] = newAccount;
   localSaveAccounts(accounts, currentAccount)
   dispatch(addAccount(newAccount));
 } 
@@ -115,8 +116,9 @@ export const signinAsync = (email) => async (dispatch, getState) => {
   let newAccount = {account: currentAccount, email, publicKey};
 
   res = await axios.post('/auth/signin', {email, publicKey, toSign, signature});
-  newAccount.token = res.data.token;
+  newAccount.jwt = res.data.token;
 
+  accounts[newAccount.account] = newAccount;
   localSaveAccounts(accounts, currentAccount)
   dispatch(addAccount(newAccount));
 };
@@ -159,6 +161,13 @@ export const selectPublicKey = state => {
 
 export const selectMetamaskMessage = state => {
   return state.auth && state.auth.metamaskMessage;
+};
+
+export const selectJWTHeader = state => {
+  if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
+    return {headers: {"Authorization":"Bearer " + state.auth.accounts[state.auth.currentAccount].jwt}}
+  }
+  return null;
 };
 
 export default authSlice.reducer;

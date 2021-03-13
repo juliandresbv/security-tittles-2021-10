@@ -14,6 +14,7 @@ import Typography from '@material-ui/core/Typography';
 import {buildTransaction} from '../helpers/signing';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectPublicKey } from '../redux/authSlice';
+import { selectJWTHeader } from '../redux/authSlice';
 
 import axios from 'axios';
 
@@ -36,6 +37,7 @@ function CreateItem(){
   const classes = useStyles();
 
   const publicKey = useSelector(selectPublicKey);
+  const jwtHeader = useSelector(selectJWTHeader);
 
   const history = useHistory();
   const formik = useFormik({
@@ -64,7 +66,7 @@ function CreateItem(){
 
         let transaction = await buildTransaction(payload);
                 
-        await axios.post('/api/', transaction);
+        await axios.post('/api/', transaction, jwtHeader);
 
         await sleep(1000);
 
