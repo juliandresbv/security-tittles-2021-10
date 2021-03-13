@@ -46,7 +46,7 @@ module.exports.signin = async function(req, res){
   }
 
   var token = jwt.sign({
-    foo: 'bar' 
+    publicKey 
   }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
   
 
@@ -77,7 +77,7 @@ module.exports.signup = async function(req, res){
   }
 
   var token = jwt.sign({
-    foo: 'bar' 
+    publicKey 
   }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
   
 

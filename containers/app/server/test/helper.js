@@ -2,6 +2,23 @@ const { ethers } = require("ethers");
 const secp256k1 = require('secp256k1');
 
 
+var jwt = require('jsonwebtoken');
+
+module.exports.jwtVerify = function (token){
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, process.env.JWT_SECRET, {ignoreExpiration: false}, (err, d)=>{
+      if(err){
+        return reject(err);
+      }
+      resolve(d);
+    })
+  });
+}
+
+module.exports.jwtSign = function (content){
+  return jwt.sign(content, process.env.JWT_SECRET, { expiresIn: 60 });
+}
+
 module.exports.buildTransaction = async function (payload, privKey){
   const wallet = new ethers.Wallet(privKey);
   let transaction = JSON.stringify(payload);

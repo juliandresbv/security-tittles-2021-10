@@ -3,7 +3,15 @@ require('dotenv').config();
 const express = require('express');
 const app = require('../app');
 const mongo = require('../mongodb/mongo');
-const {privKey1, privKey2, getPublicKey, buildTransaction, sleep} = require('./helper');
+const {
+  privKey1, 
+  privKey2, 
+  getPublicKey, 
+  buildTransaction, 
+  sleep,
+  jwtSign,
+  jwtVerify
+} = require('./helper');
 const request = require('supertest');
 const _ = require('underscore');
 
@@ -15,6 +23,7 @@ const assert = require('chai').assert;
 const HOST = "http://localhost:3001";
 
 
+const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 
 
 describe('POST /', ()=>{
@@ -43,6 +52,7 @@ describe('POST /', ()=>{
     let res = await request(app)
       .post('/api/')
       .send(tx)
+      .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
       
@@ -53,6 +63,7 @@ describe('POST /', ()=>{
 
     res = await request(app)
       .get(`/api/${tx.txid}`)
+      .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -64,6 +75,7 @@ describe('POST /', ()=>{
 
     res = await request(app)
       .get(`/api/${tx.txid}/history`)
+      .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -106,6 +118,7 @@ describe('POST /', ()=>{
     res = await request(app)
       .put(`/api/`)
       .send(tx2)
+      .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -116,6 +129,7 @@ describe('POST /', ()=>{
 
     res = await request(app)
       .get(`/api/${tx2.txid}`)
+      .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -127,11 +141,13 @@ describe('POST /', ()=>{
 
     res = await request(app)
       .get(`/api/${tx.txid}/history`)
+      .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(404);
 
     res = await request(app)
       .get(`/api/${tx2.txid}/history`)
+      .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
