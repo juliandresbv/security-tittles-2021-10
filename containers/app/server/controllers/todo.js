@@ -86,12 +86,11 @@ module.exports.postToDo = async function(req, res) {
 
 module.exports.putToDo = async function(req, res) {
   const {transaction, txid} = req.body;
-
   const input = getAddress(TRANSACTION_FAMILY, JSON.parse(transaction).input);
   const address = getAddress(TRANSACTION_FAMILY, txid);
 
   const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
-  
+
   try{
     await sendTransactionWithAwait([
       {
@@ -102,6 +101,7 @@ module.exports.putToDo = async function(req, res) {
         payload
       }
     ]);
+
     return res.json({msg:'ok'});
 
   }
