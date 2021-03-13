@@ -13,14 +13,13 @@ export async function getCurrentAccount() {
   return accounts[0];
 }
 
-export async function getPublicKey() {
-  const payload = 'SignIn';
+export async function getPublicKey(payload) {
   let signature = await signString(payload);
 
   const hashEthers = ethers.utils.hashMessage(payload);
   const recoveredPubKeyUncompressed = ethers.utils.recoverPublicKey(hashEthers, signature);
   const publicKey = ethers.utils.computePublicKey(recoveredPubKeyUncompressed, true).slice(2);
-  return publicKey;
+  return {publicKey, signature};
 }
 
 

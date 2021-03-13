@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import _ from 'underscore';
 import { getPublicKey, getCurrentAccount } from '../helpers/signing';
+import axios from 'axios'; 
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -88,10 +89,14 @@ export const signupAsync = (email) => async (dispatch, getState) => {
   if(!currentAccount){
     currentAccount = await getCurrentAccount();
   }
-  let publicKey = await getPublicKey();
+  let res = await axios.post('/auth/challange');
+  let toSign = "Signin:" + res.data.challange;
+  let {publicKey, signature} = await getPublicKey(toSign);
 
   let newAccount = {account: currentAccount, email, publicKey};
-  accounts[currentAccount] = newAccount;
+
+  res = await axios.post('/auth/signup', {email, publicKey, toSign, signature});
+  newAccount.token = res.data.token;
 
   localSaveAccounts(accounts, currentAccount)
   dispatch(addAccount(newAccount));
@@ -103,11 +108,14 @@ export const signinAsync = (email) => async (dispatch, getState) => {
   if(!currentAccount){
     currentAccount = await getCurrentAccount();
   }
-
-  let publicKey = await getPublicKey();
+  let res = await axios.post('/auth/challange');
+  let toSign = "Signin:" + res.data.challange;
+  let {publicKey, signature} = await getPublicKey(toSign);
 
   let newAccount = {account: currentAccount, email, publicKey};
-  accounts[currentAccount] = newAccount;
+
+  res = await axios.post('/auth/signin', {email, publicKey, toSign, signature});
+  newAccount.token = res.data.token;
 
   localSaveAccounts(accounts, currentAccount)
   dispatch(addAccount(newAccount));

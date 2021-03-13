@@ -9,8 +9,9 @@ const {
 } = require('../controllers/todo');
 const {authTransactionMiddleware} = require('../controllers/transaction');
 
+const {jwtMiddleware} = require('../controllers/auth');
 
-router.get('/', getAllToDo);
+router.get('/', jwtMiddleware, getAllToDo);
 router.get('/:id', getToDo);
 router.post('/', authTransactionMiddleware, postToDo);
 router.put('/', authTransactionMiddleware, putToDo);

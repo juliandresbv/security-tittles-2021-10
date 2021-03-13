@@ -6,6 +6,7 @@ var logger = require('morgan');
 
 var swaggerRouter = require('./routes/swagger');
 var apiRouter = require('./routes/api');
+var authRouter = require('./routes/auth');
 
 var app = express();
 
@@ -17,6 +18,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api-docs', swaggerRouter);
 app.use('/api', apiRouter);
+app.use('/auth', authRouter);
 
 app.get('/*', (req, res) => {
   res.sendfile(path.join(__dirname, './public', 'index.html'));
