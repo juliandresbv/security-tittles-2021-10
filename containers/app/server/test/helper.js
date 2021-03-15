@@ -1,6 +1,6 @@
 const { ethers } = require("ethers");
 const secp256k1 = require('secp256k1');
-
+const { randomBytes } = require('crypto');
 
 var jwt = require('jsonwebtoken');
 
@@ -38,6 +38,15 @@ module.exports.privKey1 = Buffer.from(
 module.exports.privKey2 = Buffer.from(
   "0e9fe89bebe111af51d8204b4e4e627764564aa003b7477f266f4f86e37179f3", 'hex');
 
+module.exports.randomPrivKey = () => {
+  let privKey;
+  do {
+    privKey = randomBytes(32);
+  } while (!secp256k1.privateKeyVerify(privKey));
+  return privKey;
+}
+  
+  
 
 module.exports.sleep = function(ms){
   return new Promise((resolve) => {
