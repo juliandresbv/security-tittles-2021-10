@@ -7,10 +7,6 @@ const SAWTOOTH_PREFIX = hash512("todos").substring(0, 6);
 const mongo = require('./mongodb/mongo');
 
 
-const blockCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('block');
-});
-
 const transactionCollectionPromise = mongo.client().then((client) => {
   return client.db('mydb').collection('transaction');
 });
@@ -204,10 +200,8 @@ async function removeDataAfterBlockNumInclusive(block_num){
 }
 
 async function removeTransactionsAfterBlockNumInclusive(block_num){
-  const blockCollection = await blockCollectionPromise;
-
-  await blockCollection.deleteMany({block_num: {$gte: block_num}});
-  await blockCollection.deleteMany({block_num: {$gte: block_num}});
+  const transactionCollection = await transactionCollectionPromise;
+  await transactionCollection.deleteMany({block_num: {$gte: block_num}});
 
 }
 

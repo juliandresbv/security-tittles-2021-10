@@ -91,6 +91,8 @@ async function blockCommitHandler(block, events){
     console.log('FORK!!')
     //Remove invalid data
     await todo.removeDataAfterBlockNumInclusive(block.block_num);
+    await removeBlocksAfterBlockNumInclusive(block.block_num);
+
     // await recalculateState();
 
     await todo.addState(block, events);
@@ -103,6 +105,11 @@ async function blockCommitHandler(block, events){
 async function findBlockByNum(block_num){
   const blockCollection = await blockCollectionPromise;
   return await blockCollection.findOne({block_num});
+}
+
+async function removeBlocksAfterBlockNumInclusive(block_num){
+  const blockCollection = await blockCollectionPromise;
+  await blockCollection.deleteMany({block_num: {$gte: block_num}});
 }
 
 
