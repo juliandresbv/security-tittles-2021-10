@@ -78,28 +78,37 @@ module.exports.signin = async function(req, res){
 }
 
 module.exports.signup = async function(req, res){
-  const  {email, publicKey, toSign, signature} = req.body;
-
-  if(!email || !publicKey || !toSign || !signature){
-    return res.status(401).json('Invalid signature');
-  }
-
-  const pubK1 = getPublicKey(toSign, signature);
-  if(pubK1 !== publicKey){
-    return res.status(401).json('Invalid signature');
-  }
-
+  const  {transaction, txid} = req.body;
   try{
-    let r = await jwtVerify(toSign.slice("Signin:".length));
+    const {email, publicKey, challange} = JSON.parse(transaction);
+
+    const pubK1 = getPublicKey(transaction, txid);
+
+    if(pubK1 !== publicKey){
+      return res.status(401).json('Invalid signature');
+    }
+
+    if(!email){
+      return res.status(401).json('email is required');
+    }
+    
+    let r = await jwtVerify(challange);
     if((Date.now() - (new Date(r.challange).getTime())) > 60*1000){
       return res.status(401).json('Old Challange');
     }
+
+    var token = jwt.sign({
+      publicKey 
+    }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
+    
+  
+    console.log('signup')
+    return res.json({token});
+
   }
   catch(err){
     return res.status(401).json(err.message);
   }
-
-
 
 
   // const {transaction, txid} = req.body;
@@ -121,14 +130,6 @@ module.exports.signup = async function(req, res){
   //   return res.status(500).json({err});
   // }
 
-
-  var token = jwt.sign({
-    publicKey 
-  }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
-  
-
-  console.log('signin', req.body)
-  return res.json({token});
 }
 
 module.exports.jwtMiddleware = async function(req, res, next){

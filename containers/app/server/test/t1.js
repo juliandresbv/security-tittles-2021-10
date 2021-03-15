@@ -20,9 +20,6 @@ const _ = require('underscore');
 //https://www.chaijs.com/guide/styles/#assert
 const assert = require('chai').assert;
 
-const HOST = "http://localhost:3001";
-
-
 const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 
 

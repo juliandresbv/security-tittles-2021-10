@@ -7,8 +7,8 @@ const {
 } = require('../controllers/auth');
 
 router.post('/challange', challange);
-router.post('/signin', signin);
 router.post('/signup', signup);
+router.post('/signin', signin);
 
 module.exports = router;
 
