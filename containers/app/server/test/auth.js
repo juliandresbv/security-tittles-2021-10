@@ -92,24 +92,24 @@ describe('/auth', ()=>{
 
 
 
-  it('/signin with random key', async ()=>{
+  // it('/signin with random key', async ()=>{
 
-    let res = await request(app)
-      .post('/auth/challange')
-      .expect('Content-Type', 'application/json; charset=utf-8')
-      .expect(200);
+  //   let res = await request(app)
+  //     .post('/auth/challange')
+  //     .expect('Content-Type', 'application/json; charset=utf-8')
+  //     .expect(200);
 
-    const randomKey = randomPrivKey();
-    let s = await buildTransaction({challange: res.body.challange}, randomKey);
+  //   const randomKey = randomPrivKey();
+  //   let s = await buildTransaction({challange: res.body.challange}, randomKey);
 
-    res = await request(app)
-      .post('/auth/signin')
-      .send(s)
-      .expect('Content-Type', 'application/json; charset=utf-8')
-      .expect(404);
+  //   res = await request(app)
+  //     .post('/auth/signin')
+  //     .send(s)
+  //     .expect('Content-Type', 'application/json; charset=utf-8')
+  //     .expect(404);
 
-    assert.deepEqual(res.body, 'publickey not registered')
-  });
+  //   assert.deepEqual(res.body, 'publickey not registered')
+  // });
 
 
   it('/signin', async ()=>{

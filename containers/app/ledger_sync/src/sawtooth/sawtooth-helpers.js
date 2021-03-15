@@ -190,16 +190,16 @@ module.exports.close = function close(){
     Message.MessageType.CLIENT_EVENTS_SUBSCRIBE_REQUEST,
     ClientEventsUnsubscribeRequest.encode({}).finish()
   )
-  .then(response => ClientEventsUnsubscribeResponse.decode(response))
-  .then(decoded => {
-    const status = _.findKey(ClientEventsUnsubscribeResponse.Status,
-      val => val === decoded.status);      
-    if (status !== 'OK') {
-      throw new Error(`Validator responded with status "${status}"`)
-    }
-    stream.close();
-    console.log('Unsubscribed to socket');
-  });
+    .then(response => ClientEventsUnsubscribeResponse.decode(response))
+    .then(decoded => {
+      const status = _.findKey(ClientEventsUnsubscribeResponse.Status,
+        val => val === decoded.status);      
+      if (status !== 'OK') {
+        throw new Error(`Validator responded with status "${status}"`)
+      }
+      stream.close();
+      console.log('Unsubscribed to socket');
+    });
 
   return closingPromise;
 }
