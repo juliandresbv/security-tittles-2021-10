@@ -25,6 +25,11 @@ const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 
 describe('POST /', ()=>{
   
+  before(async() => {
+    await mongo.close();
+    await mongo.connect();
+  });
+
   after(async () => {
     await sleep(50);
     mongo.close();

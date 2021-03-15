@@ -46,35 +46,34 @@ module.exports.challange = async function(req, res){
 }
 
 module.exports.signin = async function(req, res){
-
-  const  {email, publicKey, toSign, signature} = req.body;
-
-  if(!email || !publicKey || !toSign || !signature){
-    return res.status(401).json('Invalid signature');
-  }
-
-  const pubK1 = getPublicKey(toSign, signature);
-  if(pubK1 !== publicKey){
-    return res.status(401).json('Invalid signature');
-  }
+  const  {transaction, txid} = req.body;
 
   try{
-    let r = await jwtVerify(toSign.slice("Signin:".length));
+    const {challange} = JSON.parse(transaction);
+
+    const pubK1 = getPublicKey(transaction, txid);
+
+    // if(pubK1 !== publicKey){
+    //   return res.status(401).json('Invalid signature');
+    // }
+    
+    let r = await jwtVerify(challange);
     if((Date.now() - (new Date(r.challange).getTime())) > 60*1000){
       return res.status(401).json('Old Challange');
     }
+
+    var token = jwt.sign({
+      publicKey: pubK1
+    }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
+    
+  
+    console.log('signin')
+    return res.json({token});
+
   }
   catch(err){
     return res.status(401).json(err.message);
   }
-
-  var token = jwt.sign({
-    publicKey 
-  }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
-  
-
-  console.log('signin', req.body)
-  return res.json({token});
 }
 
 module.exports.signup = async function(req, res){
@@ -109,27 +108,6 @@ module.exports.signup = async function(req, res){
   catch(err){
     return res.status(401).json(err.message);
   }
-
-
-  // const {transaction, txid} = req.body;
-  // const address = getAddress(TRANSACTION_FAMILY, txid);
-
-  // const payload = JSON.stringify({func: 'post', args:{transaction, txid}});
-  
-  // try{
-  //   await sendTransaction([{
-  //     transactionFamily: TRANSACTION_FAMILY, 
-  //     transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
-  //     inputs: [address],
-  //     outputs: [address],
-  //     payload
-  //   }]);
-  //   return res.json({msg:'ok'});
-  // }
-  // catch(err){
-  //   return res.status(500).json({err});
-  // }
-
 }
 
 module.exports.jwtMiddleware = async function(req, res, next){

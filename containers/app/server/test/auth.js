@@ -24,14 +24,19 @@ const assert = require('chai').assert;
 const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 
 
-describe('/auth/', ()=>{
+describe('/auth', ()=>{
   
+  before(async() => {
+    await mongo.close();
+    await mongo.connect();
+  });
+
   after(async () => {
     await sleep(50);
     mongo.close();
   });
 
-  it('challange', async ()=>{
+  it('/challange', async ()=>{
     let t1 = Date.now();
     let res = await request(app)
       .post('/auth/challange')
@@ -44,7 +49,7 @@ describe('/auth/', ()=>{
     assert.isTrue(j.challange >= t1);
   });
 
-  it('signup bad email', async ()=>{
+  it('/signup bad email', async ()=>{
 
     let res = await request(app)
       .post('/auth/challange')
@@ -63,7 +68,7 @@ describe('/auth/', ()=>{
     assert.deepEqual(res.body, 'email is required')
   });
 
-  it.only('signup', async ()=>{
+  it('/signup', async ()=>{
 
     let res = await request(app)
       .post('/auth/challange')
@@ -82,8 +87,28 @@ describe('/auth/', ()=>{
     let j = await jwtVerify(res.body.token);
 
     assert.equal(j.publicKey, getPublicKey(privKey1));
-
   });
 
+
+  it.only('/signin', async ()=>{
+
+    let res = await request(app)
+      .post('/auth/challange')
+      .expect('Content-Type', 'application/json; charset=utf-8')
+      .expect(200);
+
+    let s = await buildTransaction({challange: res.body.challange}, privKey1);
+
+    res = await request(app)
+      .post('/auth/signin')
+      .send(s)
+      .expect('Content-Type', 'application/json; charset=utf-8')
+      .expect(200);
+
+    assert.isNotNull(res.body.token);
+    let j = await jwtVerify(res.body.token);
+
+    assert.equal(j.publicKey, getPublicKey(privKey1));
+  });
 
 });
