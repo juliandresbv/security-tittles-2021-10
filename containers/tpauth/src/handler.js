@@ -24,11 +24,14 @@ const handlers = {
     const {type, publicKey, permissions} = JSON.parse(transaction);
     
     if (!type || type !== 'auth') {
-      throw new InvalidTransaction('type must be auth')
+      throw new InvalidTransaction('type must be auth');
+    }
+    if(!_.isString(publicKey)){
+      throw new InvalidTransaction('publicKey must be a string');
     }
 
-    if(!_.isString(publicKey)){
-      throw new InvalidTransaction('publicKey must be a string')
+    if(publicKey !== context.publicKey){
+      throw new InvalidTransaction('bad signature')
     }
 
     if(!_.isArray(permissions) || !_.all(permissions, p => _.isString(p))){

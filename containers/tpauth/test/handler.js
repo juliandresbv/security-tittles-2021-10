@@ -22,14 +22,14 @@ describe('simple', ()=>{
 
 describe('put handler', ()=>{
 
-  it('no publickKey', async ()=>{
+  it('bad type', async ()=>{
     let contexts = [contextMock()];
     try{
       await TPHandler.handlers.put(contexts, {transaction: JSON.stringify({type:'other type'})})
       assert.fail('Should Throw');
     }
     catch(e){
-      assert.equal(e.message, 'type must be auth')
+      assert.equal(e.message, 'type must be auth');
     }
   });
 
@@ -40,15 +40,30 @@ describe('put handler', ()=>{
       assert.fail('Should Throw');
     }
     catch(e){
-      assert.equal(e.message, 'publicKey must be a string')
+      assert.equal(e.message, 'publicKey must be a string');
+    }
+  });
+
+  it('bad signature', async ()=>{
+    let contexts = [contextMock()];
+    contexts[0].publicKey = '123';
+    try{
+      const data = {type:'auth', publicKey:'pk1', permissions: ['do1', 'do2']};
+      await TPHandler.handlers.put(contexts, {transaction: JSON.stringify(data)})
+      assert.fail('Should Throw');
+    }
+    catch(e){
+      assert.equal(e.message, 'bad signature');
     }
   });
 
 
-  it('no publickKey', async ()=>{
+  it('bad permissions', async ()=>{
     let contexts = [contextMock()];
+    contexts[0].publicKey = 'pk1';
     try{
-      await TPHandler.handlers.put(contexts, {transaction: JSON.stringify({type:'auth', publicKey:'pk1'})})
+      const data = {type:'auth', publicKey: 'pk1', permissions: {}};
+      await TPHandler.handlers.put(contexts, {transaction: JSON.stringify(data)})
       assert.fail('Should Throw');
     }
     catch(e){
@@ -59,6 +74,8 @@ describe('put handler', ()=>{
 
   it('ok', async ()=>{
     let contexts = [contextMock()];
+    contexts[0].publicKey = 'pk1';
+
     const data = {type:'auth', publicKey:'pk1', permissions: ['do1', 'do2']};
     await TPHandler.handlers.put(contexts, {transaction: JSON.stringify(data)});
 

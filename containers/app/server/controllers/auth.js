@@ -2,6 +2,29 @@ var _ = require('underscore');
 var jwt = require('jsonwebtoken');
 const {getPublicKey} = require('../helpers/signature');
 
+const crypto = require('crypto');
+const { 
+  sendTransaction, 
+  getAddress, 
+  sendTransactionWithAwait, 
+  queryState } = require('../sawtooth/sawtooth-helpers');
+
+const hash512 = (x) =>
+  crypto.createHash('sha512').update(x).digest('hex');
+
+const TRANSACTION_FAMILY = 'auth';
+const TRANSACTION_FAMILY_VERSION = '1.0';
+const INT_KEY_NAMESPACE = hash512(TRANSACTION_FAMILY).substring(0, 6)
+
+const { default: axios } = require("axios");
+
+function buildAddress(transactionFamily){
+  return (key) => {
+    return getAddress(transactionFamily, key);
+  }
+}
+
+
 function jwtVerify(token){
   return new Promise((resolve, reject) => {
     jwt.verify(token, process.env.JWT_SECRET, {ignoreExpiration: false}, (err, d)=>{
@@ -75,6 +98,29 @@ module.exports.signup = async function(req, res){
   catch(err){
     return res.status(401).json(err.message);
   }
+
+
+
+
+  // const {transaction, txid} = req.body;
+  // const address = getAddress(TRANSACTION_FAMILY, txid);
+
+  // const payload = JSON.stringify({func: 'post', args:{transaction, txid}});
+  
+  // try{
+  //   await sendTransaction([{
+  //     transactionFamily: TRANSACTION_FAMILY, 
+  //     transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
+  //     inputs: [address],
+  //     outputs: [address],
+  //     payload
+  //   }]);
+  //   return res.json({msg:'ok'});
+  // }
+  // catch(err){
+  //   return res.status(500).json({err});
+  // }
+
 
   var token = jwt.sign({
     publicKey 

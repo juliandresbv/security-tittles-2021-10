@@ -4,12 +4,9 @@ gnome-terminal --tab -- bash -c "cd ./network/docker-compose-dev; ./down.sh; ./u
 
 sleep 10
 gnome-terminal --tab -- bash -c "cd ./containers/tp1; npm start; bash"
-# gnome-terminal --tab -- bash -c "cd ./containers/client; npm start; bash"
+gnome-terminal --tab -- bash -c "cd ./containers/tpauth; npm start; bash"
 
 gnome-terminal --tab -- bash -c "cd ./containers/app/server; npm start; bash"
 gnome-terminal --tab -- bash -c "cd ./containers/app/client; npm start; bash"
-
-rm ./containers/app/server/data/blocks.json
-rm ./containers/app/server/data/state.json
 gnome-terminal --tab -- bash -c "cd ./containers/app/ledger_sync; npm start; bash"
 
