@@ -8,15 +8,15 @@ const mongo = require('./mongodb/mongo');
 
 
 const transactionCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('transaction');
+  return client.db('mydb').collection('todo_transaction');
 });
 
 const stateCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('state');
+  return client.db('mydb').collection('todo_state');
 });
 
 const stateHistoryCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('state_history');
+  return client.db('mydb').collection('todo_state_history');
 });
 
 

@@ -25,11 +25,11 @@ let clientPromise = connect();
 
   try{
     await db.collection('block').createIndex({block_num: 1});
-    await db.collection('transaction').createIndex({block_num: 1});
-    await db.collection('transaction').createIndex({head_id: 1, idx: -1});
+    await db.collection('todo_transaction').createIndex({block_num: 1});
+    await db.collection('todo_transaction').createIndex({head_id: 1, idx: -1});
 
-    await db.collection('state_history').createIndex({key: 1, block_num: 1}, {unique: true});
-    await db.collection('state_history').createIndex({address: 1, key: 1, block_num: 1});
+    await db.collection('todo_state_history').createIndex({key: 1, block_num: 1}, {unique: true});
+    await db.collection('todo_state_history').createIndex({address: 1, key: 1, block_num: 1});
 
   }
   catch(err){

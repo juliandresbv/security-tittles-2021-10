@@ -126,8 +126,8 @@ module.exports.putToDo = async function(req, res) {
 module.exports.getToDoHistory = async function(req, res) {
 
   const mongoClient = await mongo.client();
-  const transactionCollection = mongoClient.db('mydb').collection("transaction");
-  const stateCollection = mongoClient.db('mydb').collection("state");
+  const transactionCollection = mongoClient.db('mydb').collection("todo_transaction");
+  const stateCollection = mongoClient.db('mydb').collection("todo_state");
 
   const st = await stateCollection.findOne({_id: req.params.id});
   if(!st){
