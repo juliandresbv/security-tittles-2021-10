@@ -26,7 +26,7 @@ const handlers = {
     const {type, id, input, output} = JSON.parse(transaction);
     
     if (!type || type !== 'todo') {
-      throw new InvalidTransaction('type must be "todo"')
+      throw new InvalidTransaction('type must be todo')
     }
 
     if (!id) {
@@ -51,7 +51,7 @@ const handlers = {
     const {type, input, output} = JSON.parse(transaction);
     
     if (!type || type !== 'todo') {
-      throw new InvalidTransaction('type must be "todo"')
+      throw new InvalidTransaction('type must be todo')
     }
 
     if(input == null){
@@ -59,7 +59,6 @@ const handlers = {
     }
 
     let stateValue = await context.getState(input);
-
     if(!stateValue){
       throw new InvalidTransaction('UTXO does not exist')
     }
