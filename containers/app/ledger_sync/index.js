@@ -2,18 +2,15 @@ require('dotenv').config()
 const _ = require('underscore');
 const mongo = require('./src/mongodb/mongo');
 const todo = require('./src/todo');
+const auth = require('./src/auth');
 const sawtoothHelper = require('./src/sawtooth/sawtooth-helpers');
-const crypto = require('crypto');
-const hash512 = (x) =>
-  crypto.createHash('sha512').update(x).digest('hex');
-
 
 const blockCollectionPromise = mongo.client().then((client) => {
   return client.db('mydb').collection('block');
 });
 
 const TODO_PREFIX = todo.SAWTOOTH_PREFIX;
-const AUTH_PREFIX = hash512("auth").substring(0, 6);
+const AUTH_PREFIX = auth.SAWTOOTH_PREFIX;
 
 const {
   EventFilter,  
@@ -32,15 +29,15 @@ const handlers = [
     }],
     handle: null,
   },
-  // {
-  //   eventType: 'sawtooth/state-delta',
-  //   filters: [{
-  //     key: 'address',
-  //     matchString: `^${AUTH_PREFIX}.*`,
-  //     filterType: EventFilter.FilterType.REGEX_ANY
-  //   }],
-  //   handle: null,
-  // },
+  {
+    eventType: 'sawtooth/state-delta',
+    filters: [{
+      key: 'address',
+      matchString: `^${AUTH_PREFIX}.*`,
+      filterType: EventFilter.FilterType.REGEX_ANY
+    }],
+    handle: null,
+  },
   {
     eventType: 'sawtooth/block-commit',
     filters: [],
@@ -84,6 +81,8 @@ async function blockCommitHandler(block, events){
   if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
     await todo.addState(block, events);
     await todo.addTransactions(block);
+
+    // await auth.addTransactions(block);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }

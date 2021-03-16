@@ -26,15 +26,9 @@ const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 
 
 describe('/auth', ()=>{
-  
-  before(async() => {
-    await mongo.close();
-    await mongo.connect();
-  });
 
   after(async () => {
-    await sleep(50);
-    mongo.close();
+    await mongo.close();
   });
 
   it('/challange', async ()=>{

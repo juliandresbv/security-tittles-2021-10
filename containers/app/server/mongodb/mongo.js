@@ -4,9 +4,30 @@ let uri = process.env.MONGO_URI;
 
 console.log('uri:', uri);
 
-// Create a new MongoClient
+let clientPromise;
+let closed = true;
 
-async function connect() {
+module.exports.client = () => {
+  if(!clientPromise){
+    clientPromise = makeClientPromise();
+  }
+  return clientPromise;
+};
+
+module.exports.close = async function(){
+  if(clientPromise){
+    const client = await clientPromise;
+    await client.close();
+    console.log('Close MongoDB');
+  }
+  else{
+    console.log('Trying to close closed connection')
+  }
+};
+
+
+// Create a new MongoClient
+async function makeClientPromise() {
   const client = new MongoClient(uri);
   await client.connect();
 
@@ -15,12 +36,10 @@ async function connect() {
   return client;
 }
 
-let clientPromise = connect();
 
 
-//Create indexes:
-(async () =>  {
-  const client = await clientPromise;
+module.exports.createIndexes = async function(){
+  const client = await module.exports.client();
   const db = client.db('mydb');
 
   try{
@@ -35,27 +54,5 @@ let clientPromise = connect();
   catch(err){
     console.log(err);
   }
-  
-
-})();
-
-let closed = false;
-
-module.exports.client = () => {
-  if(!closed){
-    return clientPromise;
-  }
-  return Promise.reject(new Error('MongoDB closed'));
 }
 
-module.exports.close = async function(){
-  closed = true;
-  const client = await clientPromise;
-  await client.close();
-  console.log('Close MongoDB');
-}
-
-module.exports.connect = async function(){
-  closed = false;
-  clientPromise = connect();
-}
