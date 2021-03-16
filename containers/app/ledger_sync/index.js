@@ -78,9 +78,11 @@ async function blockCommitHandler(block, events){
   
   const blockCollection = await blockCollectionPromise;
 
+  const transactions = getSawtoothTransactionsFromBlock(block);
+
   if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
     await todo.addState(block, events);
-    await todo.addTransactions(block);
+    await todo.addTransactions(transactions);
 
     // await auth.addTransactions(block);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
@@ -95,7 +97,7 @@ async function blockCommitHandler(block, events){
     // await recalculateState();
 
     await todo.addState(block, events);
-    await todo.addTransactions(block);
+    await todo.addTransactions(transactions);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
@@ -111,6 +113,31 @@ async function removeBlocksAfterBlockNumInclusive(block_num){
   await blockCollection.deleteMany({block_num: {$gte: block_num}});
 }
 
+
+function getSawtoothTransactionsFromBlock(block) {
+  return _.chain(block.batches)
+    .map(b => {
+      return _.map(b.transactions, t => {
+        let payload;
+        try {
+          payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
+        }
+        catch (err) {
+          payload = Buffer.from(t.payload, 'base64').toString('utf-8');
+        }
+        return {
+          block_id: block.block_id,
+          block_num: block.block_num,
+          batch_id: b.header_signature,
+          transaction_id: t.header_signature,
+          payload: payload,
+          family_name: t.header.family_name
+        };
+      });
+    })
+    .flatten()
+    .value();
+}
 
 //=============================================
 

@@ -117,11 +117,14 @@ async function applyDeltaToState(delta){
 }
 
 
-async function addTransactions(block){
+async function addTransactions(transactions){
 
   const txCollection = await transactionCollectionPromise;
 
-  const tb = getTransactionsFromBlock(block);
+  const tb = _.chain(transactions)
+    .filter(t => t.family_name === 'todos')
+    .map(t => sawtoothTransactionToTransaction(t))
+    .value();
 
   for(let n = 0; n < tb.length; n++){
     const t = tb[n];
@@ -144,38 +147,6 @@ async function addTransactions(block){
     await txCollection.updateOne({_id: t_new._id}, {$set: t_new}, {upsert: true});
     
   }
-}
-
-function getTransactionsFromBlock(block){
-  const sawtoothT = getSawtoothTransactionsFromBlock(block);
-  return _.map(sawtoothT, sawtoothTransactionToTransaction);
-}
-
-function getSawtoothTransactionsFromBlock(block) {
-  return _.chain(block.batches)
-    .map(b => {
-      return _.map(b.transactions, t => {
-        let payload;
-        try {
-          payload = JSON.parse(Buffer.from(t.payload, 'base64').toString('utf-8'));
-        }
-        catch (err) {
-          payload = Buffer.from(t.payload, 'base64').toString('utf-8');
-        }
-        return {
-          block_id: block.block_id,
-          block_num: block.block_num,
-          batch_id: b.header_signature,
-          transaction_id: t.header_signature,
-          payload: payload,
-          family_name: t.header.family_name
-        };
-      });
-    })
-    .flatten()
-    .filter(t => t.family_name === 'todos')
-    // .indexBy(t => t.payload.args.txid)
-    .value();
 }
 
 function sawtoothTransactionToTransaction(t){
