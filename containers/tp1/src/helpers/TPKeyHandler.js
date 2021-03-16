@@ -128,12 +128,12 @@ module.exports = function({TP_FAMILY, TP_VERSION, TP_NAMESPACE, handlers, addres
     }
   
     async apply (transactionProcessRequest, context) {    
-      
       let publicKey;
       let args;
       let func;
       try{
         const payload = JSON.parse(Buffer.from(transactionProcessRequest.payload, 'utf8').toString());
+
         func = payload.func;
         args = payload.args;
 

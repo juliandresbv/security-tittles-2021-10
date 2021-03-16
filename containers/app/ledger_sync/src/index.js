@@ -62,7 +62,7 @@ async function blockCommitHandler(block, events){
   if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
     await todo.addState(block, events);
     await todo.addTransactions(transactions);
-
+    await auth.addTransactions(transactions);
     // await auth.addTransactions(block);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
@@ -73,10 +73,9 @@ async function blockCommitHandler(block, events){
     await todo.removeDataAfterBlockNumInclusive(block.block_num);
     await removeBlocksAfterBlockNumInclusive(block.block_num);
 
-    // await recalculateState();
-
     await todo.addState(block, events);
     await todo.addTransactions(transactions);
+    await auth.addTransactions(transactions);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }

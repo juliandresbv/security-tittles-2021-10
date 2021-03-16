@@ -100,10 +100,22 @@ module.exports.signup = async function(req, res){
       publicKey 
     }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
     
-  
+
+    const address = getAddress(TRANSACTION_FAMILY, publicKey);
+    const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
+
+    await sendTransaction([{
+      transactionFamily: TRANSACTION_FAMILY, 
+      transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
+      inputs: [address],
+      outputs: [address],
+      payload
+    }]);
     console.log('signup')
     return res.json({token});
 
+    // return res.json({msg:'ok'});
+    
   }
   catch(err){
     return res.status(401).json(err.message);
