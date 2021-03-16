@@ -29,7 +29,7 @@ describe('POST /', ()=>{
     await mongo.close();
   });
 
-  it('success', async ()=>{
+  it.only('success', async ()=>{
     const msg = "hi there" + Math.random();
 
     let content = {
@@ -55,7 +55,7 @@ describe('POST /', ()=>{
 
     assert.deepEqual(res.body, {msg: "ok"});
 
-    await sleep(1500);
+    await sleep(2000);
 
     res = await request(app)
       .get(`/api/${tx.txid}`)
@@ -121,7 +121,7 @@ describe('POST /', ()=>{
     assert.deepEqual(res.body, {msg: "ok"});
 
 
-    await sleep(1500);
+    await sleep(2000);
 
     res = await request(app)
       .get(`/api/${tx2.txid}`)
@@ -180,7 +180,7 @@ describe('POST /', ()=>{
     assert.isNotNull(res.body[1].block_id);
 
 
-  }).timeout(10*1000);
+  }).timeout(20*1000);
 
 
 
