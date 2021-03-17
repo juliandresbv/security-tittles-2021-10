@@ -4,7 +4,7 @@ let uri = process.env.MONGO_URI;
 
 console.log('uri:', uri);
 
-let clientPromise;
+let clientPromise = null;
 let closed = true;
 
 module.exports.client = () => {
@@ -18,6 +18,7 @@ module.exports.close = async function(){
   if(clientPromise){
     const client = await clientPromise;
     await client.close();
+    clientPromise = null;
     console.log('Close MongoDB');
   }
   else{

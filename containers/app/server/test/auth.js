@@ -27,6 +27,11 @@ const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 
 describe('/auth', ()=>{
 
+  before(async () => {
+    await mongo.close();
+    await mongo.client();
+  });
+
   after(async () => {
     await mongo.close();
   });
@@ -63,7 +68,7 @@ describe('/auth', ()=>{
     assert.deepEqual(res.body, 'email is required')
   });
 
-  it.only('/signup', async ()=>{
+  it('/signup', async ()=>{
 
     let res = await request(app)
       .post('/auth/challange')
