@@ -64,8 +64,17 @@ module.exports.signin = async function(req, res){
       return res.status(401).json('Old Challange');
     }
 
+    const mongoClient = await mongo.client();
+    const authStateCollection = mongoClient.db('mydb').collection("auth_state");
+    const me = await authStateCollection.findOne({_id: pubK1});
+
+    if(!me){
+      return json.status(404).json({msg: 'Not found'});
+    }
+
     var token = jwt.sign({
-      publicKey: pubK1
+      publicKey: pubK1,
+      permissions: me.value.permissions
     }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
     
   
@@ -98,11 +107,15 @@ module.exports.signup = async function(req, res){
       return res.status(401).json('Old Challange');
     }
 
-    var token = jwt.sign({
-      publicKey 
-    }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
-    
+    const mongoClient = await mongo.client();
+    const authStateCollection = mongoClient.db('mydb').collection("auth_state");
+    const me = await authStateCollection.findOne({_id: pubK1});
 
+    if(!me){
+      return json.status(404).json({msg: 'Not found'});
+    }
+
+    
     const address = getAddress(TRANSACTION_FAMILY, publicKey);
     const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
 
@@ -113,13 +126,19 @@ module.exports.signup = async function(req, res){
       outputs: [address],
       payload
     }]);
-    console.log('signup')
+
+
+    var token = jwt.sign({
+      publicKey,
+      permissions: me.value.permissions
+    }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
     return res.json({token});
 
     // return res.json({msg:'ok'});
     
   }
   catch(err){
+    console.log(err.message);
     return res.status(401).json(err.message);
   }
 }
@@ -128,6 +147,7 @@ module.exports.whoami = async function(req, res){
   const publickey = req.auth.jwt.publicKey;
 
   const mongoClient = await mongo.client();
+
   const authStateCollection = mongoClient.db('mydb').collection("auth_state");
 
   const me = await authStateCollection.findOne({_id: publickey});
@@ -139,7 +159,6 @@ module.exports.whoami = async function(req, res){
   return res.json({publicKey: publickey, permissions: me.value.permissions, email: me.value.email});
 };
 
-
 module.exports.jwtMiddleware = async function(req, res, next){
   
   let token = req.get('Authorization');
@@ -148,12 +167,38 @@ module.exports.jwtMiddleware = async function(req, res, next){
   }
 
   try{
+
     const jwt = await jwtVerify(token.slice('Bearer '.length));
-    req.auth = {jwt};
+    if(!_.any(jwt.permissions, p => p ==='client')){
+      return res.status(401).json('JWT permission denied');
+    }
+
+    if(!req.auth){
+      req.auth = {};
+    }
+    req.auth.jwt = jwt; 
+
     next();
+    
   }
   catch(err){
     return res.status(401).json(err.message);
   }
 
+}
+
+module.exports.txMiddleware = async function(req, res, next){
+  try{
+    const {transaction, txid} = req.body;
+    const publicKey = getPublicKey(transaction, txid);
+
+    if(!req.auth){
+      req.auth = {};
+    }
+    req.auth.publicKey = publicKey;
+    next();
+  }
+  catch(err){
+    return res.status(401).json({msg: 'Bad signature'});
+  }
 }

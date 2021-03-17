@@ -20,7 +20,7 @@ const _ = require('underscore');
 //https://www.chaijs.com/guide/styles/#assert
 const assert = require('chai').assert;
 
-const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
+const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1), permissions: ['client']});
 
 
 describe('POST /', ()=>{
@@ -34,7 +34,7 @@ describe('POST /', ()=>{
     await mongo.close();
   });
 
-  it('success', async ()=>{
+  it.only('success', async ()=>{
     const msg = "hi there" + Math.random();
 
     let content = {

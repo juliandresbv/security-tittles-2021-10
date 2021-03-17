@@ -7,17 +7,17 @@ const {
   putToDo,
   getToDoHistory
 } = require('../controllers/todo');
-const {authTransactionMiddleware} = require('../controllers/transaction');
 
-const {jwtMiddleware} = require('../controllers/auth');
+const {
+  txMiddleware,
+  jwtMiddleware
+} = require('../controllers/auth');
 
 router.get('/', jwtMiddleware, getAllToDo);
 router.get('/:id', jwtMiddleware, getToDo);
-router.post('/', jwtMiddleware, authTransactionMiddleware, postToDo);
-router.put('/', jwtMiddleware, authTransactionMiddleware, putToDo);
-
-
-router.get('/:id/:history', getToDoHistory)
+router.post('/', jwtMiddleware, txMiddleware, postToDo);
+router.put('/', jwtMiddleware, txMiddleware, putToDo);
+router.get('/:id/:history', jwtMiddleware, getToDoHistory)
 
 router.use('/*', function(req, res){
   res.status(404).json({msg: 'Resource not found'});
