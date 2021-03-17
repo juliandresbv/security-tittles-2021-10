@@ -34,7 +34,7 @@ describe('POST /', ()=>{
     await mongo.close();
   });
 
-  it.only('success', async ()=>{
+  it('success', async ()=>{
     const msg = "hi there" + Math.random();
 
     let content = {

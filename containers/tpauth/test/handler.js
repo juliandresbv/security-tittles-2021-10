@@ -29,40 +29,28 @@ describe('put handler', ()=>{
       assert.fail('Should Throw');
     }
     catch(e){
-      assert.equal(e.message, 'type must be auth');
+      assert.equal(e.message, 'type must be auth/signup');
     }
   });
 
-  it('no publickKey', async ()=>{
+  it('bad email', async ()=>{
     let contexts = [contextMock()];
+    contexts[0].publicKey = 'pk1';
     try{
-      await TPHandler.handlers.put(contexts, {transaction: JSON.stringify({type:'auth'})})
-      assert.fail('Should Throw');
-    }
-    catch(e){
-      assert.equal(e.message, 'publicKey must be a string');
-    }
-  });
-
-  it('bad signature', async ()=>{
-    let contexts = [contextMock()];
-    contexts[0].publicKey = '123';
-    try{
-      const data = {type:'auth', publicKey:'pk1', permissions: ['do1', 'do2']};
+      const data = {type:'auth/signup', email: null, permissions: ['client']};
       await TPHandler.handlers.put(contexts, {transaction: JSON.stringify(data)})
       assert.fail('Should Throw');
     }
     catch(e){
-      assert.equal(e.message, 'bad signature');
+      assert.equal(e.message, 'bad email')
     }
   });
-
 
   it('bad permissions', async ()=>{
     let contexts = [contextMock()];
     contexts[0].publicKey = 'pk1';
     try{
-      const data = {type:'auth', publicKey: 'pk1', permissions: {}};
+      const data = {type:'auth/signup', email: "a@a.com", permissions: {}};
       await TPHandler.handlers.put(contexts, {transaction: JSON.stringify(data)})
       assert.fail('Should Throw');
     }
@@ -71,15 +59,14 @@ describe('put handler', ()=>{
     }
   });
 
-
   it('ok', async ()=>{
     let contexts = [contextMock()];
     contexts[0].publicKey = 'pk1';
 
-    const data = {type:'auth', publicKey:'pk1', permissions: ['do1', 'do2']};
+    const data = {type:'auth/signup', email: "a@a.com", permissions: ['do1', 'do2']};
     await TPHandler.handlers.put(contexts, {transaction: JSON.stringify(data)});
 
-    assert.deepEqual(contexts[0]._state[data.publicKey], data.permissions);
+    assert.deepEqual(contexts[0]._state['pk1'], {email: data.email, permissions: data.permissions});
   });
 
 

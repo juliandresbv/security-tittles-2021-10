@@ -90,13 +90,9 @@ module.exports.signin = async function(req, res){
 module.exports.signup = async function(req, res){
   const  {transaction, txid} = req.body;
   try{
-    const {email, publicKey, challange} = JSON.parse(transaction);
+    const {email, challange, permissions} = JSON.parse(transaction);
 
-    const pubK1 = getPublicKey(transaction, txid);
-
-    if(pubK1 !== publicKey){
-      return res.status(401).json('Invalid signature');
-    }
+    const publicKey = getPublicKey(transaction, txid);
 
     if(!email){
       return res.status(401).json('email is required');
@@ -109,13 +105,12 @@ module.exports.signup = async function(req, res){
 
     const mongoClient = await mongo.client();
     const authStateCollection = mongoClient.db('mydb').collection("auth_state");
-    const me = await authStateCollection.findOne({_id: pubK1});
+    const me = await authStateCollection.findOne({_id: publicKey});
 
     if(!me){
-      return json.status(404).json({msg: 'Not found'});
+      console.log('new client');
     }
 
-    
     const address = getAddress(TRANSACTION_FAMILY, publicKey);
     const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
 
@@ -130,7 +125,7 @@ module.exports.signup = async function(req, res){
 
     var token = jwt.sign({
       publicKey,
-      permissions: me.value.permissions
+      permissions: permissions
     }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
     return res.json({token});
 

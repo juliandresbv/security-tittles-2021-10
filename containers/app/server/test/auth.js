@@ -68,14 +68,14 @@ describe('/auth', ()=>{
     assert.deepEqual(res.body, 'email is required')
   });
 
-  it('/signup', async ()=>{
+  it.only('/signup', async ()=>{
 
     let res = await request(app)
       .post('/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
-    const tx_data = {type: "auth/signup", email: "a@a.com", publicKey: getPublicKey(privKey1), challange: res.body.challange, permissions:['client']}
+    const tx_data = {type: "auth/signup", email: "a@a.com", challange: res.body.challange, permissions:['client']};
     let s = await buildTransaction(tx_data, privKey1);
 
     res = await request(app)
