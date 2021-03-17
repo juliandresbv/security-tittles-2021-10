@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var jwt = require('jsonwebtoken');
 const {getPublicKey} = require('../helpers/signature');
+const mongo = require('../mongodb/mongo')
 
 const crypto = require('crypto');
 const { 
@@ -17,6 +18,7 @@ const TRANSACTION_FAMILY_VERSION = '1.0';
 const INT_KEY_NAMESPACE = hash512(TRANSACTION_FAMILY).substring(0, 6)
 
 const { default: axios } = require("axios");
+const { json } = require('express');
 
 function buildAddress(transactionFamily){
   return (key) => {
@@ -122,6 +124,22 @@ module.exports.signup = async function(req, res){
   }
 }
 
+module.exports.whoami = async function(req, res){
+  const publickey = req.auth.jwt.publicKey;
+
+  const mongoClient = await mongo.client();
+  const authStateCollection = mongoClient.db('mydb').collection("auth_state");
+
+  const me = await authStateCollection.findOne({_id: publickey});
+
+  if(!me){
+    return json.status(404).json({msg: 'Not found'});
+  }
+
+  return res.json({publicKey: publickey, permissions: me.value.permissions, email: me.value.email});
+};
+
+
 module.exports.jwtMiddleware = async function(req, res, next){
   
   let token = req.get('Authorization');
@@ -130,7 +148,8 @@ module.exports.jwtMiddleware = async function(req, res, next){
   }
 
   try{
-    await jwtVerify(token.slice('Bearer '.length));
+    const jwt = await jwtVerify(token.slice('Bearer '.length));
+    req.auth = {jwt};
     next();
   }
   catch(err){

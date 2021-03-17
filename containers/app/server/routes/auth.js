@@ -3,12 +3,15 @@ var router = express.Router();
 const {
   signin,
   signup,
-  challange
+  challange,
+  whoami,
+  jwtMiddleware
 } = require('../controllers/auth');
 
 router.post('/challange', challange);
 router.post('/signup', signup);
 router.post('/signin', signin);
+router.get('/whoami', jwtMiddleware, whoami);
 
 module.exports = router;
 

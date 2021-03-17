@@ -13,6 +13,7 @@ const {
   jwtSign,
   jwtVerify
 } = require('../test/helper');
+const { assert } = require('chai');
 
 let privKey;
 
@@ -36,13 +37,21 @@ const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: get
 
   let res = await axios.post('http://localhost:3001/auth/challange');
 
-  let tx = await buildTransaction({type: "auth/signin", email: "a@a.com", publicKey: getPublicKey(privKey1), challange: res.data.challange, permissions:['client']}, privKey1);
+  const tx_data = {
+    type: "auth/signin", 
+    email: "a@a.com", 
+    publicKey: getPublicKey(privKey1), 
+    challange: res.data.challange, 
+    permissions:['client']
+  };
+  let tx = await buildTransaction(tx_data, privKey1);
 
   try{
 
     let res = await axios.post('http://localhost:3001/auth/signup', tx, jwtHeader);
     console.log(res.data);
     console.log(tx.txid)
+
   }
   catch(err){
     console.log(err);

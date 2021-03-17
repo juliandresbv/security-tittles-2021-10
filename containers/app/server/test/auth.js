@@ -70,7 +70,8 @@ describe('/auth', ()=>{
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
-    let s = await buildTransaction({type: "signin", email: "a@a.com", publicKey: getPublicKey(privKey1), challange: res.body.challange, permissions:['client']}, privKey1);
+    const tx_data = {type: "auth/signup", email: "a@a.com", publicKey: getPublicKey(privKey1), challange: res.body.challange, permissions:['client']}
+    let s = await buildTransaction(tx_data, privKey1);
 
     res = await request(app)
       .post('/auth/signup')
@@ -80,9 +81,19 @@ describe('/auth', ()=>{
 
     assert.isNotNull(res.body.token);
     let j = await jwtVerify(res.body.token);
-
     assert.equal(j.publicKey, getPublicKey(privKey1));
-  });
+
+    sleep(2000);
+
+    res = await request(app)
+      .get('/auth/whoami')
+      .set('Authorization', 'Bearer ' + res.body.token)
+      .expect('Content-Type', 'application/json; charset=utf-8')
+      .expect(200);
+    
+    assert.deepEqual(res.body, {publicKey: tx_data.publicKey, permissions: tx_data.permissions, email: tx_data.email});
+
+  }).timeout(20*1000);
 
 
 
