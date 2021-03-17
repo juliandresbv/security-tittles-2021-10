@@ -110,15 +110,19 @@ export const signinAsync = (email) => async (dispatch, getState) => {
   if(!currentAccount){
     currentAccount = await getCurrentAccount();
   }
-  let res = await axios.post('/auth/challange');
-  let toSign = "Signin:" + res.data.challange;
-  let {publicKey, signature} = await getPublicKey(toSign);
+  let res = await axios.post('/auth/challange')
+  ;
+  const transaction = JSON.stringify({type: "auth/signin", email, challange: res.data.challange, permissions:['client']});
+  let {publicKey, signature} = await getPublicKey(transaction);
 
   let newAccount = {account: currentAccount, email, publicKey};
 
-  res = await axios.post('/auth/signin', {email, publicKey, toSign, signature});
+  res = await axios.post('/auth/signin', {transaction, txid: signature});
   newAccount.jwt = res.data.token;
 
+  res = await axios.get('/auth/whoami', {headers: {"Authorization":"Bearer " + newAccount.jwt}});
+  newAccount.email = res.data.email;
+  
   accounts[newAccount.account] = newAccount;
   localSaveAccounts(accounts, currentAccount)
   dispatch(addAccount(newAccount));
