@@ -54,10 +54,6 @@ module.exports.signin = async function(req, res){
     const {challange} = JSON.parse(transaction);
 
     const pubK1 = getPublicKey(transaction, txid);
-
-    // if(pubK1 !== publicKey){
-    //   return res.status(401).json('Invalid signature');
-    // }
     
     let r = await jwtVerify(challange);
     if((Date.now() - (new Date(r.challange).getTime())) > 60*1000){
@@ -69,7 +65,7 @@ module.exports.signin = async function(req, res){
     const me = await authStateCollection.findOne({_id: pubK1});
 
     if(!me){
-      return json.status(404).json({msg: 'Not found'});
+      return res.status(404).json('publickey not registered');
     }
 
     var token = jwt.sign({
@@ -77,8 +73,7 @@ module.exports.signin = async function(req, res){
       permissions: me.value.permissions
     }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
     
-  
-    console.log('signin')
+    console.log('signin');
     return res.json({token});
 
   }

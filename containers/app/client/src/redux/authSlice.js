@@ -90,14 +90,13 @@ export const signupAsync = (email) => async (dispatch, getState) => {
     currentAccount = await getCurrentAccount();
   }
   let res = await axios.post('/auth/challange');
-  // const tx_data = {type: "auth/signup", email: "a@a.com", publicKey: getPublicKey(privKey1), challange: res.body.challange, permissions:['client']};
 
-  let toSign = "Signin:" + res.data.challange;
-  let {publicKey, signature} = await getPublicKey(toSign);
+  const transaction = JSON.stringify({type: "auth/signup", email, challange: res.data.challange, permissions:['client']});
+  let {publicKey, signature} = await getPublicKey(transaction);
 
   let newAccount = {account: currentAccount, email, publicKey};
 
-  res = await axios.post('/auth/signup', {email, publicKey, toSign, signature});
+  res = await axios.post('/auth/signup', {transaction, txid: signature});
   newAccount.jwt = res.data.token;
 
   accounts[newAccount.account] = newAccount;

@@ -68,7 +68,7 @@ describe('/auth', ()=>{
     assert.deepEqual(res.body, 'email is required')
   });
 
-  it.only('/signup', async ()=>{
+  it('/signup', async ()=>{
 
     let res = await request(app)
       .post('/auth/challange')
@@ -96,40 +96,60 @@ describe('/auth', ()=>{
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
     
-    assert.deepEqual(res.body, {publicKey: tx_data.publicKey, permissions: tx_data.permissions, email: tx_data.email});
+    assert.deepEqual(res.body, {publicKey: getPublicKey(privKey1), permissions: tx_data.permissions, email: tx_data.email});
 
   }).timeout(20*1000);
 
 
-
-  // it('/signin with random key', async ()=>{
-
-  //   let res = await request(app)
-  //     .post('/auth/challange')
-  //     .expect('Content-Type', 'application/json; charset=utf-8')
-  //     .expect(200);
-
-  //   const randomKey = randomPrivKey();
-  //   let s = await buildTransaction({challange: res.body.challange}, randomKey);
-
-  //   res = await request(app)
-  //     .post('/auth/signin')
-  //     .send(s)
-  //     .expect('Content-Type', 'application/json; charset=utf-8')
-  //     .expect(404);
-
-  //   assert.deepEqual(res.body, 'publickey not registered')
-  // });
-
-
-  it('/signin', async ()=>{
+  it('/signin with random key', async ()=>{
 
     let res = await request(app)
       .post('/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
-    let s = await buildTransaction({challange: res.body.challange}, privKey1);
+    const randomKey = randomPrivKey();
+    let s = await buildTransaction({challange: res.body.challange}, randomKey);
+
+    res = await request(app)
+      .post('/auth/signin')
+      .send(s)
+      .expect('Content-Type', 'application/json; charset=utf-8')
+      .expect(404);
+
+    assert.deepEqual(res.body, 'publickey not registered')
+  });
+
+
+  it('/signin success', async ()=>{
+
+    let res = await request(app)
+      .post('/auth/challange')
+      .expect('Content-Type', 'application/json; charset=utf-8')
+      .expect(200);
+
+    let tx_data = {type: "auth/signup", email: "a@a.com", challange: res.body.challange, permissions:['client']};
+    let s = await buildTransaction(tx_data, privKey1);
+
+    res = await request(app)
+      .post('/auth/signup')
+      .send(s)
+      .expect('Content-Type', 'application/json; charset=utf-8')
+      .expect(200);
+
+    assert.isNotNull(res.body.token);
+    let j = await jwtVerify(res.body.token);
+    assert.equal(j.publicKey, getPublicKey(privKey1));
+
+    sleep(2000);
+
+    res = await request(app)
+      .post('/auth/challange')
+      .expect('Content-Type', 'application/json; charset=utf-8')
+      .expect(200);
+
+    tx_data = {type: "auth/signin", email: "a@a.com", challange: res.body.challange};
+    s = await buildTransaction(tx_data, privKey1);
 
     res = await request(app)
       .post('/auth/signin')
@@ -138,9 +158,9 @@ describe('/auth', ()=>{
       .expect(200);
 
     assert.isNotNull(res.body.token);
-    let j = await jwtVerify(res.body.token);
+    j = await jwtVerify(res.body.token);
 
-    assert.equal(j.publicKey, getPublicKey(privKey1));
+    assert.deepEqual(_.pick(j, 'publicKey', 'permissions'), {publicKey: getPublicKey(privKey1), permissions: ['client']});
   });
 
 });

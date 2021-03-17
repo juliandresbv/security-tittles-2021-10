@@ -54,6 +54,7 @@ function CreateItem(){
 
   useEffect(()=>{
     (async () => {
+
       let res1 = await axios.get('/api/'+id, jwtHeader);
       let res2 = await axios.get('/api/'+id + '/history', jwtHeader);
 
@@ -99,7 +100,7 @@ function CreateItem(){
  
         let transaction = await buildTransaction(payload);
                 
-        await axios.put('/api/', transaction);
+        await axios.put('/api/', transaction, jwtHeader);
   
         await sleep(1000);
   
