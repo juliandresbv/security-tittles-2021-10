@@ -2,7 +2,10 @@ const _ = require('underscore');
 const crypto = require('crypto');
 const hash512 = (x) =>
   crypto.createHash('sha512').update(x).digest('hex');
-const SAWTOOTH_PREFIX = hash512("auth").substring(0, 6);
+
+
+const SAWTOOTH_FAMILY = 'auth';
+const SAWTOOTH_PREFIX = hash512(SAWTOOTH_FAMILY).substring(0, 6);
 
 const mongo = require('./mongodb/mongo');
 
@@ -19,6 +22,10 @@ const stateHistoryCollectionPromise = mongo.client().then((client) => {
 });
 
 
+async function transactionTransform(transaction){
+  return transaction;
+}
+
 async function addTransactions(transactions){
 
   const txCollection = await transactionCollectionPromise;
@@ -33,7 +40,9 @@ async function addTransactions(transactions){
     const t = tb[n];
     let t_new = _.clone(t);
     t_new._id = t_new.txid;
-    await txCollection.updateOne({_id: t_new._id}, {$set: t_new}, {upsert: true});
+
+    const t2 = await transactionTransform(t_new);
+    await txCollection.updateOne({_id: t2._id}, {$set: t2}, {upsert: true});
     
   }
 }
@@ -193,4 +202,4 @@ async function getCurrentDeltaFromHistory(key){
   return currentState;
 }
 
-module.exports = {SAWTOOTH_PREFIX, addState, addTransactions, removeDataAfterBlockNumInclusive};
+module.exports = {SAWTOOTH_FAMILY, SAWTOOTH_PREFIX, addState, addTransactions, removeDataAfterBlockNumInclusive};

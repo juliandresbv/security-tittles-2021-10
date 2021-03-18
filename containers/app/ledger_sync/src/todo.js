@@ -2,7 +2,9 @@ const _ = require('underscore');
 const crypto = require('crypto');
 const hash512 = (x) =>
   crypto.createHash('sha512').update(x).digest('hex');
-const SAWTOOTH_PREFIX = hash512("todos").substring(0, 6);
+
+const SAWTOOTH_FAMILY = 'todo';
+const SAWTOOTH_PREFIX = hash512(SAWTOOTH_FAMILY).substring(0, 6);
 
 const mongo = require('./mongodb/mongo');
 
@@ -117,34 +119,44 @@ async function applyDeltaToState(delta){
 }
 
 
+async function transactionTransform(transaction){
+  const txCollection = await transactionCollectionPromise;
+
+  let p = JSON.parse(transaction.payload);
+
+  if(p.input){
+    let prev = await txCollection.findOne({_id: p.input});
+    transaction.input = prev._id;
+    transaction.root = prev.root;
+    transaction.idx = prev.idx + 1;
+  }
+  else{
+    transaction.input = null;
+    transaction.root = transaction.txid;
+    transaction.idx = 0;
+  }
+
+  return transaction;
+}
+
 async function addTransactions(transactions){
 
   const txCollection = await transactionCollectionPromise;
 
+
   const tb = _.chain(transactions)
-    .filter(t => t.family_name === 'todos')
+    .filter(t => t.family_name === 'todo')
     .map(t => sawtoothTransactionToTransaction(t))
     .value();
 
   for(let n = 0; n < tb.length; n++){
     const t = tb[n];
-    let p = JSON.parse(t.payload);
 
     let t_new = _.clone(t);
     t_new._id = t_new.txid;
+    const t2 = await transactionTransform(t_new);
 
-    if(p.input){
-      let prev = await txCollection.findOne({_id: p.input});
-      t_new.input = prev._id;
-      t_new.root = prev.root;
-      t_new.idx = prev.idx + 1;
-    }
-    else{
-      t_new.input = null;
-      t_new.root = t_new.txid;
-      t_new.idx = 0;
-    }
-    await txCollection.updateOne({_id: t_new._id}, {$set: t_new}, {upsert: true});
+    await txCollection.updateOne({_id: t2._id}, {$set: t2}, {upsert: true});
     
   }
 }
@@ -214,4 +226,4 @@ async function getCurrentDeltaFromHistory(key){
   return currentState;
 }
 
-module.exports = {SAWTOOTH_PREFIX, addState, addTransactions, removeDataAfterBlockNumInclusive};
+module.exports = {SAWTOOTH_FAMILY, SAWTOOTH_PREFIX, addState, addTransactions, removeDataAfterBlockNumInclusive};

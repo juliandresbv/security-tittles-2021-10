@@ -4,7 +4,7 @@ const {
   InvalidTransaction
 } = require('sawtooth-sdk/processor/exceptions');
 
-const TP_FAMILY = 'todos';
+const TP_FAMILY = 'todo';
 const TP_VERSION = '1.0';
 
 const hash512 = (x) =>

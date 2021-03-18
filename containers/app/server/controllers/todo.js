@@ -10,7 +10,7 @@ const {
 const hash512 = (x) =>
   crypto.createHash('sha512').update(x).digest('hex');
 
-const TRANSACTION_FAMILY = 'todos';
+const TRANSACTION_FAMILY = 'todo';
 const TRANSACTION_FAMILY_VERSION = '1.0';
 const INT_KEY_NAMESPACE = hash512(TRANSACTION_FAMILY).substring(0, 6)
 
