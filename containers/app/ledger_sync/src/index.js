@@ -8,6 +8,9 @@ const AUTH_PREFIX = auth.SAWTOOTH_PREFIX;
 
 const sawtoothHelper = require('./sawtooth/sawtooth-helpers');
 
+const hand = [todo, auth];
+
+
 const {
   EventFilter,  
 } = require('sawtooth-sdk/protobuf');
@@ -60,12 +63,17 @@ async function blockCommitHandler(block, events){
   const transactions = getSawtoothTransactionsFromBlock(block);
 
   if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
+
+    for(let n = 0; n < hand.length; n ++){
+      let h = hand[n];
+      
+      const addTransaction = addTransactionsBuilder(h.SAWTOOTH_FAMILY, h.transactionTransform);
+      await addTransaction(transactions);
+    }
+
     await todo.addState(block, events);
-    await todo.addTransactions(transactions);
 
     await auth.addState(block, events);
-    await auth.addTransactions(transactions);
-    // await auth.addTransactions(block);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
@@ -76,14 +84,62 @@ async function blockCommitHandler(block, events){
     await auth.removeDataAfterBlockNumInclusive(block.block_num);
     await removeBlocksAfterBlockNumInclusive(block.block_num);
 
+    for(let n = 0; n < hand.length; n ++){
+      let h = hand[n];
+      
+      const addTransaction = addTransactionsBuilder(h.SAWTOOTH_FAMILY, h.transactionTransform);
+      await addTransaction(transactions);
+    }
+
     await todo.addState(block, events);
-    await todo.addTransactions(transactions);
 
     await auth.addState(block, events);
-    await auth.addTransactions(transactions);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
+}
+
+function addTransactionsBuilder(transaction_family, transactionTransform){
+  const transactionCollectionPromise = mongo.client().then((client) => {
+    return client.db('mydb').collection(`${transaction_family}_transaction`);
+  });
+
+  return async function (transactions){
+
+    const txCollection = await transactionCollectionPromise;
+  
+    const tb = _.chain(transactions)
+      .filter(t => t.family_name === transaction_family)
+      .map(t => sawtoothTransactionToTransaction(t))
+      .value();
+  
+    for(let n = 0; n < tb.length; n++){
+  
+      const t = tb[n];
+      let t_new = _.clone(t);
+      t_new._id = t_new.txid;
+  
+      const t2 = await transactionTransform(t_new);
+      await txCollection.updateOne({_id: t2._id}, {$set: t2}, {upsert: true});
+      
+    }
+  }
+}
+
+
+function sawtoothTransactionToTransaction(t){
+  const payload = t.payload.args.transaction;
+  const txid = t.payload.args.txid;
+  return {
+    payload,
+    txid,
+
+    block_id: t.block_id,
+    block_num: t.block_num,
+    batch_id: t.batch_id,
+    transaction_id: t.transaction_id,
+    // family_name: t.family_name
+  };
 }
 
 const blockCollectionPromise = mongo.client().then((client) => {

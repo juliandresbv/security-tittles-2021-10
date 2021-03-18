@@ -10,58 +10,21 @@ const SAWTOOTH_PREFIX = hash512(SAWTOOTH_FAMILY).substring(0, 6);
 const mongo = require('./mongodb/mongo');
 
 const transactionCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('auth_transaction');
+  return client.db('mydb').collection(`${SAWTOOTH_FAMILY}_transaction`);
 });
 
 const stateCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('auth_state');
+  return client.db('mydb').collection(`${SAWTOOTH_FAMILY}_state`);
 });
 
 const stateHistoryCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('auth_state_history');
+  return client.db('mydb').collection(`${SAWTOOTH_FAMILY}_state_history`);
 });
 
 
 async function transactionTransform(transaction){
   return transaction;
 }
-
-async function addTransactions(transactions){
-
-  const txCollection = await transactionCollectionPromise;
-
-  const tb = _.chain(transactions)
-    .filter(t => t.family_name === 'auth')
-    .map(t => sawtoothTransactionToTransaction(t))
-    .value();
-
-  for(let n = 0; n < tb.length; n++){
-
-    const t = tb[n];
-    let t_new = _.clone(t);
-    t_new._id = t_new.txid;
-
-    const t2 = await transactionTransform(t_new);
-    await txCollection.updateOne({_id: t2._id}, {$set: t2}, {upsert: true});
-    
-  }
-}
-
-function sawtoothTransactionToTransaction(t){
-  const payload = t.payload.args.transaction;
-  const txid = t.payload.args.txid;
-  return {
-    payload,
-    txid,
-
-    block_id: t.block_id,
-    block_num: t.block_num,
-    batch_id: t.batch_id,
-    transaction_id: t.transaction_id,
-    // family_name: t.family_name
-  };
-}
-
 
 async function addState(block, events){
 
@@ -202,4 +165,4 @@ async function getCurrentDeltaFromHistory(key){
   return currentState;
 }
 
-module.exports = {SAWTOOTH_FAMILY, SAWTOOTH_PREFIX, addState, addTransactions, removeDataAfterBlockNumInclusive};
+module.exports = {SAWTOOTH_FAMILY, SAWTOOTH_PREFIX, addState, removeDataAfterBlockNumInclusive, transactionTransform};
