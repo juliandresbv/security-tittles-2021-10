@@ -22,87 +22,6 @@ const stateHistoryCollectionPromise = mongo.client().then((client) => {
 });
 
 
-async function addState(block, events){
-
-  const stateHistoryCollection = await stateHistoryCollectionPromise;
-
-  const deltas = await getStateDeltas(block, events);
-
-  for(let n = 0; n < deltas.length; n++){
-    const d = deltas[n];
-    await stateHistoryCollection.updateOne({
-      address: d.address, 
-      key:d.key, 
-      block_num: d.block_num
-    }, 
-    {$set: d}, 
-    {upsert: true});
-
-    await applyDeltaToState(d);
-  }
-
-}
-
-async function getStateDeltas(block, events){
-  const stateHistoryCollection = await stateHistoryCollectionPromise;
-
-  let deltas = [];
-
-  for(let n = 0; n < events.length; n++){
-    const e = events[n];
-    const address = e.address;
-
-    let prevState = {};
-    const cursor = stateHistoryCollection.find({address}).sort({block_num: -1}).limit(1);
-    await new Promise((resolve) => {
-      cursor.forEach((doc)=>{
-        prevState[doc.key] = doc;
-      }, 
-      resolve)
-    });
-
-    let toDelete = [];
-
-    if(e.type == 'DELETE'){
-      toDelete = _.keys(prevState);
-    }
-    else if(e.type == 'SET'){
-      const p = JSON.parse(e.value.toString('utf-8'));
-      let updates = {}
-      for(let m = 0; m < p.length; m++){
-        const {key, value} = p[m];
-        updates[key] = value;
-  
-        deltas.push({
-          address,
-          key,
-          block_num: block.block_num,
-          value,
-          type: 'SET'
-        });
-      }
-  
-      toDelete = _.difference(_.keys(prevState), _.keys(updates));
-    }
-    else{
-      //
-    }
-
-    for(let m = 0; m < toDelete.length; m ++){
-      const k = toDelete[m];
-      deltas.push({
-        address,
-        key:k,
-        block_num: block.block_num,
-        value: null,
-        type: 'DELETE'
-      });
-    }
-
-  }
-  return deltas;
-}
-
 async function applyDeltaToState(delta){
   const stateCollection = await stateCollectionPromise;
   if(delta.type === 'SET'){
@@ -189,4 +108,4 @@ async function getCurrentDeltaFromHistory(key){
   return currentState;
 }
 
-module.exports = {SAWTOOTH_FAMILY, SAWTOOTH_PREFIX, addState, removeDataAfterBlockNumInclusive, transactionTransform};
+module.exports = {SAWTOOTH_FAMILY, SAWTOOTH_PREFIX, removeDataAfterBlockNumInclusive, transactionTransform};

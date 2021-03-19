@@ -69,11 +69,10 @@ async function blockCommitHandler(block, events){
       
       const addTransaction = addTransactionsBuilder(h.SAWTOOTH_FAMILY, h.transactionTransform);
       await addTransaction(transactions);
+
+      const addState = addStateBuilder(h.SAWTOOTH_FAMILY, h.SAWTOOTH_PREFIX);
+      addState(block, events);
     }
-
-    await todo.addState(block, events);
-
-    await auth.addState(block, events);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
@@ -89,11 +88,10 @@ async function blockCommitHandler(block, events){
       
       const addTransaction = addTransactionsBuilder(h.SAWTOOTH_FAMILY, h.transactionTransform);
       await addTransaction(transactions);
+
+      const addState = addStateBuilder(h.SAWTOOTH_FAMILY);
+      addState(block, events);
     }
-
-    await todo.addState(block, events);
-
-    await auth.addState(block, events);
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
@@ -122,6 +120,112 @@ function addTransactionsBuilder(transaction_family, transactionTransform){
       const t2 = await transactionTransform(t_new);
       await txCollection.updateOne({_id: t2._id}, {$set: t2}, {upsert: true});
       
+    }
+  }
+}
+
+
+function addStateBuilder(transaction_family, transaction_prefix){
+  const stateHistoryCollectionPromise = mongo.client().then((client) => {
+    return client.db('mydb').collection(`${transaction_family}_state_history`);
+  });
+  const stateCollectionPromise = mongo.client().then((client) => {
+    return client.db('mydb').collection(`${transaction_family}_state`);
+  });
+
+  return async function (block, events){
+
+    const stateHistoryCollection = await stateHistoryCollectionPromise;
+  
+    const filteredEvents = _.filter(events, e => e.address.startsWith(transaction_prefix));
+  
+    const deltas = await getStateDeltas(block, filteredEvents);
+    for(let n = 0; n < deltas.length; n++){
+      const d = deltas[n];
+      await stateHistoryCollection.updateOne({
+        address: d.address, 
+        key:d.key, 
+        block_num: d.block_num
+      }, 
+      {$set: d}, 
+      {upsert: true});
+  
+      await applyDeltaToState(d);
+    }
+  }
+
+  async function getStateDeltas(block, events){
+    const stateHistoryCollection = await stateHistoryCollectionPromise;
+  
+    let deltas = [];
+  
+    for(let n = 0; n < events.length; n++){
+      const e = events[n];
+      const address = e.address;
+  
+      let prevState = {};
+      const cursor = stateHistoryCollection.find({address}).sort({block_num: -1}).limit(1);
+      await new Promise((resolve) => {
+        cursor.forEach((doc)=>{
+          prevState[doc.key] = doc;
+        }, 
+        resolve)
+      });
+  
+      let toDelete = [];
+  
+      if(e.type == 'DELETE'){
+        toDelete = _.keys(prevState);
+      }
+      else if(e.type == 'SET'){
+        const p = JSON.parse(e.value.toString('utf-8'));
+        let updates = {}
+        for(let m = 0; m < p.length; m++){
+          const {key, value} = p[m];
+          updates[key] = value;
+    
+          deltas.push({
+            address,
+            key,
+            block_num: block.block_num,
+            value,
+            type: 'SET'
+          });
+        }
+    
+        toDelete = _.difference(_.keys(prevState), _.keys(updates));
+      }
+      else{
+        //
+      }
+  
+      for(let m = 0; m < toDelete.length; m ++){
+        const k = toDelete[m];
+        deltas.push({
+          address,
+          key:k,
+          block_num: block.block_num,
+          value: null,
+          type: 'DELETE'
+        });
+      }
+  
+    }
+    return deltas;
+  }
+
+  async function applyDeltaToState(delta){
+    const stateCollection = await stateCollectionPromise;
+    if(delta.type === 'SET'){
+      await stateCollection.updateOne({_id: delta.key}, {$set: {
+        _id: delta.key,
+        address: delta.address,
+        block_num: delta.block_num,
+        value: delta.value 
+      }}, {upsert: true});
+    }
+    else if(delta.type === 'DELETE'){
+      await stateCollection.deleteOne({_id: delta.key});
     }
   }
 }
@@ -183,6 +287,7 @@ function getSawtoothTransactionsFromBlock(block) {
 
 async function lastBlockId(){
   let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
+  return lastBlock;
 
   const blockCollection = await blockCollectionPromise;
   const cursor = await blockCollection.find({}).sort({block_num: -1}).limit(1);

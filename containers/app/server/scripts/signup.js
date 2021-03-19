@@ -38,7 +38,7 @@ const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: get
   let res = await axios.post('http://localhost:3001/auth/challange');
 
   const tx_data = {
-    type: "auth/signin", 
+    type: "auth/signup", 
     email: "a@a.com", 
     publicKey: getPublicKey(privKey1), 
     challange: res.data.challange, 
