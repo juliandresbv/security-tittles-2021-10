@@ -3,12 +3,6 @@ const mongo = require('../mongodb/mongo');
 
 const sawtoothHelper = require('./sawtooth-helpers');
 
-
-const {
-  EventFilter,  
-} = require('sawtooth-sdk/protobuf');
-
-
 async function handler(secondHandlers, block, events){
   // console.log(block);
 
@@ -316,7 +310,6 @@ function getSawtoothTransactionsFromBlock(block) {
 
 async function lastBlockId(){
   let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
-  return lastBlock;
 
   const blockCollection = await blockCollectionPromise;
   const cursor = await blockCollection.find({}).sort({block_num: -1}).limit(1);

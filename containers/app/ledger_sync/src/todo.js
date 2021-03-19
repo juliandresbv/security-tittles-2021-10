@@ -1,4 +1,3 @@
-const _ = require('underscore');
 const crypto = require('crypto');
 const hash512 = (x) =>
   crypto.createHash('sha512').update(x).digest('hex');
