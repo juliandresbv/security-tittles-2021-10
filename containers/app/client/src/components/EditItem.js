@@ -11,7 +11,8 @@ import { useHistory } from "react-router-dom";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Typography } from '@material-ui/core';
 import {
-  useParams
+  useParams,
+  useLocation
 } from "react-router-dom";
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -21,7 +22,9 @@ import {buildTransaction} from '../helpers/signing';
 import _ from 'underscore';
 import { useSelector } from 'react-redux';
 import { selectJWTHeader } from '../redux/authSlice';
-
+import IconButton from '@material-ui/core/IconButton';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
 
 import axios from 'axios';
 
@@ -40,6 +43,10 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
 function CreateItem(){
   const classes = useStyles();
   const history = useHistory();
@@ -47,8 +54,12 @@ function CreateItem(){
 
   let { id } = useParams();
 
+  const query = useQuery().get('page'); 
+
   let [ elem, setElem ] = useState(null);
   let [ hist, setHist ] = useState(null);
+
+  const page =  (query) ? parseInt(query, 10) : 1;
 
   let [ elemQueried, setElemQueried ] = useState(false);
 
@@ -56,11 +67,17 @@ function CreateItem(){
     (async () => {
 
       let res1 = await axios.get('/api/'+id, jwtHeader);
-      let res2 = await axios.get('/api/'+id + '/history?page=0', jwtHeader);
-
       setElem(res1.data);
-      
+      setElemQueried(true);
+    })();
+    
 
+  }, [id]);
+
+  useEffect(()=>{
+    (async () => {
+
+      let res2 = await axios.get('/api/'+id + `/history?page=${page-1}`, jwtHeader);
       let h = _.map(res2.data, t => {
         let s = JSON.parse(t.payload);
         return {
@@ -72,8 +89,7 @@ function CreateItem(){
       setElemQueried(true);
     })();
     
-
-  }, [id]);
+  }, [id, page]);
 
   const formik = useFormik({
     initialValues: {
@@ -225,7 +241,23 @@ function CreateItem(){
             )}
           </List>
         </Grid>
+        <Grid item xs={12} md={4} style={{width:"100%", display: 'flex', flexDirection: 'column', alignItems: "center"}} >
+          <div>
+            <IconButton aria-label="delete" 
+              disabled={page < 2}
+              onClick={()=> history.replace(`/editItem/${id}?page=${page-1}`)}>
+              <ChevronLeft />
+            </IconButton>
+            Page: {page}
+            <IconButton aria-label="delete" 
+              disabled={hist && hist.length == 0}
+              onClick={()=> history.replace(`/editItem/${id}?page=${page+1}`)}>
+              <ChevronRight />
+            </IconButton>
+          </div>
+        </Grid>
       </Grid>
+
     </React.Fragment>
   );
 }
