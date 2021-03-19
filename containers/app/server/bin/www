@@ -2,8 +2,9 @@
 
 require('dotenv').config()
 const mongo = require('../mongodb/mongo');
-mongo.client();
-mongo.createIndexes();
+mongo.init().then(() => {
+  mongo.createIndexes();
+});
 
 /**
  * Module dependencies.

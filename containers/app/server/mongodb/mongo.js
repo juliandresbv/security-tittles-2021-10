@@ -1,15 +1,17 @@
 const { MongoClient } = require("mongodb");
-
-let uri = process.env.MONGO_URI;
-
-console.log('uri:', uri);
-
 let clientPromise = null;
-let closed = true;
+
+
+module.exports.init = async function(){
+  if(clientPromise){
+    throw new Error('Trying to initialize twice!!');
+  }
+  clientPromise = makeClientPromise();
+};
 
 module.exports.client = () => {
   if(!clientPromise){
-    clientPromise = makeClientPromise();
+    throw new Error('Client not initialized!!');
   }
   return clientPromise;
 };
@@ -29,14 +31,14 @@ module.exports.close = async function(){
 
 // Create a new MongoClient
 async function makeClientPromise() {
-  const client = new MongoClient(uri);
+  console.log('mongo uri:', process.env.MONGO_URI);
+  const client = new MongoClient(process.env.MONGO_URI);
   await client.connect();
 
   // Establish and verify connection
   await client.db("admin").command({ ping: 1 });
   return client;
 }
-
 
 
 module.exports.createIndexes = async function(){

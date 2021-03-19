@@ -122,10 +122,7 @@ module.exports.signup = async function(req, res){
       publicKey,
       permissions: permissions
     }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
-    return res.json({token});
-
-    // return res.json({msg:'ok'});
-    
+    return res.json({token});    
   }
   catch(err){
     console.log(err.message);

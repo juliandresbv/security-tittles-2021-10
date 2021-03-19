@@ -28,8 +28,7 @@ const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 describe('/auth', ()=>{
 
   before(async () => {
-    await mongo.close();
-    await mongo.client();
+    await mongo.init();
   });
 
   after(async () => {
@@ -69,7 +68,6 @@ describe('/auth', ()=>{
   });
 
   it('/signup', async ()=>{
-
     let res = await request(app)
       .post('/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
@@ -88,7 +86,7 @@ describe('/auth', ()=>{
     let j = await jwtVerify(res.body.token);
     assert.equal(j.publicKey, getPublicKey(privKey1));
 
-    sleep(2000);
+    sleep(3000);
 
     res = await request(app)
       .get('/auth/whoami')
@@ -96,6 +94,7 @@ describe('/auth', ()=>{
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
     
+
     assert.deepEqual(res.body, {publicKey: getPublicKey(privKey1), permissions: tx_data.permissions, email: tx_data.email});
 
   }).timeout(20*1000);
