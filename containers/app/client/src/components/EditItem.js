@@ -56,7 +56,7 @@ function CreateItem(){
     (async () => {
 
       let res1 = await axios.get('/api/'+id, jwtHeader);
-      let res2 = await axios.get('/api/'+id + '/history', jwtHeader);
+      let res2 = await axios.get('/api/'+id + '/history?page=0', jwtHeader);
 
       setElem(res1.data);
       

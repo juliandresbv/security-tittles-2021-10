@@ -123,7 +123,11 @@ module.exports.putToDo = async function(req, res) {
   }
 };
 
+const PAGE_SIZE = 2;
+
 module.exports.getToDoHistory = async function(req, res) {
+
+  const page = req.query.page || 0; 
 
   const mongoClient = await mongo.client();
   const transactionCollection = mongoClient.db('mydb').collection("todo_transaction");
@@ -140,7 +144,10 @@ module.exports.getToDoHistory = async function(req, res) {
   }
 
   let history = [];
-  const cursor = await transactionCollection.find({root: tx.root}).sort({block_num: -1});
+  const cursor = await transactionCollection.find({root: tx.root})
+    .sort({block_num: -1})
+    .skip(PAGE_SIZE*page)
+    .limit(PAGE_SIZE);
   await new Promise((resolve, reject) => {
     cursor.forEach((doc)=>{
       history.push(doc);
