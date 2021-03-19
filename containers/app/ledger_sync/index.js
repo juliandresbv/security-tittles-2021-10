@@ -1,16 +1,17 @@
 require('dotenv').config()
 const mongo = require('./src/mongodb/mongo');
 const sawtoothHelper = require('./src/sawtooth/sawtooth-helpers');
+const mongoEventHandler = require('./src/sawtooth/mongoEventHandler')
 const _ = require('underscore');
 
-const {events, handler, lastBlockId} = require('./src/index');
+const {events, hand} = require('./src/index');
 
 (async () => {
   await mongo.client();
-  let lastBlock = await lastBlockId(); 
+  let lastBlock = await mongoEventHandler.lastBlockId(); 
   sawtoothHelper.subscribeToSawtoothEvents(
     sawtoothHelper.deltaEventsForSubscription(events), 
-    sawtoothHelper.decodedHandler(handler), 
+    sawtoothHelper.decodedHandler(mongoEventHandler.create(hand)), 
     lastBlock);
 })();
 
