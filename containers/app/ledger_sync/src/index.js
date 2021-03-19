@@ -15,11 +15,7 @@ const {
 /*
 'sawtooth/state-delta' must be used with 'sawtooth/block-commit'
 */
-const handlers = [{
-  eventType: 'sawtooth/block-commit',
-  filters: [],
-  handle: blockCommitHandler
-}].concat(_.map(hand, (h => {
+const events = _.map(hand, (h => {
   return {
     eventType: 'sawtooth/state-delta',
     filters: [{
@@ -29,7 +25,7 @@ const handlers = [{
     }],
     handle: null,
   }
-})))
+}));
 
 
 const secondHandlers = _.map(hand, (h) => {
@@ -360,4 +356,4 @@ async function lastBlockId(){
   return lastBlock;
 }
 
-module.exports = {handlers, lastBlockId};
+module.exports = {events, handler: blockCommitHandler, lastBlockId};

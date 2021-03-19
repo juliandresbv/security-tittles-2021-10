@@ -58,11 +58,11 @@ console.log('connecting to ', VALIDATOR_HOST);
 let stream = new Stream(VALIDATOR_HOST);
 
 
-module.exports.subscribeToSawtoothEvents = (handlers, lastKnownBlocks) =>{
+module.exports.subscribeToSawtoothEvents = (events, handler, lastKnownBlocks) =>{
   return new Promise((resolve)=>{
     stream.connect(()=>{
-      stream.onReceive(handleEvent(handlers));
-      subscribe(handlers, lastKnownBlocks).then(resolve);
+      stream.onReceive(handleEvent(handler));
+      subscribe(events, lastKnownBlocks).then(resolve);
       console.log('Connected');
     });
   })
@@ -129,20 +129,11 @@ function getOtherEvents(events){
     .value();
 }
 
-const handleEvent = handlers => async (msg) => {
+const handleEvent = handler => async (msg) => {
   if (msg.messageType === Message.MessageType.CLIENT_EVENTS) {
     const events = EventList.decode(msg.content).events;
-    //Aparently every eventlist with sawtooth/state-delta has a corresponding sawtooth/block-commit
-    const block = await getBlock(events);
-    const changes = getChanges(events);
-    const others = getOtherEvents(events);
 
-    _.forEach(handlers, (h)=>{
-      if(h.eventType == 'sawtooth/block-commit'){
-        h.handle(block, changes);
-      }
-    })
-
+    handler(events);
   }
   // else {
   //   console.warn('Received message of unknown type:', msg.messageType)
@@ -150,9 +141,9 @@ const handleEvent = handlers => async (msg) => {
 }
 
 
-const subscribe = (handlers, lastKnownBlocks) => {
+const subscribe = (events, lastKnownBlocks) => {
 
-  const subscriptions = _.chain(handlers)
+  const subscriptions = _.chain(events)
     .map(h => {
       return EventSubscription.create({
         eventType: h.eventType,
@@ -203,3 +194,30 @@ module.exports.close = function close(){
 
   return closingPromise;
 }
+
+
+//==================================
+// Convenience Methods
+//==================================
+
+module.exports.decodedHandler = (handler) => {
+  return async (events)=> {
+    //Aparently every eventlist with sawtooth/state-delta has a corresponding sawtooth/block-commit
+    const block = await getBlock(events);
+    const changesEvents = getChanges(events);
+    const othersEvents = getOtherEvents(events);
+
+    handler(block, changesEvents, othersEvents);
+  }
+}
+
+module.exports.deltaEventsForSubscription = (events) => {
+  /*
+  'sawtooth/state-delta' must be used with 'sawtooth/block-commit'
+  */
+  return [{
+    eventType: 'sawtooth/block-commit',
+    filters: []
+  }].concat(events);
+}
+
