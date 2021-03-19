@@ -3,9 +3,6 @@ const mongo = require('./mongodb/mongo');
 const todo = require('./todo');
 const auth = require('./auth');
 
-const TODO_PREFIX = todo.SAWTOOTH_PREFIX;
-const AUTH_PREFIX = auth.SAWTOOTH_PREFIX;
-
 const sawtoothHelper = require('./sawtooth/sawtooth-helpers');
 
 const hand = [todo, auth];
@@ -18,36 +15,30 @@ const {
 /*
 'sawtooth/state-delta' must be used with 'sawtooth/block-commit'
 */
-const handlers = [
-  {
+const handlers = [{
+  eventType: 'sawtooth/block-commit',
+  filters: [],
+  handle: blockCommitHandler
+}].concat(_.map(hand, (h => {
+  return {
     eventType: 'sawtooth/state-delta',
     filters: [{
       key: 'address',
-      matchString: `^${TODO_PREFIX}.*`,
+      matchString: `^${h.SAWTOOTH_PREFIX}.*`,
       filterType: EventFilter.FilterType.REGEX_ANY
     }],
     handle: null,
-  },
-  {
-    eventType: 'sawtooth/state-delta',
-    filters: [{
-      key: 'address',
-      matchString: `^${AUTH_PREFIX}.*`,
-      filterType: EventFilter.FilterType.REGEX_ANY
-    }],
-    handle: null,
-  },
-  {
-    eventType: 'sawtooth/block-commit',
-    filters: [],
-    handle: blockCommitHandler
-  },
-  // {
-  //   eventType: 'myevent',
-  //   filters: [],
-  //   handle: (e) => console.log(e) 
-  // }
-];
+  }
+})))
+
+
+const secondHandlers = _.map(hand, (h) => {
+  return {
+    addTransaction: addTransactionsBuilder(h.SAWTOOTH_FAMILY, h.transactionTransform),
+    addState: addStateBuilder(h.SAWTOOTH_FAMILY, h.SAWTOOTH_PREFIX),
+    removeDataAfterBlockNumInclusive: removeDataAfterBlockNumInclusiveBuilder(h.SAWTOOTH_FAMILY)
+  }
+});
 
 async function blockCommitHandler(block, events){
   // console.log(block);
@@ -64,14 +55,11 @@ async function blockCommitHandler(block, events){
 
   if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
 
-    for(let n = 0; n < hand.length; n ++){
-      let h = hand[n];
+    for(let n = 0; n < secondHandlers.length; n ++){
+      let h = secondHandlers[n];
       
-      const addTransaction = addTransactionsBuilder(h.SAWTOOTH_FAMILY, h.transactionTransform);
-      await addTransaction(transactions);
-
-      const addState = addStateBuilder(h.SAWTOOTH_FAMILY, h.SAWTOOTH_PREFIX);
-      addState(block, events);
+      await h.addTransaction(transactions);
+      await h.addState(block, events);
     }
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
@@ -79,28 +67,100 @@ async function blockCommitHandler(block, events){
   else{ // Fork
     console.log('FORK!!')
     //Remove invalid data
-    await todo.removeDataAfterBlockNumInclusive(block.block_num);
-    await auth.removeDataAfterBlockNumInclusive(block.block_num);
+    for(let n = 0; n < secondHandlers.length; n ++){
+      let h = secondHandlers[n];
+      
+      await h.removeDataAfterBlockNumInclusive(block.block_num);
+    }
+
     await removeBlocksAfterBlockNumInclusive(block.block_num);
 
-    for(let n = 0; n < hand.length; n ++){
-      let h = hand[n];
+    for(let n = 0; n < secondHandlers.length; n ++){
+      let h = secondHandlers[n];
       
-      const addTransaction = addTransactionsBuilder(h.SAWTOOTH_FAMILY, h.transactionTransform);
-      await addTransaction(transactions);
-
-      const addState = addStateBuilder(h.SAWTOOTH_FAMILY);
-      addState(block, events);
+      await h.addTransaction(transactions);
+      await h.addState(block, events);
     }
     await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
 }
 
+function removeDataAfterBlockNumInclusiveBuilder(transaction_family){
+  const transactionCollectionPromise = mongo.client().then((client) => {
+    return client.db('mydb').collection(`${transaction_family}_transaction`);
+  });
+  const stateHistoryCollectionPromise = mongo.client().then((client) => {
+    return client.db('mydb').collection(`${transaction_family}_state_history`);
+  });
+  const stateCollectionPromise = mongo.client().then((client) => {
+    return client.db('mydb').collection(`${transaction_family}_state`);
+  });
+
+  return async function(block_num){
+    const transactionCollection = await transactionCollectionPromise;
+    await transactionCollection.deleteMany({block_num: {$gte: block_num}});
+
+    const stateHistoryCollection = await stateHistoryCollectionPromise;
+    await stateHistoryCollection.deleteMany({block_num: {$gte: block_num}});
+
+    const stateCollection = await stateCollectionPromise;
+    await stateCollection.deleteMany({});
+
+    await recalculateState();
+  }
+
+  async function recalculateState(){
+    const stateHistoryCollection = await stateHistoryCollectionPromise;
+
+    const cursor = stateHistoryCollection.aggregate([{$group: {_id: "$key"}}]);
+  
+    while(await cursor.hasNext()){
+      const key = await cursor.next();
+  
+      const delta = await getCurrentDeltaFromHistory(key._id);
+      if(delta){
+        await applyDeltaToState(delta);
+      }
+    }
+  
+  }
+
+  async function getCurrentDeltaFromHistory(key){
+    const stateHistoryCollection = await stateHistoryCollectionPromise;
+    const cursor = stateHistoryCollection.find({key}).sort({block_num: -1}).limit(1);
+  
+    let currentState = null;
+  
+    while(await cursor.hasNext()){
+      currentState = await cursor.next();
+    }
+    return currentState;
+  }
+
+  async function applyDeltaToState(delta){
+    const stateCollection = await stateCollectionPromise;
+    if(delta.type === 'SET'){
+      await stateCollection.updateOne({_id: delta.key}, {$set: {
+        _id: delta.key,
+        address: delta.address,
+        block_num: delta.block_num,
+        value: delta.value 
+      }}, {upsert: true});
+    }
+    else if(delta.type === 'DELETE'){
+      await stateCollection.deleteOne({_id: delta.key}, {$set: delta}, {upsert: true});
+    }
+  }
+
+}
+
+
 function addTransactionsBuilder(transaction_family, transactionTransform){
   const transactionCollectionPromise = mongo.client().then((client) => {
     return client.db('mydb').collection(`${transaction_family}_transaction`);
   });
+ 
 
   return async function (transactions){
 
