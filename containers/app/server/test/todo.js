@@ -33,7 +33,7 @@ describe('POST /', ()=>{
     await mongo.close();
   });
 
-  it('success', async ()=>{
+  it.only('success', async ()=>{
     const msg = "hi there" + Math.random();
 
     let content = {
@@ -68,8 +68,8 @@ describe('POST /', ()=>{
       .expect(200);
 
     
-    assert.deepEqual(res.body, {
-      key: tx.txid,
+    assert.deepEqual(_.omit(res.body, 'address', 'block_num'), {
+      _id: tx.txid,
       value: {value: msg, owner: getPublicKey(privKey1)}
     });
 
@@ -134,8 +134,8 @@ describe('POST /', ()=>{
       .expect(200);
 
 
-    assert.deepEqual(res.body, {
-      key: tx2.txid,
+    assert.deepEqual(_.omit(res.body, 'address', 'block_num'), {
+      _id: tx2.txid,
       value: {value: msg, owner: getPublicKey(privKey2)}
     });
 

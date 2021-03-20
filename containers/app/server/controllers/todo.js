@@ -49,20 +49,14 @@ module.exports.getAllToDo = async function(req, res) {
 };
 
 module.exports.getToDo = async function(req, res) {
-  try{
-    let values = await queryState(address(req.params.id + ""));
-    let value = _.find(values, v => v.key == req.params.id + "");
-    if(!value){
-      return res.status(404).json("not found"); 
-    }
-    return res.json(value);
+  const mongoClient = await mongo.client();
+  const stateCollection = mongoClient.db('mydb').collection("todo_state");
+
+  const value = await stateCollection.findOne({"_id": req.params.id});
+  if(!value){
+    return res.status(404).json("not found"); 
   }
-  catch(e){
-    if(e.response && e.response.status === 404){
-      return res.status(404).json(e.response.data) 
-    }
-    return res.status(500).json({error:e})
-  }
+  return res.json(value);
 }
 
 
