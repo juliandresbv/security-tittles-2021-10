@@ -53,6 +53,8 @@ module.exports.createIndexes = async function(){
     await db.collection('todo_state_history').createIndex({key: 1, block_num: 1}, {unique: true});
     await db.collection('todo_state_history').createIndex({address: 1, key: 1, block_num: 1});
 
+    await db.collection('todo_state').createIndex({"value.owner": 1});
+
   }
   catch(err){
     console.log(err);

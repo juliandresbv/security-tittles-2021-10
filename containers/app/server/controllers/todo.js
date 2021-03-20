@@ -27,21 +27,24 @@ const address = buildAddress(TRANSACTION_FAMILY);
 
 module.exports.getAllToDo = async function(req, res) {
 
-  let params = {
-    headers: {'Content-Type': 'application/json'}
-  };
+  const mongoClient = await mongo.client();
+  const stateCollection = mongoClient.db('mydb').collection("todo_state");
 
-  let query = await axios.get(`${process.env.SAWTOOTH_REST}/state?address=${INT_KEY_NAMESPACE}&limit=${20}`, params);
-  console.log(query.data.data);
-  let allTodos = _.chain(query.data.data)
-    .map((d) => {
-      let base = JSON.parse(Buffer.from(d.data, 'base64'));
-      return base;
-    })
-    .flatten()
-    .value();
+  const page = req.query.page || 0; 
 
-  res.json(allTodos);
+  const cursor = stateCollection.find({"value.owner": req.auth.jwt.publicKey})
+    .skip(PAGE_SIZE*page)
+    .limit(PAGE_SIZE);
+
+  let todos = [];
+  await new Promise((resolve, reject) => {
+    cursor.forEach((doc)=>{
+      todos.push(doc);
+    }, 
+    resolve)
+  });
+
+  res.json(todos);
 
 };
 

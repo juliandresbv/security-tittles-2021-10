@@ -53,11 +53,11 @@ function CreateItem(){
 
   let { id } = useParams();
 
-  const query = useQuery().get('page'); 
 
   let [ elem, setElem ] = useState(null);
   let [ hist, setHist ] = useState(null);
 
+  const query = useQuery().get('page'); 
   const page =  (query) ? parseInt(query, 10) : 1;
 
   let [ elemQueried, setElemQueried ] = useState(false);

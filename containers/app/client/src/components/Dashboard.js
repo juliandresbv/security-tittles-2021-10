@@ -12,10 +12,13 @@ import EditIcon from '@material-ui/icons/Edit';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import axios from 'axios';
 import { Box } from '@material-ui/core'
 import Paper from '@material-ui/core/Paper';
+import IconButton from '@material-ui/core/IconButton';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
 import _ from 'underscore';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
@@ -34,6 +37,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
 function Dashboard(){
   const classes = useStyles();
   const history = useHistory();
@@ -41,24 +48,18 @@ function Dashboard(){
   const publicKey = useSelector(selectPublicKey);
   const jwtHeader = useSelector(selectJWTHeader);
 
-  let [myToDos, setMyToDos] = useState([]);
   let [toDos, setToDos] = useState([]);
 
 
   useEffect(()=>{
     axios.get('/api/', jwtHeader)
-      .then((res) => {        
-        let t = _.groupBy(res.data, (e)=>{
-          return e.value.owner;
-        })
-
-        setMyToDos(t[publicKey] || []);
-        setToDos(_.omit(t, publicKey));
+      .then((res) => {
+        setToDos(res.data);
       })
   }, []);
 
   function handleItemClick(e){
-    history.push('/editItem/'+ e.key);
+    history.push('/editItem/'+ e._id);
   }
 
   return (
@@ -66,26 +67,16 @@ function Dashboard(){
       <Navbar />
       <Grid container className={classes.root} spacing={2} justify="center">
         <AccountTodos 
-          toDos={myToDos} 
+          toDos={toDos} 
           key={publicKey} 
           owner={publicKey}
           handleItemClick={handleItemClick} />
-        {_.chain(toDos)
-          .keys()
-          .map((k) => {
-            return (
-              <AccountTodos toDos={toDos[k]} owner={toDos[k][0].value.owner} key={k} handleItemClick={handleItemClick}/>
-            )
-          })
-          .value()
-        }
       </Grid>
 
       <Fab color="primary" aria-label="add" className={classes.fab} onClick={()=>{history.push('/createItem')}}>
         <AddIcon />
       </Fab>
 
-      
     </div>
   );
 }
@@ -98,9 +89,8 @@ function AccountTodos(props){
   const classes = useStyles();
   const history = useHistory();
 
-  function handleItemClick(e){
-    history.push('/editItem/'+ e.key);
-  }
+  const query = useQuery().get('page'); 
+  const page =  (query) ? parseInt(query, 10) : 1;
 
   return (
     <Grid item lg={4} md={6} xs={12}>
@@ -112,17 +102,9 @@ function AccountTodos(props){
               alignItems="center"
               justifyContent="center"
             >
-              {(publicKey == props.owner)?
-                (
-                  <Typography noWrap variant="h4">
-                    My ToDo&apos;s
-                  </Typography>
-                )
-                :
-                <Typography noWrap variant="h4">
-                  Other Account
-                </Typography>
-              }
+              <Typography noWrap variant="h4">
+                My ToDo&apos;s
+              </Typography>
             </Box>
           </Grid>
           <Grid item xs={12}>
@@ -140,7 +122,7 @@ function AccountTodos(props){
           <Grid item xs={12}>
             <List component="nav" aria-label="main mailbox folders">
               {props.toDos.map((e) => 
-                <ListItem button key={e.key} onClick={() => {handleItemClick(e)}}>
+                <ListItem button key={e._id} onClick={() => {props.handleItemClick(e)}}>
                   <ListItemIcon>
                     <EditIcon />
                   </ListItemIcon>
@@ -148,22 +130,28 @@ function AccountTodos(props){
                 </ListItem>
               )}
             </List>
+          </Grid>
+          <Grid item xs={12}>
             <Box display="flex" 
               alignItems="center"
               justifyContent="center"
             >
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                startIcon={<AddIcon />}
-                onClick={()=>{history.push('/createItem')}}
-                disabled={publicKey !== props.owner}
-              >
-                Add
-              </Button>
+              <IconButton aria-label="delete" 
+                disabled={page < 2}
+                onClick={()=> history.replace(`/editItem/`)}>
+                <ChevronLeft />
+              </IconButton>
+              Page: {page}
+              <IconButton aria-label="delete" 
+                disabled={true}
+                onClick={()=> history.replace(`/editItem/`)}>
+                <ChevronRight />
+              </IconButton>
+              
             </Box>
           </Grid>
+          
+
         </Grid>
       </Paper>
     </Grid>
