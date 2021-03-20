@@ -45,32 +45,13 @@ function Dashboard(){
   const classes = useStyles();
   const history = useHistory();
 
-  const publicKey = useSelector(selectPublicKey);
-  const jwtHeader = useSelector(selectJWTHeader);
-
-  let [toDos, setToDos] = useState([]);
-
-
-  useEffect(()=>{
-    axios.get('/api/', jwtHeader)
-      .then((res) => {
-        setToDos(res.data);
-      })
-  }, []);
-
-  function handleItemClick(e){
-    history.push('/editItem/'+ e._id);
-  }
+  
 
   return (
     <div>
       <Navbar />
       <Grid container className={classes.root} spacing={2} justify="center">
-        <AccountTodos 
-          toDos={toDos} 
-          key={publicKey} 
-          owner={publicKey}
-          handleItemClick={handleItemClick} />
+        <AccountTodos />
       </Grid>
 
       <Fab color="primary" aria-label="add" className={classes.fab} onClick={()=>{history.push('/createItem')}}>
@@ -82,15 +63,29 @@ function Dashboard(){
 }
 
 
-function AccountTodos(props){
+function AccountTodos(){
+
+  const history = useHistory();
 
   const publicKey = useSelector(selectPublicKey);
+  const jwtHeader = useSelector(selectJWTHeader);
 
-  const classes = useStyles();
-  const history = useHistory();
+  let [toDos, setToDos] = useState([]);
+
 
   const query = useQuery().get('page'); 
   const page =  (query) ? parseInt(query, 10) : 1;
+
+  useEffect(()=>{
+    axios.get(`/api/?page=${page - 1}`, jwtHeader)
+      .then((res) => {
+        setToDos(res.data);
+      })
+  }, [page]);
+
+  function handleItemClick(e){
+    history.push('/editItem/'+ e._id);
+  }
 
   return (
     <Grid item lg={4} md={6} xs={12}>
@@ -114,15 +109,15 @@ function AccountTodos(props){
               justifyContent="center"
             >
               <Typography noWrap variant="subtitle1">
-                {props.owner}
+                {publicKey}
               </Typography>
             </Box>
           </Grid>
 
           <Grid item xs={12}>
             <List component="nav" aria-label="main mailbox folders">
-              {props.toDos.map((e) => 
-                <ListItem button key={e._id} onClick={() => {props.handleItemClick(e)}}>
+              {toDos.map((e) => 
+                <ListItem button key={e._id} onClick={() => {handleItemClick(e)}}>
                   <ListItemIcon>
                     <EditIcon />
                   </ListItemIcon>
@@ -138,13 +133,13 @@ function AccountTodos(props){
             >
               <IconButton aria-label="delete" 
                 disabled={page < 2}
-                onClick={()=> history.replace(`/editItem/`)}>
+                onClick={()=> history.replace(`/dashboard?page=${page-1}`)}>
                 <ChevronLeft />
               </IconButton>
               Page: {page}
               <IconButton aria-label="delete" 
-                disabled={true}
-                onClick={()=> history.replace(`/editItem/`)}>
+                disabled={false}
+                onClick={()=> history.replace(`/dashboard?page=${page+1}`)}>
                 <ChevronRight />
               </IconButton>
               
@@ -159,9 +154,6 @@ function AccountTodos(props){
 }
 
 AccountTodos.propTypes = {
-  toDos: PropTypes.array,
-  owner: PropTypes.string,
-  handleItemClick: PropTypes.func
 }
 
 export default Dashboard;
