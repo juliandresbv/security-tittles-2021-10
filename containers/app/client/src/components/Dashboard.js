@@ -71,6 +71,7 @@ function AccountTodos(){
   const jwtHeader = useSelector(selectJWTHeader);
 
   let [toDos, setToDos] = useState([]);
+  let [hasNextPage, setHasNextPage] = useState([]);
 
 
   const query = useQuery().get('page'); 
@@ -81,7 +82,17 @@ function AccountTodos(){
       .then((res) => {
         setToDos(res.data);
       })
-  }, [page]);
+
+    axios.get(`/api/?page=${page}`, jwtHeader)
+      .then((res) => {
+        if(res.data.length > 0){
+          setHasNextPage(true);
+        }
+        else {
+          setHasNextPage(false);
+        }
+      })
+  }, [publicKey, page]);
 
   function handleItemClick(e){
     history.push('/editItem/'+ e._id);
@@ -138,7 +149,7 @@ function AccountTodos(){
               </IconButton>
               Page: {page}
               <IconButton aria-label="delete" 
-                disabled={false}
+                disabled={!hasNextPage}
                 onClick={()=> history.replace(`/dashboard?page=${page+1}`)}>
                 <ChevronRight />
               </IconButton>

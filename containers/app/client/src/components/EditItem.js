@@ -60,6 +60,8 @@ function CreateItem(){
   const query = useQuery().get('page'); 
   const page =  (query) ? parseInt(query, 10) : 1;
 
+  let [hasNextPage, setHasNextPage] = useState([]);
+
   let [ elemQueried, setElemQueried ] = useState(false);
 
   useEffect(()=>{
@@ -86,6 +88,15 @@ function CreateItem(){
       });
       setHist(h);
       setElemQueried(true);
+
+      let res3 = await axios.get('/api/'+id + `/history?page=${page}`, jwtHeader);
+      if(res3.data.length > 0){
+        setHasNextPage(true);
+      }
+      else {
+        setHasNextPage(false);
+      }
+
     })();
     
   }, [id, page]);
@@ -249,7 +260,7 @@ function CreateItem(){
             </IconButton>
             Page: {page}
             <IconButton aria-label="delete" 
-              disabled={hist && hist.length == 0}
+              disabled={!hasNextPage}
               onClick={()=> history.replace(`/editItem/${id}?page=${page+1}`)}>
               <ChevronRight />
             </IconButton>
