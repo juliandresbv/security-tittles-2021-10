@@ -5,7 +5,18 @@ let provider;
 
 export function init(_store){
   store = _store;
+  if(!window.ethereum){
+    return console.log('No etheruem provider');
+  }
   provider = new ethers.providers.Web3Provider(window.ethereum);
+}
+
+export function tryToEnableMetamask(){
+  if(!window.ethereum){
+    return console.log('No etheruem provider');
+  }
+  window.ethereum.enable();
+
 }
 
 export async function getCurrentAccount() {

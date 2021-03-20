@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -19,6 +19,7 @@ import { signupAsync } from '../redux/authSlice';
 import { useDispatch } from 'react-redux';
 import { useStore } from 'react-redux';
 import {selectMetamaskMessage} from '../redux/authSlice';
+import {tryToEnableMetamask} from '../helpers/signing';
 
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -56,6 +57,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
 export default function SignUp() {
   const classes = useStyles();
 
@@ -64,6 +66,10 @@ export default function SignUp() {
 
   const metamaskMessage = selectMetamaskMessage(useStore().getState());
 
+  useEffect(()=>{
+    tryToEnableMetamask();
+  }, [])
+  
   const formik = useFormik({
     initialValues: {
       firstName: '',

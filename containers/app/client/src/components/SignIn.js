@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -25,6 +25,8 @@ import { signinAsync } from '../redux/authSlice';
 import { useStore } from 'react-redux';
 
 import {selectMetamaskMessage} from '../redux/authSlice';
+
+import {tryToEnableMetamask} from '../helpers/signing';
 
 function Copyright() {
   return (
@@ -74,6 +76,10 @@ export default function SignIn() {
   if(state.auth.username){
     history.replace(from);
   }
+
+  useEffect(()=>{
+    tryToEnableMetamask();
+  }, [])
   
   const dispatch = useDispatch();
 
