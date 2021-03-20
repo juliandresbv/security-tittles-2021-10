@@ -123,7 +123,7 @@ module.exports.putToDo = async function(req, res) {
   }
 };
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = (process.env.PAGE_SIZE)? parseInt(process.env.PAGE_SIZE): 10;
 
 module.exports.getToDoHistory = async function(req, res) {
 

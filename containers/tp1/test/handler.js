@@ -8,7 +8,7 @@ const contextMock = require('../src/helpers/contextMock')
 
 describe('simple', ()=>{
   it('constants are defined', ()=>{
-    assert.equal(TPHandler.TP_FAMILY, 'todos');
+    assert.equal(TPHandler.TP_FAMILY, 'todo');
     assert.equal(TPHandler.TP_VERSION, '1.0');
     assert.equal(TPHandler.TP_NAMESPACE.length, 6);
   })
