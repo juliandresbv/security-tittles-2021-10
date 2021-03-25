@@ -1,5 +1,5 @@
 const _ = require('underscore');
-const jobExecutor = require('./src/jobExecutor')
+const jobExecutor = require('./src/serialExecutor')
 const fsPromises = require('fs').promises;
 const seedrandom = require('seedrandom');
 const {produce} = require('immer');
@@ -43,10 +43,12 @@ if(n_max == null){
   let state;
 
   if(!last_line){
+    console.log('INIT');
     state = stateMachine.apply(null, {type: 'INIT', payload: n_max});
   }
   else{
     state = JSON.parse(last_line);
+    console.log('INIT,', state.n)
   }
 
 
@@ -83,7 +85,7 @@ const stateMachine = {
     let r = rng();
 
     await sleep(10);
-    if(Math.random() < 0.2){
+    if(Math.random() < 0.5){
       throw new Error('error');
     }
     console.log('j', state.n);
