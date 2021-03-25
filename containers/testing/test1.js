@@ -43,7 +43,7 @@ if(n_max == null){
   let state;
 
   if(!last_line){
-    state = stateMachine.update(null, {type: 'INIT', payload: n_max});
+    state = stateMachine.apply(null, {type: 'INIT', payload: n_max});
   }
   else{
     state = JSON.parse(last_line);
@@ -57,7 +57,7 @@ if(n_max == null){
 
 
 const stateMachine = {
-  update: (state, event) => {
+  apply: (state, event) => {
     if(event && event.type === 'INIT'){
       const rng = seedrandom('random seed', {state: true});
       return {
@@ -86,7 +86,7 @@ const stateMachine = {
     if(Math.random() < 0.2){
       throw new Error('error');
     }
-    console.log(state.n);
+    console.log('j', state.n);
   }
 }
 
