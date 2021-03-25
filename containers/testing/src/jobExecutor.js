@@ -2,7 +2,7 @@ const _ = require('underscore');
 const log = require('./log');
 
 const MAX_ERRORS = 20;
-const CHECKPOINT_AFTER = 5;
+const CHECKPOINT_AFTER = 2;
 let errors = 0;
 const {produce} = require('immer');
 
@@ -10,44 +10,63 @@ const {produce} = require('immer');
 const CONCURRENCY = 2;
 
 let jobs = {};
-let job_count = 0;
-
-function addJob(job, n){
+let jobsState = {};
+function addJob(job, idx){
   let j = (async () => {
     try {
       await retry(job, 10);
-      return n;
+      return idx;
     }
     catch(err){
-      throw n;
+      throw idx;
     }
   })();
-  jobs[n] = j;
+  jobs[idx] = j;
 }
-
-function canAddJob(){
-  return _.size(jobs) < CONCURRENCY;
-}
-
 
 
 module.exports = async function(state, stateMachine){
-  let c = 0;
+  let lastIdxCommited = -1;
 
-  let lastState = state;
-  while(lastState || _.size(jobs) > 0){
+  let lastStateDone = null;
+  let lastIdxDone = -1;
 
-    while(lastState && (_.size(jobs) < CONCURRENCY)){
-      let c = produce(lastState, () =>{});
-      addJob(() => stateMachine.job(c), lastState.n)
-      lastState = stateMachine.apply(lastState);
+  let lastStateAdded = state;
+  let lastIdxAdded = 0;
+  while(lastStateAdded || _.size(jobs) > 0){
+
+    while(lastStateAdded && (_.size(jobs) < CONCURRENCY)){
+      let s = produce(lastStateAdded, () =>{});
+      jobsState[lastIdxAdded] = s;
+      addJob(() => stateMachine.job(s), lastIdxAdded);
+
+      lastStateAdded = stateMachine.apply(lastStateAdded);
+      lastIdxAdded = lastIdxAdded + 1;
     }
 
     try{
       let fjobs = _.values(jobs);
-      let n = await Promise.race(fjobs);
-      console.log('remove, ', n);
-      delete jobs[n];
+      let idx = await Promise.race(fjobs);
+      delete jobs[idx];
+
+
+      let minWorking = _.chain(jobs).keys().map(k => parseInt(k, 10)).min().value();
+
+      let commited = _.chain(jobsState).keys().map(k => parseInt(k, 10)).filter(k => k < minWorking).value();
+      
+      if(commited.length > 0){
+        lastIdxDone = _.max(commited);
+        lastStateDone = jobsState[lastIdxDone];
+        jobsState = _.omit(jobsState, commited);
+  
+  
+        if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
+          console.log('check', lastIdxDone - lastIdxCommited)
+          checkpoint(lastStateDone);
+          lastIdxCommited = lastIdxDone;
+        }
+      }
+      
 
     }
     catch(err){
@@ -91,7 +110,7 @@ module.exports = async function(state, stateMachine){
     //   }
     // }
   }
-  checkpoint(state);
+  checkpoint(lastStateDone);
 
 
 
