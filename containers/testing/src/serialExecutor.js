@@ -9,12 +9,7 @@ const CHECKPOINT_AFTER = 2;
 
 module.exports = async function(stateMachine, n_max){
   await log.init();
-  await execute(stateMachine, n_max);  
-  await log.close();
-}
 
-
-async function execute(stateMachine, n_max){
   let state;
   let lastStateDone = await getLastState();
 
@@ -32,38 +27,52 @@ async function execute(stateMachine, n_max){
   let lastIdxCommited = -1;
   let lastIdxDone = -1;
   let err;
-  while(state.name !== 'DONE'){
-    try {
-      let s = state;
-      await retry(() => stateMachine.job(s), MAX_RETRIES);
-      lastStateDone = s;
-      lastIdxDone = lastIdxDone + 1;
-      state = stateMachine.apply(state);
-    }
-    catch(e){
-      err = e;
-      break;
-    }
 
-    if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
-      console.log('check', lastIdxDone - lastIdxCommited)
-      checkpoint(lastStateDone);
-      lastIdxCommited = lastIdxDone;
+  async function execute(){
+    while(state.name !== 'DONE'){
+      try {
+        let s = state;
+        await retry(() => stateMachine.job(s), MAX_RETRIES);
+        lastStateDone = s;
+        lastIdxDone = lastIdxDone + 1;
+        state = stateMachine.apply(state);
+      }
+      catch(e){
+        err = e;
+        break;
+      }
+  
+      if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
+        console.log('check', lastIdxDone - lastIdxCommited)
+        checkpoint(lastStateDone);
+        lastIdxCommited = lastIdxDone;
+      }
     }
+    if(lastIdxDone > -1){
+      checkpoint(lastStateDone);
+    }
+  
+    if(state.name === 'DONE'){
+      console.log('DONE')
+    }
+  
+    if(err){
+      throw err;
+    }
+    await log.close();
+
   }
-  if(lastIdxDone > -1){
+  
+  function close(){
+    console.log('check', lastStateDone.n);
     checkpoint(lastStateDone);
   }
 
-  if(state.name === 'DONE'){
-    console.log('DONE')
-  }
+  let executePromise = execute();
 
-  if(err){
-    throw err;
-  }
-
+  return {executePromise, close}
 }
+
 
 function checkpoint(state){
   log.log(JSON.stringify(state));

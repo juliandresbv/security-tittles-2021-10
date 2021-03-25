@@ -24,6 +24,8 @@ if(n_max == null){
   return;
 }
 
+let close;
+
 async function main(){
   try{
     if(from0){
@@ -33,7 +35,11 @@ async function main(){
 
     await generateUserFile(1000);
 
-    await jobExecutor(stateMachine, n_max);
+    let r = await jobExecutor(stateMachine, n_max);
+    close = r.close;
+
+    await r.executePromise;
+    close = null;
 
   }
   catch(err){
@@ -43,3 +49,37 @@ async function main(){
 
 
 main();
+
+
+let startshutdown = false;
+async function shutdown(){
+  if(startshutdown){
+    return;
+  }
+  startshutdown = true;
+  if(close){
+    close();
+  }
+
+}
+
+process.on('SIGINT', async () => {
+  // await console.log('SIGINT')
+  await shutdown();
+  // process.kill(process.pid, 'SIGUSR2');
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await shutdown();
+  // process.kill(process.pid, 'SIGUSR2');
+  process.exit(0);
+});
+
+process.once('SIGUSR2', async () => {
+  await shutdown();
+  console.log('kill');
+  // process.kill(process.pid, 'SIGUSR2');
+  process.exit(0);
+});
+
