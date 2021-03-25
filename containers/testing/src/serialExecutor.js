@@ -1,136 +1,83 @@
 const _ = require('underscore');
 const log = require('./log');
-
-const MAX_ERRORS = 20;
-const MAX_RETRIES = 1;
-
-const CHECKPOINT_AFTER = 2;
-let errors = 0;
 const {produce} = require('immer');
 
 
-const CONCURRENCY = 2;
+const MAX_RETRIES = 1;
+const CHECKPOINT_AFTER = 2;
 
-let jobs = {};
-let jobsState = {};
-function addJob(job, idx){
-  let j = (async () => {
-    try {
-      await retry(job, MAX_RETRIES);
-      return idx;
-    }
-    catch(err){
-      throw idx;
-    }
-  })();
-  jobs[idx] = j;
+
+module.exports = async function(stateMachine, n_max){
+  await log.init();
+  await execute(stateMachine, n_max);  
+  await log.close();
 }
 
 
-module.exports = async function(state, stateMachine){
+async function execute(stateMachine, n_max){
+  let state;
+  let lastStateDone = await getLastState();
+
+  if(!lastStateDone){
+    console.log('INIT');
+    state = stateMachine.apply(null, {type: 'INIT', payload: n_max});
+  }
+  else{
+    console.log('Last Commit:', lastStateDone.n);
+
+    lastStateDone.n_max = n_max;
+    state = stateMachine.apply(lastStateDone);
+  }
+
   let lastIdxCommited = -1;
-
-  let lastStateDone = null;
   let lastIdxDone = -1;
-
-  let lastStateAdded = state;
-  let lastIdxAdded = 0;
-  while(lastStateAdded || _.size(jobs) > 0){
-
-    while(lastStateAdded && (_.size(jobs) < CONCURRENCY)){
-      let s = produce(lastStateAdded, () =>{});
-      // let s = lastStateAdded;
-      jobsState[lastIdxAdded] = s;
-      addJob(() => stateMachine.job(s), lastIdxAdded);
-
-      lastStateAdded = stateMachine.apply(lastStateAdded);
-      lastIdxAdded = lastIdxAdded + 1;
+  let err;
+  while(state.name !== 'DONE'){
+    try {
+      let s = state;
+      await retry(() => stateMachine.job(s), MAX_RETRIES);
+      lastStateDone = s;
+      lastIdxDone = lastIdxDone + 1;
+      state = stateMachine.apply(state);
     }
-
-    try{
-      let fjobs = _.values(jobs);
-      let idx = await Promise.race(fjobs);
-      delete jobs[idx];
-
-
-      let minWorking = _.chain(jobs).keys().map(k => parseInt(k, 10)).min().value();
-
-      let commited = _.chain(jobsState).keys().map(k => parseInt(k, 10)).filter(k => k < minWorking).value();
-      
-      if(commited.length > 0){
-        lastIdxDone = _.max(commited);
-        lastStateDone = jobsState[lastIdxDone];
-        jobsState = _.omit(jobsState, commited);
-  
-  
-        if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
-          console.log('check', lastIdxDone - lastIdxCommited)
-          checkpoint(lastStateDone);
-          lastIdxCommited = lastIdxDone;
-        }
-      }
-      
-    }
-    catch(err){
-      console.log('ERR!!:', err);
+    catch(e){
+      err = e;
       break;
     }
-    // sleep(1000);
-    // break;
 
-
-
-    
-
-    // let job = async () => {
-    //   await stateMachine.job(state);
-    // };
-
-    // let err = await attemptWithRetries(job, 5);
-    // errors = errors + err;
-
-    // if(err){
-    //   checkpoint(state);
-    //   c = 0;
-
-    //   if(errors >= MAX_ERRORS){
-    //     console.log('Max errors exceeded');
-    //     break;
-    //   }  
-    // }
-
-    // let nextState = stateMachine.update(state);
-    // if(!nextState){
-    //   checkpoint(state);  //Save last not null state
-    //   state = nextState;
-    // }
-    // else{
-    //   state = nextState;
-    //   c = c + 1;
-    //   if(c >= CHECKPOINT_AFTER){
-    //     checkpoint(state);
-    //     c = 0;
-    //   }
-    // }
+    if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
+      console.log('check', lastIdxDone - lastIdxCommited)
+      checkpoint(lastStateDone);
+      lastIdxCommited = lastIdxDone;
+    }
   }
-  checkpoint(lastStateDone);
+  if(lastIdxDone > -1){
+    checkpoint(lastStateDone);
+  }
 
+  if(state.name === 'DONE'){
+    console.log('DONE')
+  }
 
+  if(err){
+    throw err;
+  }
 
-
-  // console.log('Last:', last_n)
-
-  // for(let n = last_n + 1; n < n_max; n++){
-  //   jobFunc(n);
-  //   await log.log(n)
-  // }
-
-  await log.close();
 }
 
 function checkpoint(state){
   log.log(JSON.stringify(state));
 }
+
+async function getLastState(){
+  let last_line = await log.lastLog();
+  if(last_line){
+    return JSON.parse(last_line);
+  }
+  return null;
+}
+
+
 
 async function retry(job, max_retries){
   let r = 0;
@@ -152,7 +99,6 @@ async function retry(job, max_retries){
     r = r + 1;
   }
   throw er;
-
 }
 
 function sleep(m){
