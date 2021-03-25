@@ -1,6 +1,8 @@
 const jobExecutor = require('./src/serialExecutor');
-const stateMachine = require('./src/stateMachine');
+// const stateMachine = require('./src/stateMachine');
+const stateMachine = require('./src/users/stateMachine');
 const fsPromises = require('fs').promises;
+const {generateUserFile} = require('./src/users/signup');
 
 let args = process.argv.slice(2)
 
@@ -26,7 +28,11 @@ async function main(){
   try{
     if(from0){
       await fsPromises.unlink('./log.txt');
+      await fsPromises.unlink('./users.txt');
     }
+
+    await generateUserFile(1000);
+
     await jobExecutor(stateMachine, n_max);
 
   }
