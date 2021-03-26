@@ -5,7 +5,7 @@ const {produce} = require('immer');
 
 const MAX_RETRIES = 10;
 const CHECKPOINT_AFTER = 2;
-const CONCURRENCY = 4;
+const CONCURRENCY = 20;
 
 module.exports = async function(stateMachine, n_max){
   let closing = false; 
@@ -36,8 +36,16 @@ module.exports = async function(stateMachine, n_max){
     
     do{
       while(state.name !== 'DONE' && (jobQueue.length < CONCURRENCY) && !closing){
+                
         let s = state;
         let i = idx;
+
+        let locks = await stateMachine.locks(s);
+        let usedLocks = _.chain(jobQueue).map(j => j.locks).flatten().value();
+        if(_.any(locks, l => _.contains(usedLocks, l))){
+          break;
+        }
+
         let job = retry(async () => {
           try{
             await stateMachine.job(s);
@@ -48,7 +56,7 @@ module.exports = async function(stateMachine, n_max){
           }
         }, MAX_RETRIES);
 
-        jobQueue.push({job, idx: i, state: s, done: false});
+        jobQueue.push({job, idx: i, state: s, done: false, locks});
         idx = idx + 1;
         state = stateMachine.apply(state);
       }

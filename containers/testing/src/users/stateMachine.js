@@ -68,6 +68,9 @@ module.exports = {
     console.log('j', user.email);
     // console.log('j', state.n);
 
+  },
+  locks: async (state) => {
+    return [];
   }
 }
 

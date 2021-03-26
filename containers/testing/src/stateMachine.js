@@ -27,18 +27,22 @@ module.exports = {
       s.seed = rng.state();
     });
   },
-
   job: async (state) =>{
 
     let rng = seedrandom('', {state: state.seed});
     let r = rng();
 
     await sleep(10);
-    if(Math.random() < 0.5){
+    if(Math.random() < 0.2){
       throw new Error('error');
     }
     console.log('j', state.n);
+  },
+  locks: async (state) => {
+    // return [];
+    return [state.n % 4];
   }
+
 }
 
 
