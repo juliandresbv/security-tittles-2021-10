@@ -5,7 +5,7 @@ const {produce} = require('immer');
 
 const MAX_RETRIES = 10;
 const CHECKPOINT_AFTER = 2;
-
+const CONCURRENCY = 4;
 
 module.exports = async function(stateMachine, n_max){
   let closing = false; 
@@ -27,18 +27,57 @@ module.exports = async function(stateMachine, n_max){
 
   let lastIdxCommited = -1;
   let lastIdxDone = -1;
+  let idx = lastIdxCommited + 1;
   let err;
 
+  let jobQueue = [];
+
   async function execute(){
-    while(state.name !== 'DONE' && !closing){
-      try {
+    
+    do{
+      while(state.name !== 'DONE' && (jobQueue.length < CONCURRENCY) && !closing){
         let s = state;
-        await retry(() => stateMachine.job(s), MAX_RETRIES);
-        lastStateDone = s;
-        lastIdxDone = lastIdxDone + 1;
+        let i = idx;
+        let job = retry(async () => {
+          try{
+            await stateMachine.job(s);
+            return [null, i];
+          }
+          catch(err){
+            throw [err, i]
+          }
+        }, MAX_RETRIES);
+
+        jobQueue.push({job, idx: i, state: s, done: false});
+        idx = idx + 1;
         state = stateMachine.apply(state);
       }
-      catch(e){
+      if(jobQueue.length == 0){
+        continue;
+      }
+
+      try {
+        let fjobs = _.chain(jobQueue)
+          .filter(j => !j.done)
+          .map(j => j.job)
+          .value();
+
+        let idx = await Promise.race(fjobs);
+
+        for(let j = 0; j < jobQueue.length; j++){
+          if(jobQueue[j].idx === idx[1]){
+            jobQueue[j].done = true;
+            break;
+          }
+        }
+
+        while(jobQueue.length > 0 && jobQueue[0].done === true){
+          let j = jobQueue.shift();
+          lastStateDone = j.state;
+          lastIdxDone = j.idx;
+        }
+      }
+      catch([n, e]){
         err = e;
         break;
       }
@@ -48,7 +87,9 @@ module.exports = async function(stateMachine, n_max){
         checkpoint(lastStateDone);
         lastIdxCommited = lastIdxDone;
       }
-    }
+    } while(jobQueue.length > 0 || (state.name !== 'DONE' && !closing));
+
+
     console.log('...');
     if(lastIdxDone > -1){
       checkpoint(lastStateDone);
@@ -108,6 +149,7 @@ async function retry(job, max_retries){
     }
     r = r + 1;
   }
+  console.log('r:', r)
   throw er;
 }
 

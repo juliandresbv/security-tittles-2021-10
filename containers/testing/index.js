@@ -1,6 +1,8 @@
-const jobExecutor = require('./src/serialExecutor');
-// const stateMachine = require('./src/stateMachine');
-const stateMachine = require('./src/users/stateMachine');
+// const jobExecutor = require('./src/serialExecutor');
+const jobExecutor = require('./src/parallelExecutor');
+
+const stateMachine = require('./src/stateMachine');
+// const stateMachine = require('./src/users/stateMachine');
 const fsPromises = require('fs').promises;
 const {generateUserFile} = require('./src/users/signup');
 
@@ -34,7 +36,7 @@ async function main(){
     }
   }
   catch(err){
-    console.log(err);
+    // console.log(err);
   }
 
   try{
@@ -61,7 +63,11 @@ async function shutdown(){
   startshutdown = true;
   if(executor){
     executor.close();
-    await executor.executePromise;
+
+    await Promise.race([
+      executor.executePromise,
+      new Promise((resolve) => setTimeout(resolve, 1*1000))
+    ]);
     executor = null;
   }
 
