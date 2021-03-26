@@ -1,0 +1,30 @@
+{
+  "name": "k6",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon ./bin/www",
+    "run": "node ./bin/www"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "chance": "^1.1.7",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^8.2.0",
+    "ethers": "^5.0.32",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "immer": "^9.0.1",
+    "jade": "~1.11.0",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "~1.9.1",
+    "secp256k1": "^4.0.2",
+    "seedrandom": "^3.0.5",
+    "underscore": "^1.12.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.22.0",
+    "nodemon": "^2.0.4"
+  }
+}
