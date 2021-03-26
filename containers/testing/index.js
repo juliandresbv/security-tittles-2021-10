@@ -24,7 +24,7 @@ if(n_max == null){
   return;
 }
 
-let close;
+let executor;
 
 async function main(){
   try{
@@ -40,11 +40,8 @@ async function main(){
   try{
     await generateUserFile(n_max);
 
-    let r = await jobExecutor(stateMachine, n_max);
-    close = r.close;
-
-    await r.executePromise;
-    close = null;
+    executor = await jobExecutor(stateMachine, n_max);
+    await executor.executePromise;
 
   }
   catch(err){
@@ -62,8 +59,10 @@ async function shutdown(){
     return;
   }
   startshutdown = true;
-  if(close){
-    close();
+  if(executor){
+    executor.close();
+    await executor.executePromise;
+    executor = null;
   }
 
 }

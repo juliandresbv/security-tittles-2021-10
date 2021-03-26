@@ -8,6 +8,7 @@ const CHECKPOINT_AFTER = 2;
 
 
 module.exports = async function(stateMachine, n_max){
+  let closing = false; 
   await log.init();
 
   let state;
@@ -29,7 +30,7 @@ module.exports = async function(stateMachine, n_max){
   let err;
 
   async function execute(){
-    while(state.name !== 'DONE'){
+    while(state.name !== 'DONE' && !closing){
       try {
         let s = state;
         await retry(() => stateMachine.job(s), MAX_RETRIES);
@@ -43,11 +44,12 @@ module.exports = async function(stateMachine, n_max){
       }
   
       if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
-        console.log('check', lastIdxDone - lastIdxCommited)
+        // console.log('check', lastIdxDone - lastIdxCommited)
         checkpoint(lastStateDone);
         lastIdxCommited = lastIdxDone;
       }
     }
+    console.log('...');
     if(lastIdxDone > -1){
       checkpoint(lastStateDone);
     }
@@ -64,8 +66,7 @@ module.exports = async function(stateMachine, n_max){
   }
   
   function close(){
-    console.log('check', lastStateDone.n);
-    checkpoint(lastStateDone);
+    closing = true;
   }
 
   let executePromise = execute();
@@ -76,6 +77,7 @@ module.exports = async function(stateMachine, n_max){
 
 function checkpoint(state){
   log.log(JSON.stringify(state));
+  console.log('check:', state.n);
 }
 
 async function getLastState(){
