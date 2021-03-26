@@ -17,9 +17,11 @@ const {
 
 
 async function signup(email, pk){
-  const privateKey = Buffer.from(pk);
+  const privateKey = Buffer.from(pk, 'hex');
   const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(privateKey)})}};
 
+
+  console.log('>>', email, pk.toString('hex'), getPublicKey(privateKey));
   let res = await axios.post(`${process.env.SERVER_HOST}/auth/challange`);
   const tx_data = {
     type: "auth/signup", 
@@ -38,9 +40,12 @@ async function signup(email, pk){
 }
 
 function generateUser(){
+  let privateKey = randomPrivKey();
+  
   return {
     email: chance.email(),
-    privateKey: randomPrivKey().toString('hex')
+    privateKey: privateKey.toString('hex'),
+    publicKey: getPublicKey(privateKey)
   };
 }
 

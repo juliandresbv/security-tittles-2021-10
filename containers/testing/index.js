@@ -32,8 +32,13 @@ async function main(){
       await fsPromises.unlink('./log.txt');
       await fsPromises.unlink('./users.txt');
     }
+  }
+  catch(err){
+    console.log(err);
+  }
 
-    await generateUserFile(1000);
+  try{
+    await generateUserFile(n_max);
 
     let r = await jobExecutor(stateMachine, n_max);
     close = r.close;

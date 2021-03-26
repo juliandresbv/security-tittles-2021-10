@@ -109,13 +109,22 @@ module.exports.signup = async function(req, res){
     const address = getAddress(TRANSACTION_FAMILY, publicKey);
     const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
 
-    await sendTransaction([{
+
+    await sendTransactionWithAwait([{
       transactionFamily: TRANSACTION_FAMILY, 
       transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
       inputs: [address],
       outputs: [address],
       payload
     }]);
+
+    // await sendTransaction([{
+    //   transactionFamily: TRANSACTION_FAMILY, 
+    //   transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
+    //   inputs: [address],
+    //   outputs: [address],
+    //   payload
+    // }]);
 
 
     var token = jwt.sign({

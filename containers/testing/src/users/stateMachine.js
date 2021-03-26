@@ -5,22 +5,30 @@ const {signup} = require('./signup');
 const fs = require('fs');
 const readline = require('readline');
 
-const allUsersPromise = new Promise((resolve, reject) =>{
-  const rl = readline.createInterface({
-    input: fs.createReadStream('./users.txt'),
-    crlfDelay: Infinity
-  });
 
-  let users = [];
+let allUsersPromise;
+function allUsers(){
+  if(!allUsersPromise){
+    allUsersPromise = new Promise((resolve, reject) =>{
+      const rl = readline.createInterface({
+        input: fs.createReadStream('./users.txt'),
+        crlfDelay: Infinity
+      });
+    
+      let users = [];
+    
+      rl.on('line', (line) => {
+        users.push(JSON.parse(line));
+      });
+    
+      rl.on('close', () => {
+        resolve(users);
+      });
+    });
+  }
+  return allUsersPromise;
+}
 
-  rl.on('line', (line) => {
-    users.push(JSON.parse(line));
-  });
-
-  rl.on('close', () => {
-    resolve(users);
-  });
-});
 
 module.exports = {
   apply: (state, event) => {
@@ -53,7 +61,7 @@ module.exports = {
 
     let rng = seedrandom('', {state: state.seed});
 
-    let users = await allUsersPromise;
+    let users = await allUsers();
     let user = users[state.n];
 
     await signup(user.email, user.privateKey);
