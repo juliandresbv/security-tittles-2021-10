@@ -13,7 +13,7 @@ const {
   buildTransaction, 
   jwtSign,
   randomPrivKey
-} = require('./helper');
+} = require('../helper/helper');
 
 
 async function signup(email, pk){

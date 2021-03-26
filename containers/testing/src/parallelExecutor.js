@@ -5,7 +5,7 @@ const {produce} = require('immer');
 
 const MAX_RETRIES = 10;
 const CHECKPOINT_AFTER = 2;
-const CONCURRENCY = 20;
+const CONCURRENCY = 10;
 
 module.exports = async function(stateMachine, n_max){
   let closing = false; 
@@ -16,13 +16,13 @@ module.exports = async function(stateMachine, n_max){
 
   if(!lastStateDone){
     console.log('INIT');
-    state = stateMachine.apply(null, {type: 'INIT', payload: n_max});
+    state = await stateMachine.apply(null, {type: 'INIT', payload: n_max});
   }
   else{
     console.log('Last Commit:', lastStateDone.n);
 
     lastStateDone.n_max = n_max;
-    state = stateMachine.apply(lastStateDone);
+    state = await stateMachine.apply(lastStateDone);
   }
 
   let lastIdxCommited = -1;
@@ -58,7 +58,7 @@ module.exports = async function(stateMachine, n_max){
 
         jobQueue.push({job, idx: i, state: s, done: false, locks});
         idx = idx + 1;
-        state = stateMachine.apply(state);
+        state = await stateMachine.apply(state);
       }
       if(jobQueue.length == 0){
         continue;

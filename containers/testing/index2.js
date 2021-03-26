@@ -1,9 +1,9 @@
-// const jobExecutor = require('./src/serialExecutor');
-const jobExecutor = require('./src/parallelExecutor');
+const jobExecutor = require('./src/serialExecutor');
+// const jobExecutor = require('./src/parallelExecutor');
 
 // const stateMachine = require('./src/stateMachine');
-const stateMachine = require('./src/users/stateMachine');
-// const stateMachine = require('./src/todos/stateMachine');
+// const stateMachine = require('./src/users/stateMachine');
+const stateMachine = require('./src/todos/stateMachine');
 
 
 const fsPromises = require('fs').promises;
@@ -35,7 +35,6 @@ async function main(){
   try{
     if(from0){
       await fsPromises.unlink('./log.txt');
-      await fsPromises.unlink('./users.txt');
     }
   }
   catch(err){
