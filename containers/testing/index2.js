@@ -1,5 +1,5 @@
-const jobExecutor = require('./src/serialExecutor');
-// const jobExecutor = require('./src/parallelExecutor');
+// const jobExecutor = require('./src/serialExecutor');
+const jobExecutor = require('./src/parallelExecutor');
 
 // const stateMachine = require('./src/stateMachine');
 // const stateMachine = require('./src/users/stateMachine');
@@ -7,7 +7,6 @@ const stateMachine = require('./src/todos/stateMachine');
 
 
 const fsPromises = require('fs').promises;
-const {generateUserFile} = require('./src/users/signup');
 
 let args = process.argv.slice(2)
 
@@ -25,7 +24,7 @@ while(args.length > 0){
 
 if(n_max == null){
   console.log("Usage:");
-  console.log("node ./batchCreate.js <num_iters> --from0");
+  console.log("node ./index2.js <num_iters> --from0");
   return;
 }
 
@@ -42,8 +41,6 @@ async function main(){
   }
 
   try{
-    await generateUserFile(n_max);
-
     executor = await jobExecutor(stateMachine, n_max);
     await executor.executePromise;
 

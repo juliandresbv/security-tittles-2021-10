@@ -67,7 +67,7 @@ module.exports.postToDo = async function(req, res) {
   const payload = JSON.stringify({func: 'post', args:{transaction, txid}});
   
   try{
-    await sendTransaction([{
+    await sendTransactionWithAwait([{
       transactionFamily: TRANSACTION_FAMILY, 
       transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
       inputs: [address],

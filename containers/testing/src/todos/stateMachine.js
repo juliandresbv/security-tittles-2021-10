@@ -7,7 +7,7 @@ const readline = require('readline');
 const sawtooth = require('./sawtooth');
 
 
-const NUM_UTXOS = 2;
+const NUM_UTXOS = 100;
 
 module.exports = {
   apply: async (state, event) => {
@@ -16,6 +16,9 @@ module.exports = {
 
     if(event && event.type === 'INIT'){
       const rng = seedrandom('random seed', {state: true});
+      const seed = rng.state();
+
+      const u = (rng.int32() & 0x7FFFFFFF) % NUM_UTXOS;
 
       const u_i1 = (rng.int32() & 0x7FFFFFFF) % users.length;
       const user1 = users[u_i1];
@@ -24,11 +27,10 @@ module.exports = {
       const uVal = {tx, length: 1, privatekey: user1.privateKey};
 
       let utxos = _.map(_.range(NUM_UTXOS), () => null);
-      const u = (rng.int32() & 0x7FFFFFFF) % utxos.length;
       utxos[u] = uVal;
 
       return {
-        seed: rng.state(),
+        seed: seed,
         n: 0,
         n_max: event.payload,
         utxos
@@ -36,6 +38,8 @@ module.exports = {
     }
 
     const rng = seedrandom('', {state: state.seed});
+    rng();
+    const seed = rng.state();
     const u = (rng.int32() & 0x7FFFFFFF) % state.utxos.length;
 
     const u_i1 = (rng.int32() & 0x7FFFFFFF) % users.length;
@@ -73,7 +77,7 @@ module.exports = {
       }
       s.utxos[u] = uVal;
       
-      s.seed = rng.state();
+      s.seed = seed;
     });
   },
 
@@ -83,11 +87,11 @@ module.exports = {
     const u = (rng.int32() & 0x7FFFFFFF) % state.utxos.length;
     
     let utxo = state.utxos[u];
-    if(utxo.length){
-      sawtooth.sendCreateTodoTx(utxo.tx, utxo.privatekey);
+    if(utxo.length === 1){
+      await sawtooth.sendCreateTodoTx(utxo.tx, utxo.privatekey);
     }
     else{
-      sawtooth.sendMoveTodoTx(utxo.tx, utxo.privatekey);
+      await sawtooth.sendMoveTodoTx(utxo.tx, utxo.privatekey);
     }
 
     console.log('j', state.n);
