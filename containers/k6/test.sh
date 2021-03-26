@@ -9,4 +9,4 @@
 
 #With grafana
 CURRENT_UID=$(id -u):$(id -g) docker-compose -f ./docker-compose/k6.yaml run cli \
-  run --vus 20 --duration 10s --out influxdb=http://influxdb:8086/k6 script.js
+  run --vus 100 --duration 10s --out influxdb=http://influxdb:8086/k6 script.js

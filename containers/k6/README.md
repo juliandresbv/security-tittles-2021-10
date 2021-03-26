@@ -15,7 +15,7 @@ npm start
 ./up.sh
 ```
 
-http://localhost:3000/
+http://localhost:3012/
 
 
 In grafana it's a good idea to import a Dashboard in the right menu:

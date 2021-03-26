@@ -18,5 +18,5 @@ services:
     networks:
       - docker-compose_k6
     environment:
-    - TARGET_HOST=172.17.0.1:3001     #localhost through docker network
+    - TARGET_HOST=172.17.0.1:3011     #localhost through docker network
     # - TARGET_HOST=192.168.99.100:30001  #minikube
