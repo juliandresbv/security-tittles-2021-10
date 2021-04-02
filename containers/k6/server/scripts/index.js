@@ -49,7 +49,7 @@ async function main(){
     logger = loggerBuilder('./log.txt');
     await logger.init();
 
-    executor = await jobExecutor(stateMachine, n_max, logger);
+    executor = await jobExecutor(stateMachine, {type: "INIT", payload: n_max}, logger);
     await executor.executePromise;
 
   }

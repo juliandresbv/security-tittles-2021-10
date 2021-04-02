@@ -16,7 +16,12 @@ let users;
 describe('user stateMachine', ()=>{
 
   before(async () => {
-    await fsPromises.unlink('./users.txt');
+    try{
+      await fsPromises.unlink('./users.txt');
+    }
+    catch(err){
+      //
+    }
     await generateUserFile(10);
     users = await readUsersFromFile();
   });
@@ -26,14 +31,14 @@ describe('user stateMachine', ()=>{
 
   it('init', async ()=>{
     let state = await stateMachine.apply(null, {type: 'INIT', payload: {n_max: 2, num_utxos: 4}});
-    assert.deepEqual(_.omit(state, 'seed', 'utxos'), {n:0, n_max: 2, name: 'WORKING'});
+    assert.deepEqual(_.omit(state, 'seed', 'utxos', '_locks', '_job'), {n:0, n_max: 2, name: 'WORKING'});
 
     assert.equal(state.utxos.length, 4);
     let added = _.filter(state.utxos, s => s !== null);
+    assert.isTrue(added.length == 0);
 
-    assert.isTrue(added.length == 1);
-    assert.isTrue(added[0].length == 1);
-    assert.containsAllKeys(added[0], ['tx', 'privatekey'])
+    assert.containsAllKeys(state._job, ['tx', 'privatekey'])
+    assert.isArray(state._locks);
   });
 
   it('state 2', async ()=>{
@@ -54,21 +59,20 @@ describe('user stateMachine', ()=>{
 
 
     function validateStep(s0, s1){
-      let idx = findIdxOfDifference(s0.utxos, s1.utxos);
+      const {u, tx} = s0._job;
 
-      if(s0.utxos[idx] == null){
-        assert.isTrue(s1.utxos[idx] !== null);
-        assert.isTrue(s1.utxos[idx].length === 1);
+      if(s0.utxos[u] == null){
+        assert.isTrue(s1.utxos[u] !== null);
+        assert.isTrue(s1.utxos[u].length === 1);
       }
       else{
-        let tx1 = JSON.parse(s1.utxos[idx].tx.transaction);
-        assert.equal(tx1.input, s0.utxos[idx].tx.txid);
-        assert.equal(s1.utxos[idx].length, s0.utxos[idx].length + 1);
+        let tx1 = JSON.parse(tx.transaction);
+        assert.equal(tx1.input, s0.utxos[u].tx.txid);
+        assert.equal(s1.utxos[u].length, s0.utxos[u].length + 1);
       }
     }
 
   });
-
 
 });
 

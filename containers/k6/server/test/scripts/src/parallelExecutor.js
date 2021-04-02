@@ -8,7 +8,7 @@ const executor = require('../../../scripts/src/parallelExecutor')
 const stateMachineBuilder = require('../../mockStateMachineBuilder');
 const mockLogger = require('../../mockLogger');
 
-describe('paralllelExecutor', ()=>{
+describe('parallelExecutor', ()=>{
 
   before(async () => {
   });
@@ -20,7 +20,7 @@ describe('paralllelExecutor', ()=>{
     let logger = mockLogger();
     let sm = stateMachineBuilder();
 
-    const {executePromise, close } = await executor(sm, 0, logger, 2);
+    const {executePromise, close } = await executor(sm, {type: 'INIT', payload: 0}, logger, 2);
 
     await executePromise;
 
@@ -32,7 +32,7 @@ describe('paralllelExecutor', ()=>{
     let logger = mockLogger();
     let sm = stateMachineBuilder();
 
-    const {executePromise, close } = await executor(sm, 1, logger, 2);
+    const {executePromise, close } = await executor(sm, {type: 'INIT', payload: 1}, logger, 2);
 
     await executePromise;
 
@@ -49,7 +49,7 @@ describe('paralllelExecutor', ()=>{
       [-50, -1, 50]
     ]);
 
-    const {executePromise, close } = await executor(sm, 2, logger, 2);
+    const {executePromise, close } = await executor(sm, {type: 'INIT', payload: 2}, logger, 2);
 
     await executePromise;
 
@@ -70,7 +70,7 @@ describe('paralllelExecutor', ()=>{
       [1],
     ]);
 
-    const {executePromise, close } = await executor(sm, 4, logger, 2);
+    const {executePromise, close } = await executor(sm, {type: 'INIT', payload: 4}, logger, 2);
 
     await executePromise;
 

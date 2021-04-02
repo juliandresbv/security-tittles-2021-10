@@ -1,10 +1,11 @@
-// const jobExecutor = require('./src/serialExecutor');
-const jobExecutor = require('./src/parallelExecutor');
+const jobExecutor = require('./src/serialExecutor');
+// const jobExecutor = require('./src/parallelExecutor');
 
 // const stateMachine = require('./src/stateMachine');
 // const stateMachine = require('./src/users/stateMachine');
-const stateMachine = require('./src/todos/stateMachine');
+const stateMachine = require('./src/todo/stateMachine');
 
+const loggerBuilder = require('./src/logger');
 
 const fsPromises = require('fs').promises;
 
@@ -33,20 +34,30 @@ let executor;
 async function main(){
   try{
     if(from0){
-      await fsPromises.unlink('./log.txt');
+      await fsPromises.unlink('./log2.txt');
     }
   }
   catch(err){
     // console.log(err);
   }
 
+  let logger;
   try{
-    executor = await jobExecutor(stateMachine, n_max);
+    logger = loggerBuilder('./log2.txt');
+    await logger.init();
+
+
+    executor = await jobExecutor(stateMachine, {type: "INIT", payload: {n_max, num_utxos: 100}}, logger);
     await executor.executePromise;
 
   }
   catch(err){
     console.log(err);
+  }
+  finally{
+    if(logger){
+      await logger.close();
+    }
   }
 }
 
