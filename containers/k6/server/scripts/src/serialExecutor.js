@@ -6,22 +6,11 @@ const MAX_RETRIES = 10;
 const CHECKPOINT_AFTER = 2;
 
 
-module.exports = async function(stateMachine, initEvent, logger){
+module.exports = async function(stateMachine, initState, logger){
   let closing = false; 
 
-  let state;
+  let state = initState;
   let lastStateDone = await getLastState(logger);
-
-  if(!lastStateDone){
-    console.log('INIT');
-    state = await stateMachine.apply(null, initEvent);
-  }
-  else{
-    console.log('Last Commit:', lastStateDone.n);
-
-    lastStateDone.n_max = initEvent.payload;
-    state = await stateMachine.apply(lastStateDone);
-  }
 
   let lastIdxCommited = -1;
   let lastIdxDone = -1;

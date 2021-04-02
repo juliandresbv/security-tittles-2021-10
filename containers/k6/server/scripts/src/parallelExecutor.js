@@ -6,7 +6,7 @@ const MAX_RETRIES = 10;
 const CHECKPOINT_AFTER = 2;
 const DEFAULT_CONCURRENCY = 10;
 
-module.exports = async function(stateMachine, initialEvent, logger, concurrency){
+module.exports = async function(stateMachine, initialState, logger, concurrency){
 
   let realConcurrency = DEFAULT_CONCURRENCY;
   if(concurrency){
@@ -15,19 +15,8 @@ module.exports = async function(stateMachine, initialEvent, logger, concurrency)
 
   let closing = false; 
 
-  let state;
+  let state = initialState;
   let lastStateDone = await getLastState(logger);
-
-  if(!lastStateDone){
-    console.log('INIT');
-    state = await stateMachine.apply(null, initialEvent);
-  }
-  else{
-    console.log('Last Commit:', lastStateDone.n);
-
-    lastStateDone.n_max = initialEvent.payload;
-    state = await stateMachine.apply(lastStateDone);
-  }
 
   let lastIdxCommited = -1;
   let lastIdxDone = -1;
@@ -40,7 +29,6 @@ module.exports = async function(stateMachine, initialEvent, logger, concurrency)
     
     do{
       while(state.name !== 'DONE' && (jobQueue.length < realConcurrency) && !closing){
-                
         let s = state;
         let i = idx;
 

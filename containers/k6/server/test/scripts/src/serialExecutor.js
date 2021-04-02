@@ -20,7 +20,8 @@ describe('serialExecutor', ()=>{
     let logger = mockLogger();
     let sm = stateMachineBuilder();
 
-    const {executePromise, close } = await serialExecutor(sm, {type: 'INIT', payload: 0}, logger);
+    const initialState = sm.apply(null, {type: 'INIT', payload: 0});
+    const {executePromise, close } = await serialExecutor(sm, initialState, logger);
 
     await executePromise;
 
@@ -32,7 +33,8 @@ describe('serialExecutor', ()=>{
     let logger = mockLogger();
     let sm = stateMachineBuilder();
 
-    const {executePromise, close } = await serialExecutor(sm, {type: 'INIT', payload: 1}, logger);
+    const initialState = sm.apply(null, {type: 'INIT', payload: 1});
+    const {executePromise, close } = await serialExecutor(sm, initialState, logger);
 
     await executePromise;
 
@@ -44,7 +46,8 @@ describe('serialExecutor', ()=>{
     let logger = mockLogger();
     let sm = stateMachineBuilder();
 
-    const {executePromise, close } = await serialExecutor(sm, {type: 'INIT', payload: 2}, logger);
+    const initialState = sm.apply(null, {type: 'INIT', payload: 2});
+    const {executePromise, close } = await serialExecutor(sm, initialState, logger);
 
     await executePromise;
 

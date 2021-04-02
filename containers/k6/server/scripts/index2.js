@@ -1,5 +1,5 @@
-const jobExecutor = require('./src/serialExecutor');
-// const jobExecutor = require('./src/parallelExecutor');
+// const jobExecutor = require('./src/serialExecutor');
+const jobExecutor = require('./src/parallelExecutor');
 
 // const stateMachine = require('./src/stateMachine');
 // const stateMachine = require('./src/users/stateMachine');
@@ -8,6 +8,9 @@ const stateMachine = require('./src/todo/stateMachine');
 const loggerBuilder = require('./src/logger');
 
 const fsPromises = require('fs').promises;
+
+const CONCURRENCY = 10;
+
 
 let args = process.argv.slice(2)
 
@@ -45,9 +48,22 @@ async function main(){
   try{
     logger = loggerBuilder('./log2.txt');
     await logger.init();
+    let lastStateDone = await logger.lastLog();
+    let initState;
 
+    if(!lastStateDone){
+      console.log('INIT');
+      initState = await stateMachine.apply(null, {type: "INIT", payload: {n_max, num_utxos: 100}});
+    }
+    else{
+      const s = JSON.parse(lastStateDone);
+      console.log('Last Commit:', s.n);
 
-    executor = await jobExecutor(stateMachine, {type: "INIT", payload: {n_max, num_utxos: 100}}, logger);
+      s.n_max = n_max;
+      initState = s;
+    }
+
+    executor = await jobExecutor(stateMachine, initState, logger, CONCURRENCY);
     await executor.executePromise;
 
   }
