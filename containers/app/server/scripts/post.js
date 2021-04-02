@@ -34,7 +34,7 @@ if(process.argv[3]){
 }
 
 const publicKey = getPublicKey(privKey);
-const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(privKey)})}};
+const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(privKey), permissions:['client']})}};
 
 (async () => {
 
@@ -62,11 +62,9 @@ const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: get
   const tx = await buildTransaction(payload1, privKey);
 
   try{
-    // let res = await axios.get('http://localhost:3001/api/');
-
-    let res = await axios.post('http://localhost:3001/api/', tx, jwtHeader);
+    let res = await axios.post('http://localhost:3001/api/todo', tx, jwtHeader);
     console.log(res.data);
-    console.log(tx.txid)
+    console.log('txid:', tx.txid)
   }
   catch(err){
     console.log(err);

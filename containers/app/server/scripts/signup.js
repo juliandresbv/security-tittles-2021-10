@@ -35,7 +35,7 @@ const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: get
 
 (async () => {
 
-  let res = await axios.post('http://localhost:3001/auth/challange');
+  let res = await axios.post('http://localhost:3001/api/auth/challange');
 
   const tx_data = {
     type: "auth/signup", 
@@ -48,7 +48,7 @@ const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: get
 
   try{
 
-    let res = await axios.post('http://localhost:3001/auth/signup', tx, jwtHeader);
+    let res = await axios.post('http://localhost:3001/api/auth/signup', tx, jwtHeader);
     console.log(res.data);
     console.log(tx.txid)
 

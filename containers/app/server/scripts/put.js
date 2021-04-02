@@ -38,10 +38,9 @@ else{
 }
 
 
-const publicKey1 = getPublicKey(prKey1);
 const publicKey2 = getPublicKey(prKey2);
 
-const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(prKey1)})}};
+const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(prKey1), permissions:['client']})}};
 
 
 (async () => {
@@ -60,7 +59,7 @@ const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: get
   console.log('txid:', tx.txid)
 
   try{
-    let res = await axios.put(`http://localhost:3001/api/`, tx, jwtHeader);
+    let res = await axios.put(`http://localhost:3001/api/todo`, tx, jwtHeader);
     console.log(res.data);
   }
   catch(err){
