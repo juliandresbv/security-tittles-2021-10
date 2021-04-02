@@ -1,5 +1,4 @@
 const _ = require('underscore');
-const log = require('./log');
 const {produce} = require('immer');
 
 
@@ -7,12 +6,11 @@ const MAX_RETRIES = 10;
 const CHECKPOINT_AFTER = 2;
 
 
-module.exports = async function(stateMachine, n_max){
+module.exports = async function(stateMachine, n_max, logger){
   let closing = false; 
-  await log.init();
 
   let state;
-  let lastStateDone = await getLastState();
+  let lastStateDone = await getLastState(logger);
 
   if(!lastStateDone){
     console.log('INIT');
@@ -45,13 +43,13 @@ module.exports = async function(stateMachine, n_max){
   
       if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
         // console.log('check', lastIdxDone - lastIdxCommited)
-        checkpoint(lastStateDone);
+        checkpoint(lastStateDone, logger);
         lastIdxCommited = lastIdxDone;
       }
     }
     console.log('...');
     if(lastIdxDone > -1){
-      checkpoint(lastStateDone);
+      checkpoint(lastStateDone, logger);
     }
   
     if(state.name === 'DONE'){
@@ -61,8 +59,6 @@ module.exports = async function(stateMachine, n_max){
     if(err){
       throw err;
     }
-    await log.close();
-
   }
   
   function close(){
@@ -75,13 +71,13 @@ module.exports = async function(stateMachine, n_max){
 }
 
 
-function checkpoint(state){
-  log.log(JSON.stringify(state));
+function checkpoint(state, logger){
+  logger.log(JSON.stringify(state));
   console.log('check:', state.n);
 }
 
-async function getLastState(){
-  let last_line = await log.lastLog();
+async function getLastState(logger){
+  let last_line = await logger.lastLog();
   if(last_line){
     return JSON.parse(last_line);
   }

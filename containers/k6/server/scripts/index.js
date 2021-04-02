@@ -1,13 +1,13 @@
-// const jobExecutor = require('./src/serialExecutor');
-const jobExecutor = require('./src/parallelExecutor');
+const jobExecutor = require('./src/serialExecutor');
+// const jobExecutor = require('./src/parallelExecutor');
 
 // const stateMachine = require('./src/stateMachine');
-const stateMachine = require('./src/users/stateMachine');
+const stateMachine = require('./src/user/stateMachine');
 // const stateMachine = require('./src/todos/stateMachine');
 
-
+const loggerBuilder = require('./src/logger');
 const fsPromises = require('fs').promises;
-const {generateUserFile} = require('./src/users/signup');
+const {generateUserFile} = require('./src/user/signup');
 
 let args = process.argv.slice(2)
 
@@ -42,15 +42,24 @@ async function main(){
     // console.log(err);
   }
 
+  let logger;
   try{
     await generateUserFile(n_max);
 
-    executor = await jobExecutor(stateMachine, n_max);
+    logger = loggerBuilder('./log.txt');
+    await logger.init();
+
+    executor = await jobExecutor(stateMachine, n_max, logger);
     await executor.executePromise;
 
   }
   catch(err){
     console.log(err);
+  }
+  finally{
+    if(logger){
+      await logger.close();
+    }
   }
 }
 

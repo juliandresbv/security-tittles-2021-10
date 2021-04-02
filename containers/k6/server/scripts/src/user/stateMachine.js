@@ -33,28 +33,38 @@ function allUsers(){
 module.exports = {
   apply: (state, event) => {
 
+    let next_n;
+    let next_n_max;
+    let next_name;
+    let next_seed;
+
     if(event && event.type === 'INIT'){
+      next_n = 0;
+      next_n_max = event.payload;
       const rng = seedrandom('random seed', {state: true});
-      return {
-        seed: rng.state(),
-        n: 0,
-        n_max: event.payload
-      };
+      next_seed = rng.state();
+    }
+    else{
+      next_n = state.n + 1;
+      next_n_max = state.n_max;
+      const rng = seedrandom('', {state: state.seed});
+      rng();
+      next_seed = rng.state();
     }
 
-    return produce(state, s => {
-      if(s.n + 1 >= s.n_max){
-        return {
-          name: 'DONE',
-          n: s.n + 1,
-          n_max: s.n_max
-        };
-      }
-      s.n = s.n + 1;
-      const rng = seedrandom('', {state: s.seed});
-      rng();
-      s.seed = rng.state();
-    });
+    if(next_n >= next_n_max){
+      next_name = 'DONE';
+    }
+    else{
+      next_name = 'WORKING';
+    }
+
+    return {
+      n: next_n,
+      n_max: next_n_max,
+      name: next_name,
+      seed: next_seed
+    }
   },
 
   job: async (state) =>{
