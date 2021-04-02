@@ -36,7 +36,7 @@ async function sendCreateTodoTx(tx, pk){
     permissions: ['client']
   })}};
   
-  await axios.post(`${process.env.SERVER_HOST}/api/`, tx, jwtHeader);
+  await axios.post(`${process.env.SERVER_HOST}/api/todo`, tx, jwtHeader);
 }
 
 async function moveTodoTx(pk1, pk2, tx){
@@ -68,7 +68,7 @@ async function sendMoveTodoTx(tx, pk){
     permissions: ['client']
   })}};
   
-  await axios.put(`${process.env.SERVER_HOST}/api/`, tx, jwtHeader);
+  await axios.put(`${process.env.SERVER_HOST}/api/todo`, tx, jwtHeader);
 }
 
 

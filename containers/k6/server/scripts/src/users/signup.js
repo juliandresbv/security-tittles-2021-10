@@ -20,7 +20,7 @@ async function signup(email, pk){
   const privateKey = Buffer.from(pk, 'hex');
   const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(privateKey)})}};
 
-  let res = await axios.post(`${process.env.SERVER_HOST}/auth/challange`);
+  let res = await axios.post(`${process.env.SERVER_HOST}/api/auth/challange`);
   const tx_data = {
     type: "auth/signup", 
     email: email, 
@@ -31,7 +31,7 @@ async function signup(email, pk){
   let tx = await buildTransaction(tx_data, privateKey);
 
 
-  res = await axios.post(`${process.env.SERVER_HOST}/auth/signup`, tx, jwtHeader);
+  res = await axios.post(`${process.env.SERVER_HOST}/api/auth/signup`, tx, jwtHeader);
 
 }
 

@@ -6,7 +6,7 @@ const chance = new Chance();
 
 const {getPublicKey, buildTransaction, jwtSign, randomPrivKey} = require('../scripts/src/helper/helper');
 
-router.post('/auth/signup', async function(req, res) {
+router.post('/api/auth/signup', async function(req, res) {
 
   const privateKey = randomPrivKey();
   const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(privateKey)})}};
