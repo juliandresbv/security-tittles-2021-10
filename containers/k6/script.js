@@ -12,7 +12,7 @@ export default function() {
 
  //has a group_duration metric associated, can filter in grafana WHERE
  //https://k6.io/docs/using-k6/tags-and-groups
-  var res = http.post(`http://${__ENV.TARGET_HOST}/auth/signup`, {});
+  var res = http.post(`http://${__ENV.TARGET_HOST}/api/auth/signup`, {});
 
   check(res, {
     "is status 200": r => r.status === 200

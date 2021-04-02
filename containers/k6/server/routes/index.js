@@ -12,7 +12,7 @@ router.post('/api/auth/signup', async function(req, res) {
   const jwtHeader = {headers: {"Authorization":"Bearer " + jwtSign({publicKey: getPublicKey(privateKey)})}};
 
   try{
-    let ares = await axios.post(`${process.env.SERVER_HOST}/auth/challange`);
+    let ares = await axios.post(`${process.env.SERVER_HOST}/api/auth/challange`);
     const tx_data = {
       type: "auth/signup", 
       email: chance.email(), 
@@ -23,7 +23,7 @@ router.post('/api/auth/signup', async function(req, res) {
     let tx = await buildTransaction(tx_data, privateKey);
   
   
-    ares = await axios.post(`${process.env.SERVER_HOST}/auth/signup`, tx, jwtHeader);
+    ares = await axios.post(`${process.env.SERVER_HOST}/api/auth/signup`, tx, jwtHeader);
   
     return res.json({
       email: tx_data.email,
