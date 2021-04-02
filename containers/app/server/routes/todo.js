@@ -13,10 +13,11 @@ const {
   jwtMiddleware
 } = require('../controllers/auth');
 
-router.get('/', jwtMiddleware, getAllToDo);
-router.get('/:id', jwtMiddleware, getToDo);
+
 router.post('/', jwtMiddleware, txMiddleware, postToDo);
 router.put('/', jwtMiddleware, txMiddleware, putToDo);
+router.get('/', jwtMiddleware, getAllToDo);
+router.get('/:id', jwtMiddleware, getToDo);
 router.get('/:id/:history', jwtMiddleware, getToDoHistory)
 
 router.use('/*', function(req, res){

@@ -25,7 +25,7 @@ const assert = require('chai').assert;
 const jwtHeader = 'Bearer ' + jwtSign({publicKey: getPublicKey(privKey1)});
 
 
-describe('/auth', ()=>{
+describe('/api/auth', ()=>{
 
   before(async () => {
     await mongo.init();
@@ -35,10 +35,10 @@ describe('/auth', ()=>{
     await mongo.close();
   });
 
-  it('/challange', async ()=>{
+  it('/api/challange', async ()=>{
     let t1 = Date.now();
     let res = await request(app)
-      .post('/auth/challange')
+      .post('/api/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
       
@@ -48,10 +48,10 @@ describe('/auth', ()=>{
     assert.isTrue(j.challange >= t1);
   });
 
-  it('/signup bad email', async ()=>{
+  it('/api/signup bad email', async ()=>{
 
     let res = await request(app)
-      .post('/auth/challange')
+      .post('/api/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -59,7 +59,7 @@ describe('/auth', ()=>{
     let s = await buildTransaction({publicKey: getPublicKey(privKey1), challange: res.body.challange}, privKey1);
 
     res = await request(app)
-      .post('/auth/signup')
+      .post('/api/auth/signup')
       .send(s)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(401);
@@ -67,9 +67,9 @@ describe('/auth', ()=>{
     assert.deepEqual(res.body, 'email is required')
   });
 
-  it('/signup', async ()=>{
+  it('/api/signup', async ()=>{
     let res = await request(app)
-      .post('/auth/challange')
+      .post('/api/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -77,7 +77,7 @@ describe('/auth', ()=>{
     let s = await buildTransaction(tx_data, privKey1);
 
     res = await request(app)
-      .post('/auth/signup')
+      .post('/api/auth/signup')
       .send(s)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
@@ -89,7 +89,7 @@ describe('/auth', ()=>{
     sleep(3000);
 
     res = await request(app)
-      .get('/auth/whoami')
+      .get('/api/auth/whoami')
       .set('Authorization', 'Bearer ' + res.body.token)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
@@ -100,10 +100,10 @@ describe('/auth', ()=>{
   }).timeout(20*1000);
 
 
-  it('/signin with random key', async ()=>{
+  it('/api/signin with random key', async ()=>{
 
     let res = await request(app)
-      .post('/auth/challange')
+      .post('/api/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -111,7 +111,7 @@ describe('/auth', ()=>{
     let s = await buildTransaction({challange: res.body.challange}, randomKey);
 
     res = await request(app)
-      .post('/auth/signin')
+      .post('/api/auth/signin')
       .send(s)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(404);
@@ -120,10 +120,10 @@ describe('/auth', ()=>{
   });
 
 
-  it('/signin success', async ()=>{
+  it('/api/signin success', async ()=>{
 
     let res = await request(app)
-      .post('/auth/challange')
+      .post('/api/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -131,7 +131,7 @@ describe('/auth', ()=>{
     let s = await buildTransaction(tx_data, privKey1);
 
     res = await request(app)
-      .post('/auth/signup')
+      .post('/api/auth/signup')
       .send(s)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
@@ -143,7 +143,7 @@ describe('/auth', ()=>{
     sleep(2000);
 
     res = await request(app)
-      .post('/auth/challange')
+      .post('/api/auth/challange')
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
 
@@ -151,7 +151,7 @@ describe('/auth', ()=>{
     s = await buildTransaction(tx_data, privKey1);
 
     res = await request(app)
-      .post('/auth/signin')
+      .post('/api/auth/signin')
       .send(s)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);

@@ -33,7 +33,7 @@ describe('POST /', ()=>{
     await mongo.close();
   });
 
-  it.only('success', async ()=>{
+  it('success', async ()=>{
     const msg = "hi there" + Math.random();
 
     let content = {
@@ -50,7 +50,7 @@ describe('POST /', ()=>{
     let tx = await buildTransaction(content, privKey1);
 
     let res = await request(app)
-      .post('/api/')
+      .post('/api/todo')
       .send(tx)
       .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
@@ -62,7 +62,7 @@ describe('POST /', ()=>{
     await sleep(2000);
 
     res = await request(app)
-      .get(`/api/${tx.txid}`)
+      .get(`/api/todo/${tx.txid}`)
       .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
@@ -74,7 +74,7 @@ describe('POST /', ()=>{
     });
 
     res = await request(app)
-      .get(`/api/${tx.txid}/history`)
+      .get(`/api/todo/${tx.txid}/history`)
       .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
@@ -116,7 +116,7 @@ describe('POST /', ()=>{
 
 
     res = await request(app)
-      .put(`/api/`)
+      .put(`/api/todo/`)
       .send(tx2)
       .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
@@ -128,7 +128,7 @@ describe('POST /', ()=>{
     await sleep(2000);
 
     res = await request(app)
-      .get(`/api/${tx2.txid}`)
+      .get(`/api/todo/${tx2.txid}`)
       .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
@@ -140,13 +140,13 @@ describe('POST /', ()=>{
     });
 
     res = await request(app)
-      .get(`/api/${tx.txid}/history`)
+      .get(`/api/todo/${tx.txid}/history`)
       .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(404);
 
     res = await request(app)
-      .get(`/api/${tx2.txid}/history`)
+      .get(`/api/todo/${tx2.txid}/history`)
       .set('Authorization', jwtHeader)
       .expect('Content-Type', 'application/json; charset=utf-8')
       .expect(200);
