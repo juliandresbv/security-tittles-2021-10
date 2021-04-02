@@ -78,12 +78,12 @@ function AccountTodos(){
   const page =  (query) ? parseInt(query, 10) : 1;
 
   useEffect(()=>{
-    axios.get(`/api/?page=${page - 1}`, jwtHeader)
+    axios.get(`/api/todo?page=${page - 1}`, jwtHeader)
       .then((res) => {
         setToDos(res.data);
       })
 
-    axios.get(`/api/?page=${page}`, jwtHeader)
+    axios.get(`/api/todo?page=${page}`, jwtHeader)
       .then((res) => {
         if(res.data.length > 0){
           setHasNextPage(true);

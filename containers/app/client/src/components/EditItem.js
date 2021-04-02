@@ -67,7 +67,7 @@ function CreateItem(){
   useEffect(()=>{
     (async () => {
 
-      let res1 = await axios.get('/api/'+id, jwtHeader);
+      let res1 = await axios.get('/api/todo/'+id, jwtHeader);
       setElem(res1.data);
       setElemQueried(true);
     })();
@@ -78,7 +78,7 @@ function CreateItem(){
   useEffect(()=>{
     (async () => {
 
-      let res2 = await axios.get('/api/'+id + `/history?page=${page-1}`, jwtHeader);
+      let res2 = await axios.get('/api/todo/'+id + `/history?page=${page-1}`, jwtHeader);
       let h = _.map(res2.data, t => {
         let s = JSON.parse(t.payload);
         return {
@@ -89,7 +89,7 @@ function CreateItem(){
       setHist(h);
       setElemQueried(true);
 
-      let res3 = await axios.get('/api/'+id + `/history?page=${page}`, jwtHeader);
+      let res3 = await axios.get('/api/todo/'+id + `/history?page=${page}`, jwtHeader);
       if(res3.data.length > 0){
         setHasNextPage(true);
       }
@@ -126,7 +126,7 @@ function CreateItem(){
  
         let transaction = await buildTransaction(payload);
                 
-        await axios.put('/api/', transaction, jwtHeader);
+        await axios.put('/api/todo/', transaction, jwtHeader);
   
         await sleep(1000);
   

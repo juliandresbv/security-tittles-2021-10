@@ -66,7 +66,7 @@ function CreateItem(){
 
         let transaction = await buildTransaction(payload);
                 
-        await axios.post('/api/', transaction, jwtHeader);
+        await axios.post('/api/todo', transaction, jwtHeader);
 
         await sleep(1000);
 

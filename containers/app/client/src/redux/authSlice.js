@@ -89,14 +89,14 @@ export const signupAsync = (email) => async (dispatch, getState) => {
   if(!currentAccount){
     currentAccount = await getCurrentAccount();
   }
-  let res = await axios.post('/auth/challange');
+  let res = await axios.post('/api/auth/challange');
 
   const transaction = JSON.stringify({type: "auth/signup", email, challange: res.data.challange, permissions:['client']});
   let {publicKey, signature} = await getPublicKey(transaction);
 
   let newAccount = {account: currentAccount, email, publicKey};
 
-  res = await axios.post('/auth/signup', {transaction, txid: signature});
+  res = await axios.post('/api/auth/signup', {transaction, txid: signature});
   newAccount.jwt = res.data.token;
 
   accounts[newAccount.account] = newAccount;
@@ -110,17 +110,17 @@ export const signinAsync = (email) => async (dispatch, getState) => {
   if(!currentAccount){
     currentAccount = await getCurrentAccount();
   }
-  let res = await axios.post('/auth/challange')
+  let res = await axios.post('/api/auth/challange')
   ;
   const transaction = JSON.stringify({type: "auth/signin", email, challange: res.data.challange, permissions:['client']});
   let {publicKey, signature} = await getPublicKey(transaction);
 
   let newAccount = {account: currentAccount, email, publicKey};
 
-  res = await axios.post('/auth/signin', {transaction, txid: signature});
+  res = await axios.post('/api/auth/signin', {transaction, txid: signature});
   newAccount.jwt = res.data.token;
 
-  res = await axios.get('/auth/whoami', {headers: {"Authorization":"Bearer " + newAccount.jwt}});
+  res = await axios.get('/api/auth/whoami', {headers: {"Authorization":"Bearer " + newAccount.jwt}});
   newAccount.email = res.data.email;
   
   accounts[newAccount.account] = newAccount;
