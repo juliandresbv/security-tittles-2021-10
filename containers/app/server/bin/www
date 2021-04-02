@@ -20,9 +20,6 @@ const { createTerminus } = require('@godaddy/terminus');
  */
 
 var port = normalizePort(process.env.PORT || '3001');
-console.log('Listening on PORT: ' + port);
-console.log('Swagger:', '/api-docs');
-
 app.set('port', port);
 
 /**
@@ -136,4 +133,7 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  // console.log('Listening on ' + bind);
+  // console.log('Swagger:', '/api-docs');
+
 }

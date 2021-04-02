@@ -32,7 +32,7 @@ module.exports.close = async function(){
 // Create a new MongoClient
 async function makeClientPromise() {
   console.log('mongo uri:', process.env.MONGO_URI);
-  const client = new MongoClient(process.env.MONGO_URI);
+  const client = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
   await client.connect();
 
   // Establish and verify connection
