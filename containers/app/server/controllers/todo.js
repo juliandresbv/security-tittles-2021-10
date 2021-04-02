@@ -27,8 +27,7 @@ const address = buildAddress(TRANSACTION_FAMILY);
 
 module.exports.getAllToDo = async function(req, res) {
 
-  const mongoClient = await mongo.client();
-  const stateCollection = mongoClient.db('mydb').collection("todo_state");
+  const stateCollection = mongo.client().db('mydb').collection("todo_state");
 
   const page = req.query.page || 0; 
 
@@ -49,8 +48,7 @@ module.exports.getAllToDo = async function(req, res) {
 };
 
 module.exports.getToDo = async function(req, res) {
-  const mongoClient = await mongo.client();
-  const stateCollection = mongoClient.db('mydb').collection("todo_state");
+  const stateCollection = mongo.client().db('mydb').collection("todo_state");
 
   const value = await stateCollection.findOne({"_id": req.params.id});
   if(!value){
@@ -126,9 +124,8 @@ module.exports.getToDoHistory = async function(req, res) {
 
   const page = req.query.page || 0; 
 
-  const mongoClient = await mongo.client();
-  const transactionCollection = mongoClient.db('mydb').collection("todo_transaction");
-  const stateCollection = mongoClient.db('mydb').collection("todo_state");
+  const transactionCollection = mongo.client().db('mydb').collection("todo_transaction");
+  const stateCollection = mongo.client().db('mydb').collection("todo_state");
 
   const st = await stateCollection.findOne({_id: req.params.id});
   if(!st){

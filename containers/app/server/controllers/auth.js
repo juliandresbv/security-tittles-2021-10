@@ -60,8 +60,7 @@ module.exports.signin = async function(req, res){
       return res.status(401).json('Old Challange');
     }
 
-    const mongoClient = await mongo.client();
-    const authStateCollection = mongoClient.db('mydb').collection("auth_state");
+    const authStateCollection = mongo.client().db('mydb').collection("auth_state");
     const me = await authStateCollection.findOne({_id: pubK1});
 
     if(!me){
@@ -98,8 +97,7 @@ module.exports.signup = async function(req, res){
       return res.status(401).json('Old Challange');
     }
 
-    const mongoClient = await mongo.client();
-    const authStateCollection = mongoClient.db('mydb').collection("auth_state");
+    const authStateCollection = mongo.client().db('mydb').collection("auth_state");
     const me = await authStateCollection.findOne({_id: publicKey});
 
     if(!me){
@@ -142,9 +140,7 @@ module.exports.signup = async function(req, res){
 module.exports.whoami = async function(req, res){
   const publickey = req.auth.jwt.publicKey;
 
-  const mongoClient = await mongo.client();
-
-  const authStateCollection = mongoClient.db('mydb').collection("auth_state");
+  const authStateCollection = mongo.client().db('mydb').collection("auth_state");
 
   const me = await authStateCollection.findOne({_id: publickey});
 

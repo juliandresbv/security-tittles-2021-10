@@ -1,26 +1,27 @@
 const { MongoClient } = require("mongodb");
-let clientPromise = null;
 
+let client;
 
 module.exports.init = async function(){
-  if(clientPromise){
+  if(client){
     throw new Error('Trying to initialize twice!!');
   }
-  clientPromise = makeClientPromise();
+  console.log('mongo uri:', process.env.MONGO_URI);
+  client = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
+  await client.connect();
+
+  // Establish and verify connection
+  await client.db("admin").command({ ping: 1 });
 };
 
 module.exports.client = () => {
-  if(!clientPromise){
-    throw new Error('Client not initialized!!');
-  }
-  return clientPromise;
+  return client;
 };
 
 module.exports.close = async function(){
-  if(clientPromise){
-    const client = await clientPromise;
+  if(client){
     await client.close();
-    clientPromise = null;
+    client = null;
     console.log('Close MongoDB');
   }
   else{
@@ -29,22 +30,8 @@ module.exports.close = async function(){
 };
 
 
-// Create a new MongoClient
-async function makeClientPromise() {
-  console.log('mongo uri:', process.env.MONGO_URI);
-  const client = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
-  await client.connect();
-
-  // Establish and verify connection
-  await client.db("admin").command({ ping: 1 });
-  return client;
-}
-
-
 module.exports.createIndexes = async function(){
-  const client = await module.exports.client();
   const db = client.db('mydb');
-
   try{
     await db.collection('block').createIndex({block_num: 1});
     await db.collection('todo_transaction').createIndex({block_num: 1});

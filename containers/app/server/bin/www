@@ -2,9 +2,6 @@
 
 require('dotenv').config()
 const mongo = require('../mongodb/mongo');
-mongo.init().then(() => {
-  mongo.createIndexes();
-});
 
 /**
  * Module dependencies.
@@ -71,7 +68,18 @@ process.once('SIGUSR2', function(){
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+
+Promise.all([
+  mongo.init().then(() => {
+    mongo.createIndexes();
+  })
+])
+  .then(() => {
+    server.listen(port);
+  })
+
+
+
 server.on('error', onError);
 server.on('listening', onListening);
 
@@ -110,16 +118,16 @@ function onError(error) {
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
+  case 'EACCES':
+    console.error(bind + ' requires elevated privileges');
+    process.exit(1);
+    break;
+  case 'EADDRINUSE':
+    console.error(bind + ' is already in use');
+    process.exit(1);
+    break;
+  default:
+    throw error;
   }
 }
 
@@ -133,7 +141,7 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
-  // console.log('Listening on ' + bind);
-  // console.log('Swagger:', '/api-docs');
+  console.log('Listening on ' + bind);
+  console.log('Swagger:', '/api-docs');
 
 }
