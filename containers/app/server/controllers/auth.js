@@ -145,7 +145,7 @@ module.exports.whoami = async function(req, res){
   const me = await authStateCollection.findOne({_id: publickey});
 
   if(!me){
-    return json.status(404).json({msg: 'Not found'});
+    return res.status(404).json({msg: 'Not found'});
   }
 
   return res.json({publicKey: publickey, permissions: me.value.permissions, email: me.value.email});

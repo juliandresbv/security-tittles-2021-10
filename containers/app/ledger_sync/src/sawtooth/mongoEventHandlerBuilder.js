@@ -12,8 +12,6 @@ async function handler(secondHandlers, block, events){
   
   let blockByNum = await findBlockByNum(block.block_num);
   
-  const blockCollection = await blockCollectionPromise;
-
   const transactions = getSawtoothTransactionsFromBlock(block);
 
   if(!blockByNum || blockByNum.block_id === block.block_id ){ //No fork
@@ -24,7 +22,7 @@ async function handler(secondHandlers, block, events){
       await h.addTransaction(transactions);
       await h.addState(block, events);
     }
-    await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
+    await blockCollection().updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
   else{ // Fork
@@ -44,38 +42,25 @@ async function handler(secondHandlers, block, events){
       await h.addTransaction(transactions);
       await h.addState(block, events);
     }
-    await blockCollection.updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
+    await blockCollection().updateOne({_id: block.block_id},{$set:{_id: block.block_id, ...block}}, {upsert: true});
 
   }
 }
 
 function removeDataAfterBlockNumInclusiveBuilder(transaction_family){
-  const transactionCollectionPromise = mongo.client().then((client) => {
-    return client.db('mydb').collection(`${transaction_family}_transaction`);
-  });
-  const stateHistoryCollectionPromise = mongo.client().then((client) => {
-    return client.db('mydb').collection(`${transaction_family}_state_history`);
-  });
-  const stateCollectionPromise = mongo.client().then((client) => {
-    return client.db('mydb').collection(`${transaction_family}_state`);
-  });
+  const transactionCollection =   mongo.client().db('mydb').collection(`${transaction_family}_transaction`);
+  const stateHistoryCollection =  mongo.client().db('mydb').collection(`${transaction_family}_state_history`);
+  const stateCollection =         mongo.client().db('mydb').collection(`${transaction_family}_state`);
 
   return async function(block_num){
-    const transactionCollection = await transactionCollectionPromise;
     await transactionCollection.deleteMany({block_num: {$gte: block_num}});
-
-    const stateHistoryCollection = await stateHistoryCollectionPromise;
     await stateHistoryCollection.deleteMany({block_num: {$gte: block_num}});
-
-    const stateCollection = await stateCollectionPromise;
     await stateCollection.deleteMany({});
 
     await recalculateState();
   }
 
   async function recalculateState(){
-    const stateHistoryCollection = await stateHistoryCollectionPromise;
-
     const cursor = stateHistoryCollection.aggregate([{$group: {_id: "$key"}}]);
   
     while(await cursor.hasNext()){
@@ -90,7 +75,6 @@ function removeDataAfterBlockNumInclusiveBuilder(transaction_family){
   }
 
   async function getCurrentDeltaFromHistory(key){
-    const stateHistoryCollection = await stateHistoryCollectionPromise;
     const cursor = stateHistoryCollection.find({key}).sort({block_num: -1}).limit(1);
   
     let currentState = null;
@@ -102,7 +86,6 @@ function removeDataAfterBlockNumInclusiveBuilder(transaction_family){
   }
 
   async function applyDeltaToState(delta){
-    const stateCollection = await stateCollectionPromise;
     if(delta.type === 'SET'){
       await stateCollection.updateOne({_id: delta.key}, {$set: {
         _id: delta.key,
@@ -120,14 +103,9 @@ function removeDataAfterBlockNumInclusiveBuilder(transaction_family){
 
 
 function addTransactionsBuilder(transaction_family, transactionTransform){
-  const transactionCollectionPromise = mongo.client().then((client) => {
-    return client.db('mydb').collection(`${transaction_family}_transaction`);
-  });
- 
+  const transactionCollection =   mongo.client().db('mydb').collection(`${transaction_family}_transaction`);
 
   return async function (transactions){
-
-    const txCollection = await transactionCollectionPromise;
   
     const tb = _.chain(transactions)
       .filter(t => t.family_name === transaction_family)
@@ -141,7 +119,7 @@ function addTransactionsBuilder(transaction_family, transactionTransform){
       t_new._id = t_new.txid;
   
       const t2 = await transactionTransform(t_new);
-      await txCollection.updateOne({_id: t2._id}, {$set: t2}, {upsert: true});
+      await transactionCollection.updateOne({_id: t2._id}, {$set: t2}, {upsert: true});
       
     }
   }
@@ -149,16 +127,10 @@ function addTransactionsBuilder(transaction_family, transactionTransform){
 
 
 function addStateBuilder(transaction_family, transaction_prefix){
-  const stateHistoryCollectionPromise = mongo.client().then((client) => {
-    return client.db('mydb').collection(`${transaction_family}_state_history`);
-  });
-  const stateCollectionPromise = mongo.client().then((client) => {
-    return client.db('mydb').collection(`${transaction_family}_state`);
-  });
+  const stateHistoryCollection =  mongo.client().db('mydb').collection(`${transaction_family}_state_history`);
+  const stateCollection =         mongo.client().db('mydb').collection(`${transaction_family}_state`);
 
   return async function (block, events){
-
-    const stateHistoryCollection = await stateHistoryCollectionPromise;
   
     const filteredEvents = _.filter(events, e => e.address.startsWith(transaction_prefix));
   
@@ -177,9 +149,7 @@ function addStateBuilder(transaction_family, transaction_prefix){
     }
   }
 
-  async function getStateDeltas(block, events){
-    const stateHistoryCollection = await stateHistoryCollectionPromise;
-  
+  async function getStateDeltas(block, events){  
     let deltas = [];
   
     for(let n = 0; n < events.length; n++){
@@ -238,7 +208,6 @@ function addStateBuilder(transaction_family, transaction_prefix){
   }
 
   async function applyDeltaToState(delta){
-    const stateCollection = await stateCollectionPromise;
     if(delta.type === 'SET'){
       await stateCollection.updateOne({_id: delta.key}, {$set: {
         _id: delta.key,
@@ -269,18 +238,16 @@ function sawtoothTransactionToTransaction(t){
   };
 }
 
-const blockCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection('block');
-});
+const blockCollection = () => {
+  return mongo.client().db('mydb').collection('block');
+};
 
 async function findBlockByNum(block_num){
-  const blockCollection = await blockCollectionPromise;
-  return await blockCollection.findOne({block_num});
+  return await blockCollection().findOne({block_num});
 }
 
 async function removeBlocksAfterBlockNumInclusive(block_num){
-  const blockCollection = await blockCollectionPromise;
-  await blockCollection.deleteMany({block_num: {$gte: block_num}});
+  await blockCollection().deleteMany({block_num: {$gte: block_num}});
 }
 
 function getSawtoothTransactionsFromBlock(block) {
@@ -311,8 +278,7 @@ function getSawtoothTransactionsFromBlock(block) {
 async function lastBlockId(){
   let lastBlock = sawtoothHelper.NULL_BLOCK_ID;
 
-  const blockCollection = await blockCollectionPromise;
-  const cursor = await blockCollection.find({}).sort({block_num: -1}).limit(1);
+  const cursor = await blockCollection().find({}).sort({block_num: -1}).limit(1);
   await new Promise((resolve, reject) => {
     cursor.forEach((doc)=>{
       lastBlock = doc.block_id

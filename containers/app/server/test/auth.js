@@ -86,7 +86,7 @@ describe('/api/auth', ()=>{
     let j = await jwtVerify(res.body.token);
     assert.equal(j.publicKey, getPublicKey(privKey1));
 
-    sleep(3000);
+    await sleep(1000);
 
     res = await request(app)
       .get('/api/auth/whoami')
@@ -97,7 +97,7 @@ describe('/api/auth', ()=>{
 
     assert.deepEqual(res.body, {publicKey: getPublicKey(privKey1), permissions: tx_data.permissions, email: tx_data.email});
 
-  }).timeout(20*1000);
+  }).timeout(10*1000);
 
 
   it('/api/signin with random key', async ()=>{
@@ -140,7 +140,7 @@ describe('/api/auth', ()=>{
     let j = await jwtVerify(res.body.token);
     assert.equal(j.publicKey, getPublicKey(privKey1));
 
-    sleep(2000);
+    await sleep(1000);
 
     res = await request(app)
       .post('/api/auth/challange')
@@ -160,6 +160,6 @@ describe('/api/auth', ()=>{
     j = await jwtVerify(res.body.token);
 
     assert.deepEqual(_.pick(j, 'publicKey', 'permissions'), {publicKey: getPublicKey(privKey1), permissions: ['client']});
-  });
+  }).timeout(10*1000);
 
 });

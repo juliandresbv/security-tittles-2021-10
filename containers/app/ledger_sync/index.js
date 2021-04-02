@@ -6,7 +6,7 @@ const mongoEventHandlerBuilder = require('./src/sawtooth/mongoEventHandlerBuilde
 const {events, handlers} = require('./src/index');
 
 (async () => {
-  await mongo.client();
+  await mongo.init();
   let lastBlock = await mongoEventHandlerBuilder.lastBlockId(); 
   
   sawtoothHelper.subscribeToSawtoothEvents(
@@ -62,7 +62,6 @@ process.on('SIGTERM', async () => {
 
 process.once('SIGUSR2', async () => {
   await shutdown();
-  console.log('kill');
   // process.kill(process.pid, 'SIGUSR2');
   process.exit(0);
 });

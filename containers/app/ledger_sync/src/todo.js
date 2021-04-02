@@ -8,12 +8,8 @@ const SAWTOOTH_PREFIX = hash512(SAWTOOTH_FAMILY).substring(0, 6);
 const mongo = require('./mongodb/mongo');
 
 
-const transactionCollectionPromise = mongo.client().then((client) => {
-  return client.db('mydb').collection(`${SAWTOOTH_FAMILY}_transaction`);
-});
-
 async function transactionTransform(transaction){
-  const txCollection = await transactionCollectionPromise;
+  const txCollection = mongo.client().db('mydb').collection(`${SAWTOOTH_FAMILY}_transaction`);
 
   let p = JSON.parse(transaction.payload);
 
