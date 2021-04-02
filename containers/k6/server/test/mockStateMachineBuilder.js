@@ -1,5 +1,6 @@
 const {produce} = require('immer');
 const { job } = require('../scripts/src/stateMachine');
+const _ = require('underscore');
 
 
 const stateMachine = {
@@ -25,28 +26,52 @@ const stateMachine = {
       next_name = 'WORKING';
     }
 
+
     return {
       n: next_n,
       n_max: next_n_max,
-      name: next_name
+      name: next_name,
+      _locks: [next_n % 4]
     }
   },
   job: async (state) =>{
-    await sleep(1);
     console.log('j', state.n);
-  },
-  locks: async (state) => {
-    // return [];
-    return [state.n % 4];
   }
 };
 
-module.exports = () => {
+/**
+ * 
+ * jobDelays = []
+ * [-1, -1, 2]
+ * ]
+ * negative throws Excpetion
+ */
+module.exports = (jobDelays) => {
   let jobs = [];
+
+  let jobIdx = _.mapObject(jobDelays, () => 0);
+
   const sm = {
     ...stateMachine,
-    job: (state) => {
+    job: async (state) => {
       jobs.push(state);
+
+
+      let delay = 1;
+
+      if(jobDelays){
+        delay = jobDelays[state.n][jobIdx[state.n]];
+        jobIdx[state.n] = jobIdx[state.n] + 1;
+      }
+
+      if(delay < 0){
+        await sleep(-delay);
+        throw new Error('some error');
+      }
+      else {
+        await sleep(delay);
+      }
+
       return stateMachine.job;
     },
     _jobs: jobs

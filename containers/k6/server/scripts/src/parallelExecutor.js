@@ -1,18 +1,22 @@
 const _ = require('underscore');
-const log = require('./log');
 const {produce} = require('immer');
 
 
 const MAX_RETRIES = 10;
 const CHECKPOINT_AFTER = 2;
-const CONCURRENCY = 10;
+const DEFAULT_CONCURRENCY = 10;
 
-module.exports = async function(stateMachine, n_max){
+module.exports = async function(stateMachine, n_max, logger, concurrency){
+
+  let realConcurrency = DEFAULT_CONCURRENCY;
+  if(concurrency){
+    realConcurrency = concurrency;
+  }
+
   let closing = false; 
-  await log.init();
 
   let state;
-  let lastStateDone = await getLastState();
+  let lastStateDone = await getLastState(logger);
 
   if(!lastStateDone){
     console.log('INIT');
@@ -35,12 +39,12 @@ module.exports = async function(stateMachine, n_max){
   async function execute(){
     
     do{
-      while(state.name !== 'DONE' && (jobQueue.length < CONCURRENCY) && !closing){
+      while(state.name !== 'DONE' && (jobQueue.length < realConcurrency) && !closing){
                 
         let s = state;
         let i = idx;
 
-        let locks = await stateMachine.locks(s);
+        let locks = s._locks;
         let usedLocks = _.chain(jobQueue).map(j => j.locks).flatten().value();
         if(_.any(locks, l => _.contains(usedLocks, l))){
           break;
@@ -92,7 +96,7 @@ module.exports = async function(stateMachine, n_max){
   
       if(lastIdxDone - lastIdxCommited > CHECKPOINT_AFTER){
         // console.log('check', lastIdxDone - lastIdxCommited)
-        checkpoint(lastStateDone);
+        checkpoint(lastStateDone, logger);
         lastIdxCommited = lastIdxDone;
       }
     } while(jobQueue.length > 0 || (state.name !== 'DONE' && !closing));
@@ -100,7 +104,7 @@ module.exports = async function(stateMachine, n_max){
 
     console.log('...');
     if(lastIdxDone > -1){
-      checkpoint(lastStateDone);
+      checkpoint(lastStateDone, logger);
     }
   
     if(state.name === 'DONE'){
@@ -110,8 +114,6 @@ module.exports = async function(stateMachine, n_max){
     if(err){
       throw err;
     }
-    await log.close();
-
   }
   
   function close(){
@@ -124,13 +126,13 @@ module.exports = async function(stateMachine, n_max){
 }
 
 
-function checkpoint(state){
-  log.log(JSON.stringify(state));
+function checkpoint(state, logger){
+  logger.log(JSON.stringify(state));
   console.log('check:', state.n);
 }
 
-async function getLastState(){
-  let last_line = await log.lastLog();
+async function getLastState(logger){
+  let last_line = await logger.lastLog();
   if(last_line){
     return JSON.parse(last_line);
   }

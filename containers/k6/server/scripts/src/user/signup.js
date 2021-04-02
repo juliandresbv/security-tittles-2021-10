@@ -6,7 +6,7 @@ const Chance = require('chance');
 const chance = new Chance();
 const fsPromises = require('fs').promises;
 const fs = require('fs');
-
+const readline = require('readline');
 
 const {
   getPublicKey, 
@@ -70,6 +70,26 @@ async function fileExists(file){
   }
 }
 
-module.exports = {signup, generateUserFile}
+async function readUsersFromFile(){
+  return new Promise((resolve, reject) =>{
+    const rl = readline.createInterface({
+      input: fs.createReadStream(FILE),
+      crlfDelay: Infinity
+    });
+  
+    let users = [];
+  
+    rl.on('line', (line) => {
+      users.push(JSON.parse(line));
+    });
+  
+    rl.on('close', () => {
+      resolve(users);
+    });
+  });
+  
+}
+
+module.exports = {signup, generateUserFile, readUsersFromFile}
 
 

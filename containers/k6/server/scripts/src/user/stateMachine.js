@@ -63,7 +63,8 @@ module.exports = {
       n: next_n,
       n_max: next_n_max,
       name: next_name,
-      seed: next_seed
+      seed: next_seed,
+      _locks: [] 
     }
   },
 
@@ -78,9 +79,6 @@ module.exports = {
     console.log('j', user.email);
     // console.log('j', state.n);
 
-  },
-  locks: async (state) => {
-    return [];
   }
 }
 

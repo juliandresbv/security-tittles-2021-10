@@ -19,21 +19,21 @@ describe('user stateMachine', ()=>{
 
   it('init', async ()=>{
     let state = stateMachine.apply(null, {type: 'INIT', payload: 2});
-    assert.deepEqual(_.omit(state, 'seed'), {n:0, n_max: 2, name: 'WORKING'});
+    assert.deepEqual(_.omit(state, 'seed'), {n:0, n_max: 2, name: 'WORKING', _locks:[]});
   });
 
   it('state 1', async ()=>{
     const rng = seedrandom('random seed', {state: true});
 
     let state = stateMachine.apply({seed: rng.state(), n:0, n_max: 2});
-    assert.deepEqual(_.omit(state, 'seed'), {n:1, n_max: 2, name: 'WORKING'});
+    assert.deepEqual(_.omit(state, 'seed'), {n:1, n_max: 2, name: 'WORKING', _locks:[]});
   });
 
   it('state 2', async ()=>{
     const rng = seedrandom('random seed', {state: true});
 
     let state = stateMachine.apply({seed: rng.state(), n:1, n_max: 2});
-    assert.deepEqual(_.omit(state, 'seed'), {n:2, n_max: 2, name: 'DONE'});
+    assert.deepEqual(_.omit(state, 'seed'), {n:2, n_max: 2, name: 'DONE', _locks:[]});
   });
 
 

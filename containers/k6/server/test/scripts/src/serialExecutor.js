@@ -36,8 +36,8 @@ describe('serialExecutor', ()=>{
 
     await executePromise;
 
-    assert.deepEqual(_.map(logger._logs, n => JSON.parse(n)), [{n: 0, n_max: 1, name: 'WORKING'}]);
-    assert.deepEqual(sm._jobs, [{n: 0, n_max: 1, name: 'WORKING'}]);
+    assert.deepEqual(_.map(logger._logs, n => JSON.parse(n)), [{n: 0, n_max: 1, name: 'WORKING', _locks: [0]}]);
+    assert.deepEqual(_.map(sm._jobs, j => j.n), [0]);
   });
 
   it('n_max = 2', async ()=>{
@@ -49,11 +49,10 @@ describe('serialExecutor', ()=>{
     await executePromise;
 
     assert.deepEqual(_.map(logger._logs, n => JSON.parse(n)), [
-      {n: 1, n_max: 2, name: 'WORKING'},
+      {n: 1, n_max: 2, name: 'WORKING', _locks: [1]},
     ]);
-    assert.deepEqual(sm._jobs, [
-      {n: 0, n_max: 2, name: 'WORKING'},
-      {n: 1, n_max: 2, name: 'WORKING'},
+    assert.deepEqual(_.map(sm._jobs, j => j.n), [
+      0, 1
     ]);
   });
 
