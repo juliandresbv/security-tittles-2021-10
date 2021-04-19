@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: apporg0app0
-        image: le999/app1:1.0
+        image: le999/org0app0:1.0
         ports:
         - containerPort: 3000
         env:
@@ -29,8 +29,8 @@ spec:
 
 
 
-          
-
+          - name: SAWTOOTH_PRIVATE_KEY
+            value: "0x7f664d71e4200b4a2989558d1f6006d0dac9771a36a546b1a47c384ec9c4f04b"
           - name: VALIDATOR_HOST
             value: tcp://sawtooth-org0peer0:4004
           - name: SAWTOOTH_REST
@@ -45,6 +45,60 @@ spec:
   type: ClusterIP
   selector:
     app: apporg0app0
+  ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-org0app1
+  labels:
+    app: apporg0app1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apporg0app1
+  template:
+    metadata:
+      labels:
+        app: apporg0app1
+    spec:
+      containers:
+      - name: apporg0app1
+        image: le999/org0app1:1.0
+        ports:
+        - containerPort: 3000
+        env:
+          - name: PORT
+            value: "3000"
+
+          - name: MONGO_URI
+            value: mongodb://root:example@mongodborg0:27017/mydb
+
+
+
+          - name: SAWTOOTH_PRIVATE_KEY
+            value: "0x7f664d71e4200b4a2989558d1f6006d0dac9771a36a546b1a47c384ec9c4f04b"
+          - name: VALIDATOR_HOST
+            value: tcp://sawtooth-org0peer0:4004
+          - name: SAWTOOTH_REST
+            value: http://sawtooth-org0:8008
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: apporg0app1
+spec:
+  type: ClusterIP
+  selector:
+    app: apporg0app1
   ports:
     - name: "3000"
       port: 3000
@@ -71,7 +125,7 @@ spec:
     spec:
       containers:
       - name: apporg1app0
-        image: le999/app1:1.0
+        image: le999/org1app0:1.0
         ports:
         - containerPort: 3000
         env:
@@ -83,8 +137,8 @@ spec:
 
 
 
-          
-
+          - name: SAWTOOTH_PRIVATE_KEY
+            value: "0x7f664d71e4200b4a2989558d1f6006d0dac9771a36a546b1a47c384ec9c4f04b"
           - name: VALIDATOR_HOST
             value: tcp://sawtooth-org1peer0:4004
           - name: SAWTOOTH_REST
@@ -99,6 +153,60 @@ spec:
   type: ClusterIP
   selector:
     app: apporg1app0
+  ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-org1app1
+  labels:
+    app: apporg1app1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apporg1app1
+  template:
+    metadata:
+      labels:
+        app: apporg1app1
+    spec:
+      containers:
+      - name: apporg1app1
+        image: le999/org1app1:1.0
+        ports:
+        - containerPort: 3000
+        env:
+          - name: PORT
+            value: "3000"
+
+          - name: MONGO_URI
+            value: mongodb://root:example@mongodborg1:27017/mydb
+
+
+
+          - name: SAWTOOTH_PRIVATE_KEY
+            value: "0x7f664d71e4200b4a2989558d1f6006d0dac9771a36a546b1a47c384ec9c4f04b"
+          - name: VALIDATOR_HOST
+            value: tcp://sawtooth-org1peer0:4004
+          - name: SAWTOOTH_REST
+            value: http://sawtooth-org1:8008
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: apporg1app1
+spec:
+  type: ClusterIP
+  selector:
+    app: apporg1app1
   ports:
     - name: "3000"
       port: 3000

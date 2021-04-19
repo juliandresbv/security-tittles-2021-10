@@ -15,5 +15,3 @@ sleep 10
 
 # kubectl apply -f ./loadbalancer.yaml
 kubectl apply -f ./network.yaml
-
-#../../scripts/wait-for-pods.sh pbft-org1peer0 pbft-org1peer1 

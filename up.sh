@@ -8,5 +8,4 @@ gnome-terminal --tab -- bash -c "cd ./containers/tpauth; npm start; bash"
 
 gnome-terminal --tab -- bash -c "cd ./containers/app/server; npm start; bash"
 gnome-terminal --tab -- bash -c "cd ./containers/app/client; npm start; bash"
-gnome-terminal --tab -- bash -c "cd ./containers/app/ledger_sync; npm start; bash"
-
+gnome-terminal --tab -- bash -c "cd ./containers/app_ledger_sync; npm start; bash"

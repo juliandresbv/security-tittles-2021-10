@@ -11,3 +11,17 @@ cd "./mongodb"
 cd - 
 
 
+
+#--------------------
+# wait
+#--------------------
+
+# cd "./sawtooth"
+#   ./wait.sh
+# cd - 
+
+# cd "./mongodb"
+#   ./wait.sh
+# cd - 
+
+

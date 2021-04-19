@@ -1,5 +1,7 @@
 #!/bin/bash
 
+./setContainerVersion.sh
+
 kubectl config use-context org0
 
 cd "./org0/sawtooth"
@@ -21,18 +23,17 @@ kubectl -f "./org0/sawtooth/loadbalancer.yaml" apply
 kubectl config use-context org1
 kubectl -f "./org1/sawtooth/loadbalancer.yaml" apply
 
-rm -f ./services.txt
-kubectl config use-context org0
-../scripts/servicesIP.sh sawtooth-org0peer0-lb sawtooth-org0peer1-lb 
-kubectl config use-context org1
-../scripts/servicesIP.sh sawtooth-org1peer0-lb sawtooth-org1peer1-lb 
-
-mv ./services.txt ./build/services.txt
-
+./sawtoothIP.sh
 
 declare -A serviceIPS
 
-FILE=$(cat "./build/services.txt")
+FILE=$(cat "./build/services-sawtooth-org0.txt")
+while read line ; do
+  name=$(echo "$line"     | sed 's/^sawtooth-\(\S\+\)-lb\s*\(\S*\)/\1/g')
+  sip=$(echo "$line"      | sed 's/^sawtooth-\(\S\+\)-lb\s*\(\S*\)/\2/g')
+  serviceIPS["$name"]="$sip"
+done <<< "$FILE"
+FILE=$(cat "./build/services-sawtooth-org1.txt")
 while read line ; do
   name=$(echo "$line"     | sed 's/^sawtooth-\(\S\+\)-lb\s*\(\S*\)/\1/g')
   sip=$(echo "$line"      | sed 's/^sawtooth-\(\S\+\)-lb\s*\(\S*\)/\2/g')
@@ -65,8 +66,10 @@ cd ./org0
   ./up.sh
 cd -
 
+cd ./org0/app/loadbalancer
+  ./up.sh
+cd -
 cd ./org0/app
-  kubectl -f ./loadbalancer.yaml apply
   ./up.sh
 cd -
 kubectl config use-context org1
@@ -76,8 +79,10 @@ cd ./org1
   ./up.sh
 cd -
 
+cd ./org1/app/loadbalancer
+  ./up.sh
+cd -
 cd ./org1/app
-  kubectl -f ./loadbalancer.yaml apply
   ./up.sh
 cd -
 

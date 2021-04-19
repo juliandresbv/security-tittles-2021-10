@@ -153,13 +153,28 @@ spec:
         #     - -c
         #     - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
-        - name: sawtooth-intkey-tp-js
+        - name: sawtooth-tp0-js
+          image: le999/tp0:1.0
+          command:
+            - bash
+          args:
+            - -c
+            - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp0
+              
+        - name: sawtooth-tp1-js
           image: le999/tp1:1.0
           command:
             - bash
           args:
             - -c
             - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp1
+              
 
       volumes:
         - name: genesis-batch
@@ -341,13 +356,28 @@ spec:
         #     - -c
         #     - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
-        - name: sawtooth-intkey-tp-js
+        - name: sawtooth-tp0-js
+          image: le999/tp0:1.0
+          command:
+            - bash
+          args:
+            - -c
+            - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp0
+              
+        - name: sawtooth-tp1-js
           image: le999/tp1:1.0
           command:
             - bash
           args:
             - -c
             - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp1
+              
 
       volumes:
         - name: validator-toml
@@ -526,13 +556,28 @@ spec:
         #     - -c
         #     - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
-        - name: sawtooth-intkey-tp-js
+        - name: sawtooth-tp0-js
+          image: le999/tp0:1.0
+          command:
+            - bash
+          args:
+            - -c
+            - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp0
+              
+        - name: sawtooth-tp1-js
           image: le999/tp1:1.0
           command:
             - bash
           args:
             - -c
             - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp1
+              
 
       volumes:
         - name: validator-toml
@@ -711,13 +756,28 @@ spec:
         #     - -c
         #     - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
-        - name: sawtooth-intkey-tp-js
+        - name: sawtooth-tp0-js
+          image: le999/tp0:1.0
+          command:
+            - bash
+          args:
+            - -c
+            - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp0
+              
+        - name: sawtooth-tp1-js
           image: le999/tp1:1.0
           command:
             - bash
           args:
             - -c
             - "VALIDATOR=tcp://$HOSTNAME:4004 node ./index.js"
+          env:
+            - name: TRANSACTION_FAMILY
+              value: tp1
+              
 
       volumes:
         - name: validator-toml

@@ -13,7 +13,5 @@ kubectl create configmap validator-toml --from-file=./build/validator.toml
 
 sleep 10
 
-kubectl apply -f ./loadbalancer.yaml
+# kubectl apply -f ./loadbalancer.yaml
 kubectl apply -f ./network.yaml
-
-../../scripts/wait-for-pods.sh pbft-org0peer0 pbft-org0peer1 pbft-org1peer0 pbft-org1peer1 

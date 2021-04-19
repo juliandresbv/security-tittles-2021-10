@@ -4,5 +4,3 @@
 
 kubectl apply -f ./sawtooth.yaml
 # kubectl apply -f ./ingress.yaml
-
-../../scripts/wait-for-pods.sh pbft-org0peer0
