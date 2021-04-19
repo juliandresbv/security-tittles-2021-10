@@ -10,4 +10,4 @@ RUN npm install --loglevel verbose
 
 COPY . .
 
-CMD [ "node", "bin/www" ]
+CMD [ "node", "index.js" ]

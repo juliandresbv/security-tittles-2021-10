@@ -1,16 +1,16 @@
 #!/bin/bash
 
-TP0_V="tp1:latest"
-TP1_V="tp1:latest"
+TP0_V="tp1_todo:1.0"
+TP1_V="tpauth_todo:1.0"
 
-ORG0_APP0_V="app1:latest"
+ORG0_APP0_V="app_todo:1.0"
 ORG0_APP0_LB="true"
-ORG0_APP1_V="app1:latest"
-ORG0_APP1_LB="true"
-ORG1_APP0_V="app1:latest"
+ORG0_APP1_V="app_ledger_sync_todo:1.0"
+ORG0_APP1_LB="false"
+ORG1_APP0_V="app_todo:1.0"
 ORG1_APP0_LB="true"
-ORG1_APP1_V="app1:latest"
-ORG1_APP1_LB="true"
+ORG1_APP1_V="app_ledger_sync_todo:1.0"
+ORG1_APP1_LB="false"
 
 FILE="./minikube-prod/app/loadbalancer/up.sh"
 

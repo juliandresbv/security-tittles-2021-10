@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: apporg0app0
-        image: le999/org0app0:1.0
+        image: le999/app_todo:1.0
         ports:
         - containerPort: 3000
         env:
@@ -71,7 +71,7 @@ spec:
     spec:
       containers:
       - name: apporg0app1
-        image: le999/org0app1:1.0
+        image: le999/app_ledger_sync_todo:1.0
         ports:
         - containerPort: 3000
         env:
@@ -125,7 +125,7 @@ spec:
     spec:
       containers:
       - name: apporg1app0
-        image: le999/org1app0:1.0
+        image: le999/app_todo:1.0
         ports:
         - containerPort: 3000
         env:
@@ -179,7 +179,7 @@ spec:
     spec:
       containers:
       - name: apporg1app1
-        image: le999/org1app1:1.0
+        image: le999/app_ledger_sync_todo:1.0
         ports:
         - containerPort: 3000
         env:

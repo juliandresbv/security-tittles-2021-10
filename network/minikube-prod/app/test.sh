@@ -6,7 +6,7 @@ if [[ -z "$1" ]]; then
   exit 0
 fi
 
-kubectl run --rm -it borrar1 --image le999/org0app0:1.0 \
+kubectl run --rm -it borrar1 --image le999/app_todo:1.0 \
   --restart=Never \
   --env "SAWTOOTH_PRIVATE_KEY=0x7f664d71e4200b4a2989558d1f6006d0dac9771a36a546b1a47c384ec9c4f04b" \
   --env "SAWTOOTH_REST=http://sawtooth-org${ORG}:8008" \
