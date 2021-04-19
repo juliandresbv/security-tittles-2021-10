@@ -1,12 +1,26 @@
 #!/bin/bash
 
-TP0_V="tp1:latest"
-TP1_V="tp1:latest"
+TP0_V="le999/tp0:1.0"
+TP1_V="le999/tp0:1.0"
 
-ORG0_APP0_V="app1:latest"
+ORG0_APP0_V="le999/org0app0:1.0"
 ORG0_APP0_LB="true"
-ORG0_APP1_V="app1:latest"
+ORG0_APP1_V="le999/org0app0:1.0"
 ORG0_APP1_LB="true"
+
+
+
+#--------------------
+# Escaped envs, for sed substitutiion
+# https://unix.stackexchange.com/questions/129059/how-to-ensure-that-string-interpolated-into-sed-substitution-escapes-all-metac
+
+TP0_V_escaped=$(printf '%s\n' "$TP0_V" | sed 's:[\\/&]:\\&:g;$!s/$/\\/')
+TP1_V_escaped=$(printf '%s\n' "$TP1_V" | sed 's:[\\/&]:\\&:g;$!s/$/\\/')
+
+ORG0_APP0_V_escaped=$(printf '%s\n' "$ORG0_APP0_V" | sed 's:[\\/&]:\\&:g;$!s/$/\\/')
+ORG0_APP1_V_escaped=$(printf '%s\n' "$ORG0_APP1_V" | sed 's:[\\/&]:\\&:g;$!s/$/\\/')
+
+
 
 FILE="./app/loadbalancer/up.sh"
 
@@ -60,17 +74,17 @@ chmod 755 "$FILE"
 
 
 FILE="./sawtooth/network.yaml"
-cat "${FILE}.backup"  | sed "s/le999\/tp0:1.0/le999\/${TP0_V}/g"  | sed "s/le999\/tp1:1.0/le999\/${TP1_V}/g" > "$FILE"
+cat "${FILE}.backup"  | sed "s/le999\/tp0:1.0/${TP0_V_escaped}/g"  | sed "s/le999\/tp1:1.0/${TP1_V_escaped}/g" > "$FILE"
 
 FILE="./app/network.yaml"
-cat "${FILE}.backup"  | sed "s/le999\/org0app0:1.0/le999\/${ORG0_APP0_V}/g"  | sed "s/le999\/org0app1:1.0/le999\/${ORG0_APP1_V}/g"  > "$FILE"
+cat "${FILE}.backup"  | sed "s/le999\/org0app0:1.0/${ORG0_APP0_V_escaped}/g"  | sed "s/le999\/org0app1:1.0/${ORG0_APP1_V_escaped}/g"  > "$FILE"
 
 FILE="./app/run1.sh"
-cat "${FILE}.backup"  | sed "s/le999\/org0app0:1.0/le999\/${ORG0_APP0_V}/g"  | sed "s/le999\/org0app1:1.0/le999\/${ORG0_APP1_V}/g"  > "$FILE"
+cat "${FILE}.backup"  | sed "s/le999\/org0app0:1.0/${ORG0_APP0_V_escaped}/g"  | sed "s/le999\/org0app1:1.0/${ORG0_APP1_V_escaped}/g"  > "$FILE"
 chmod 755 "$FILE"
 
 FILE="./app/test.sh"
-cat "${FILE}.backup"  | sed "s/le999\/org0app0:1.0/le999\/${ORG0_APP0_V}/g"  | sed "s/le999\/org0app1:1.0/le999\/${ORG0_APP1_V}/g"  > "$FILE"
+cat "${FILE}.backup"  | sed "s/le999\/org0app0:1.0/${ORG0_APP0_V_escaped}/g"  | sed "s/le999\/org0app1:1.0/${ORG0_APP1_V_escaped}/g"  > "$FILE"
 chmod 755 "$FILE"
 
 
