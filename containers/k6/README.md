@@ -48,6 +48,23 @@ In docker-compose/k6.yaml:
 
 TARGET_HOST=172.17.0.1:3001
 
+
+
+## Query how many documents
+```bash
+kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.auth_state_.find().size()"
+kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.auth_state_history.find().size()"
+kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.auth_transaction.find().size()"
+
+kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.todo_state.find().size()"
+kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.todo_state_history.find().size()"
+kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.todo_transaction.find().size()"
+
+
+
+```
+
+
 ## References
 https://k6.io/docs/results-visualization/influxdb-+-grafana
 https://k6.io/blog/k6-loves-grafana

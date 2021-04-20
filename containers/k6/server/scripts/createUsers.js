@@ -1,16 +1,11 @@
 // const jobExecutor = require('./src/serialExecutor');
 const jobExecutor = require('./src/parallelExecutor');
 
-// const stateMachine = require('./src/stateMachine');
-// const stateMachine = require('./src/users/stateMachine');
-const stateMachine = require('./src/todo/stateMachine');
+const stateMachine = require('./src/user/stateMachine');
 
 const loggerBuilder = require('./src/logger');
-
 const fsPromises = require('fs').promises;
-
-const CONCURRENCY = 10;
-
+const {generateUserFile} = require('./src/user/signup');
 
 let args = process.argv.slice(2)
 
@@ -28,7 +23,7 @@ while(args.length > 0){
 
 if(n_max == null){
   console.log("Usage:");
-  console.log("node ./index2.js <num_iters> --from0");
+  console.log("node ./scripts/createUsers.js <num_iters> --from0");
   return;
 }
 
@@ -37,7 +32,8 @@ let executor;
 async function main(){
   try{
     if(from0){
-      await fsPromises.unlink('./log2.txt');
+      await fsPromises.unlink('./log.txt');
+      await fsPromises.unlink('./users.txt');
     }
   }
   catch(err){
@@ -46,14 +42,16 @@ async function main(){
 
   let logger;
   try{
-    logger = loggerBuilder('./log2.txt');
+    await generateUserFile(n_max);
+
+    logger = loggerBuilder('./log.txt');
     await logger.init();
     let lastStateDone = await logger.lastLog();
     let initState;
 
     if(!lastStateDone){
       console.log('INIT');
-      initState = await stateMachine.apply(null, {type: "INIT", payload: {n_max, num_utxos: 100}});
+      initState = await stateMachine.apply(null, {type: "INIT", payload: n_max});
     }
     else{
       const s = JSON.parse(lastStateDone);
@@ -63,7 +61,8 @@ async function main(){
       initState = s;
     }
 
-    executor = await jobExecutor(stateMachine, initState, logger, CONCURRENCY);
+
+    executor = await jobExecutor(stateMachine, initState, logger);
     await executor.executePromise;
 
   }
