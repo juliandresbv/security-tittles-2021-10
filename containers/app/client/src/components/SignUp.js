@@ -86,7 +86,6 @@ export default function SignUp() {
     onSubmit: async (values, {setStatus}) => {
 
       try{
-        console.log('signupAsync');
         await dispatch(signupAsync(values.email, values.firstName, values.password));
         history.replace('/dashboard');
       }

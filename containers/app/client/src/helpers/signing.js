@@ -60,7 +60,6 @@ export async function buildTransaction(payload){
 
 export async function signString(toSign){
   const signer = provider.getSigner();
-  console.log('signer.signMessage');
   return await signer.signMessage(toSign);
 }
 

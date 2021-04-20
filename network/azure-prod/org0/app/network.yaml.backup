@@ -35,6 +35,11 @@ spec:
             value: tcp://sawtooth-org0peer0:4004
           - name: SAWTOOTH_REST
             value: http://sawtooth-org0:8008
+
+          - name: JWT_SECRET
+            value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE2MTU2NTE5ODJ9.Fr8AAvMHdi9at7qUX5WdJevaQrnJnMM5CMhxOFW4820"
+          - name: PAGE_SIZE
+            value: "10"
 ---
 
 apiVersion: v1

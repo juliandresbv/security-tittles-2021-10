@@ -1,43 +1,29 @@
 #!/bin/bash
 
-TP0_V="le999/tp1_todo:1.0"
-TP1_V="le999/tpauth_todo:1.0"
+# TP0_V="le999/tp1_todo:1.0"
+# TP1_V="le999/tpauth_todo:1.0"
 
-ORG0_APP0_V="le999/app_todo:1.0"
+# ORG0_APP0_V="le999/app_todo:1.0"
+# ORG0_APP0_LB="true"
+# ORG0_APP1_V="le999/app_ledger_sync_todo:1.0"
+# ORG0_APP1_LB="false"
+# ORG1_APP0_V="le999/app_todo:1.0"
+# ORG1_APP0_LB="true"
+# ORG1_APP1_V="le999/app_ledger_sync_todo:1.0"
+# ORG1_APP1_LB="false"
+
+
+TP0_V="le999/tp1_todo:latest"
+TP1_V="le999/tpauth_todo:latest"
+
+ORG0_APP0_V="le999/app_todo:latest"
 ORG0_APP0_LB="true"
-ORG0_APP1_V="le999/app_ledger_sync_todo:1.0"
+ORG0_APP1_V="le999/app_ledger_sync_todo:latest"
 ORG0_APP1_LB="false"
-ORG1_APP0_V="le999/app_todo:1.0"
+ORG1_APP0_V="le999/app_todo:latest"
 ORG1_APP0_LB="true"
-ORG1_APP1_V="le999/app_ledger_sync_todo:1.0"
+ORG1_APP1_V="le999/app_ledger_sync_todo:latest"
 ORG1_APP1_LB="false"
-
-
-# TP0_V="le999/tp1_todo:1.1.1"
-# TP1_V="le999/tpauth_todo:1.1.1"
-
-# ORG0_APP0_V="le999/app_todo:1.1.1"
-# ORG0_APP0_LB="true"
-# ORG0_APP1_V="le999/app_ledger_sync_todo:1.1.1"
-# ORG0_APP1_LB="false"
-# ORG1_APP0_V="le999/app_todo:1.1.1"
-# ORG1_APP0_LB="true"
-# ORG1_APP1_V="le999/app_ledger_sync_todo:1.1.1"
-# ORG1_APP1_LB="false"
-
-
-
-# TP0_V="le999/tp1_todo:latest"
-# TP1_V="le999/tpauth_todo:latest"
-
-# ORG0_APP0_V="le999/app_todo:latest"
-# ORG0_APP0_LB="true"
-# ORG0_APP1_V="le999/app_ledger_sync_todo:latest"
-# ORG0_APP1_LB="false"
-# ORG1_APP0_V="le999/app_todo:latest"
-# ORG1_APP0_LB="true"
-# ORG1_APP1_V="le999/app_ledger_sync_todo:latest"
-# ORG1_APP1_LB="false"
 
 
 #--------------------

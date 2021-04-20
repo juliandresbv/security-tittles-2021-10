@@ -26,6 +26,10 @@ function buildAddress(transactionFamily){
   }
 }
 
+if(!process.env.JWT_SECRET){
+  console.log('JWT_SECRET env var not defined');
+  process.exit(1);
+}
 
 function jwtVerify(token){
   return new Promise((resolve, reject) => {

@@ -92,7 +92,6 @@ export const signupAsync = (email) => async (dispatch, getState) => {
   let res = await axios.post('/api/auth/challange');
 
   const transaction = JSON.stringify({type: "auth/signup", email, challange: res.data.challange, permissions:['client']});
-  console.log('getPublicKey');
   let {publicKey, signature} = await getPublicKey(transaction);
 
   let newAccount = {account: currentAccount, email, publicKey};
