@@ -26,7 +26,7 @@ cd ./containers/app/server
   cp ./.env.docker-compose ./.env
 cd -
 
-cd ./containers/app//ledger_sync
+cd ./containers/app_ledger_sync
   npm install
   rm ./.env
   cp ./.env.docker-compose ./.env
