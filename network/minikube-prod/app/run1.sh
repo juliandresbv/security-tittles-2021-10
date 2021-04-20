@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubectl run --rm -it borrar1 --image le999/app_todo:1.0 \
+kubectl run --rm -it borrar1 --image le999/app_todo:1.1.1 \
   --env "SAWTOOTH_REST=http://sawtooth-org0:8008" \
   --env "VALIDATOR_HOST=tcp://sawtooth-org0peer0:4004" \
   --env "MONGO_URI=mongodb://root:example@mongodborg0:27017/mydb" \

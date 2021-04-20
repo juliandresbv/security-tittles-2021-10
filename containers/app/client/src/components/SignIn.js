@@ -121,7 +121,7 @@ export default function SignIn() {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Sign in --
+            Sign in
           </Typography>
           {metamaskMessage &&
             <Typography variant="body1" color="error">
