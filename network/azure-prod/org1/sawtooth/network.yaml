@@ -156,7 +156,7 @@ spec:
         #     - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
         - name: sawtooth-tp0-js
-          image: le999/tp0:1.0
+          image: le999/tp1_todo:latest
           command:
             - bash
           args:
@@ -167,7 +167,7 @@ spec:
               value: tp0
               
         - name: sawtooth-tp1-js
-          image: le999/tp1:1.0
+          image: le999/tpauth_todo:latest
           command:
             - bash
           args:
@@ -356,7 +356,7 @@ spec:
         #     - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
         - name: sawtooth-tp0-js
-          image: le999/tp0:1.0
+          image: le999/tp1_todo:latest
           command:
             - bash
           args:
@@ -367,7 +367,7 @@ spec:
               value: tp0
               
         - name: sawtooth-tp1-js
-          image: le999/tp1:1.0
+          image: le999/tpauth_todo:latest
           command:
             - bash
           args:

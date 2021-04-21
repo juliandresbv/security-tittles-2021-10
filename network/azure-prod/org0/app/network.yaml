@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: apporg0app0
-        image: le999/org0app0:1.0
+        image: le999/app_todo:latest
         ports:
         - containerPort: 3000
         env:
@@ -35,6 +35,11 @@ spec:
             value: tcp://sawtooth-org0peer0:4004
           - name: SAWTOOTH_REST
             value: http://sawtooth-org0:8008
+
+          - name: JWT_SECRET
+            value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE2MTU2NTE5ODJ9.Fr8AAvMHdi9at7qUX5WdJevaQrnJnMM5CMhxOFW4820"
+          - name: PAGE_SIZE
+            value: "10"
 ---
 
 apiVersion: v1
@@ -71,7 +76,7 @@ spec:
     spec:
       containers:
       - name: apporg0app1
-        image: le999/org0app1:1.0
+        image: le999/app_ledger_sync_todo:latest
         ports:
         - containerPort: 3000
         env:

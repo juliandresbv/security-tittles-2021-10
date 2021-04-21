@@ -6,9 +6,19 @@ Includes a node.js server that will be tested
 
 ```bash
 cd ./server
+#vim .env
+#Edit SERVER_HOST, to point to app
 npm install
 npm start
 ```
+
+## Add data
+```bash
+cd ./server
+node ./scripts/createUsers.js 100 --from0
+node ./scripts/createTodos.js 100 --from0
+```
+
 
 ## Run grafana
 ```bash
@@ -52,7 +62,7 @@ TARGET_HOST=172.17.0.1:3001
 
 ## Query how many documents
 ```bash
-kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.auth_state_.find().size()"
+kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.auth_state.find().size()"
 kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.auth_state_history.find().size()"
 kubectl exec pod/mongodborg0-ccb556fd5-p9t87 -- mongo -u root -p example mydb --eval "db.auth_transaction.find().size()"
 
