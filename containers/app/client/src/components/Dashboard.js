@@ -24,6 +24,8 @@ import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 import { selectPublicKey, selectJWTHeader } from '../redux/authSlice';
 
+var CurrencyFormat = require('react-currency-format');
+
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
@@ -109,7 +111,7 @@ function AccountTodos(){
               justifyContent="center"
             >
               <Typography noWrap variant="h4">
-                My ToDo&apos;s
+                Todos tus cheques
               </Typography>
             </Box>
           </Grid>
@@ -125,6 +127,16 @@ function AccountTodos(){
             </Box>
           </Grid>
 
+          <Box 
+            display="flex" 
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Typography noWrap variant="h4">
+              Cheques girados
+            </Typography>
+          </Box>
+
           <Grid item xs={12}>
             <List component="nav" aria-label="main mailbox folders">
               {toDos.map((e) => 
@@ -132,7 +144,8 @@ function AccountTodos(){
                   <ListItemIcon>
                     <EditIcon />
                   </ListItemIcon>
-                  <ListItemText primary={e.value.value} />
+                  <ListItemText primary={e._id} />
+                  
                 </ListItem>
               )}
             </List>

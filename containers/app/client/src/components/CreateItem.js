@@ -42,10 +42,22 @@ function CreateItem(){
   const history = useHistory();
   const formik = useFormik({
     initialValues: {
-      text: '',
+      valorNumeros: '',
+      valorLetras: '',
+      lugarEmision: '',
+      fechaVencimiento: '',
+      tipo: '',
+      idBeneficiario: '',
+      tipoIdentificacion: '',
     },
     validationSchema: Yup.object({
-      text: Yup.string().required('Required')
+      valorNumeros: Yup.number().required('Required'),
+      valorLetras: Yup.string().required('Required'),
+      lugarEmision: Yup.string().required('Required'),
+      fechaVencimiento: Yup.string().required('Required'),
+      tipo: Yup.string().required('Required'),
+      idBeneficiario: Yup.number().required('Required'),
+      tipoIdentificacion: Yup.string().required('Required')
     }),
     onSubmit: async (values, {setStatus}) => {
 
@@ -56,10 +68,19 @@ function CreateItem(){
         const payload = {
           type: 'todo',
           id: ID,
-          
+          titulo:{
+            servicio: "cheque",
+            valorNumeros: values.valorNumeros,
+            valorLetras: values.valorLetras,
+            lugarEmision: values.lugarEmision,
+            fechaVencimiento: values.fechaVencimiento,
+            tipo: values.tipo,
+            idBeneficiario: values.idBeneficiario,
+            tipoIdentificacion: values.tipoIdentificacion,
+          },
           input: null,
           output:{
-            value: values.text,
+            estado: "Activo",
             owner: publicKey
           }
         };
@@ -93,14 +114,92 @@ function CreateItem(){
         <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center" >         
           <Grid item xs={4} style={{width:"100%"}}>
             <TextField 
-              id="text" 
-              label="Text" 
-              value={formik.values.text}
+              id="idBeneficiario" 
+              label="Identificación del beneficiario" 
+              value={formik.values.idBeneficiario}
               onChange={formik.handleChange}
-              error={formik.touched.text && Boolean(formik.errors.text)}
-              helperText={formik.touched.text && formik.errors.text}
+              error={formik.touched.idBeneficiario && Boolean(formik.errors.idBeneficiario)}
+              helperText={formik.touched.idBeneficiario && formik.errors.idBeneficiario}
               disabled={formik.isSubmitting}
               autoFocus
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={4} style={{width:"100%"}}>
+            <TextField 
+              id="tipoIdentificacion" 
+              label="Tipo de identificación del beneficiario" 
+              value={formik.values.tipoIdentificacion}
+              onChange={formik.handleChange}
+              error={formik.touched.tipoIdentificacion && Boolean(formik.errors.tipoIdentificacion)}
+              helperText={formik.touched.tipoIdentificacion && formik.errors.tipoIdentificacion}
+              disabled={formik.isSubmitting}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={4} style={{width:"100%"}}>
+            <TextField 
+              id="valorNumeros" 
+              label="Valor en números" 
+              value={formik.values.valorNumeros}
+              onChange={formik.handleChange}
+              error={formik.touched.valorNumeros && Boolean(formik.errors.valorNumeros)}
+              helperText={formik.touched.valorNumeros && formik.errors.valorNumeros}
+              disabled={formik.isSubmitting}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={4} style={{width:"100%"}}>
+            <TextField 
+              id="valorLetras" 
+              label="Valor en letras" 
+              value={formik.values.valorLetras}
+              onChange={formik.handleChange}
+              error={formik.touched.valorLetras && Boolean(formik.errors.valorLetras)}
+              helperText={formik.touched.valorLetras && formik.errors.valorLetras}
+              disabled={formik.isSubmitting}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={4} style={{width:"100%"}}>
+            <TextField 
+              id="lugarEmision" 
+              label="Lugar de emisión" 
+              value={formik.values.lugarEmision}
+              onChange={formik.handleChange}
+              error={formik.touched.lugarEmision && Boolean(formik.errors.lugarEmision)}
+              helperText={formik.touched.lugarEmision && formik.errors.lugarEmision}
+              disabled={formik.isSubmitting}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={4} style={{width:"100%"}}>
+            <TextField 
+              id="fechaVencimiento" 
+              label="Fecha de vencimiento" 
+              value={formik.values.fechaVencimiento}
+              onChange={formik.handleChange}
+              error={formik.touched.fechaVencimiento && Boolean(formik.errors.fechaVencimiento)}
+              helperText={formik.touched.fechaVencimiento && formik.errors.fechaVencimiento}
+              disabled={formik.isSubmitting}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={4} style={{width:"100%"}}>
+            <TextField 
+              id="tipo" 
+              label="Tipo de cheque" 
+              value={formik.values.tipo}
+              onChange={formik.handleChange}
+              error={formik.touched.tipo && Boolean(formik.errors.tipo)}
+              helperText={formik.touched.tipo && formik.errors.tipo}
+              disabled={formik.isSubmitting}
               fullWidth
             />
           </Grid>

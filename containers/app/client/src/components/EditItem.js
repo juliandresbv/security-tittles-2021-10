@@ -103,8 +103,8 @@ function CreateItem(){
 
   const formik = useFormik({
     initialValues: {
-      text: (elem)? elem.value.value: '',
-      owner: (elem)? elem.value.owner: ''
+      text: (elem)? elem.titulo.valorNumeros: '',
+      owner: (elem)? elem.output.owner: ''
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
@@ -116,10 +116,9 @@ function CreateItem(){
       try{
         const payload = {
           type: 'todo',
-          
           input: id,
           output:{
-            value: elem.value.value,
+            estado: "Endosado",
             owner: values.owner
           }
         };

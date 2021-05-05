@@ -49,12 +49,21 @@ module.exports.getAllToDo = async function(req, res) {
 
 module.exports.getToDo = async function(req, res) {
   const stateCollection = mongo.client().db('mydb').collection("todo_state");
+  const transactions = mongo.client().db('mydb').collection("todo_transaction");
 
   const value = await stateCollection.findOne({"_id": req.params.id});
   if(!value){
     return res.status(404).json("not found"); 
   }
-  return res.json(value);
+  const r = await transactions.findOne({"_id" : req.params.id})
+  const a = await transactions.findOne({"root" : r.root, "idx": 0})
+
+  var ultimaTran = JSON.parse(r.payload);
+  var primeraTran = JSON.parse(a.payload);
+  
+  return res.json({
+    ...primeraTran, input: ultimaTran.input, output: ultimaTran.output
+  });
 }
 
 
