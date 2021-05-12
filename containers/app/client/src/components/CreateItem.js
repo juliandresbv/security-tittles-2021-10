@@ -69,7 +69,6 @@ function CreateItem(){
           type: 'todo',
           id: ID,
           titulo:{
-            servicio: "cheque",
             valorNumeros: values.valorNumeros,
             valorLetras: values.valorLetras,
             lugarEmision: values.lugarEmision,
@@ -80,7 +79,10 @@ function CreateItem(){
           },
           input: null,
           output:{
-            estado: "Activo",
+            servicio: {
+              nombre:"cheque",
+              estado: "POSECION",
+            },
             owner: publicKey
           }
         };

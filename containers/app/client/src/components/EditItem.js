@@ -118,7 +118,10 @@ function CreateItem(){
           type: 'todo',
           input: id,
           output:{
-            estado: "Endosado",
+            servicio: {
+              nombre:"cheque",
+              estado: "ENDOSADO",
+            },
             owner: values.owner
           }
         };

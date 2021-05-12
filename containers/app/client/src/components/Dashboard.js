@@ -84,7 +84,6 @@ function AccountTodos(){
       .then((res) => {
         setToDos(res.data);
       })
-
     axios.get(`/api/todo?page=${page}`, jwtHeader)
       .then((res) => {
         if(res.data.length > 0){

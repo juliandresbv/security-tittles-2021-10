@@ -24,7 +24,7 @@ async function transactionTransform(transaction){
     transaction.root = transaction.txid;
     transaction.idx = 0;
   }
-
+  transaction.deco = p.output;
   return transaction;
 }
 

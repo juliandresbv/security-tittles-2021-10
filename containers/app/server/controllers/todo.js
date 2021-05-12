@@ -28,10 +28,43 @@ const address = buildAddress(TRANSACTION_FAMILY);
 module.exports.getAllToDo = async function(req, res) {
 
   const stateCollection = mongo.client().db('mydb').collection("todo_state");
+  const transactions = mongo.client().db('mydb').collection("todo_transaction");
 
   const page = req.query.page || 0; 
 
-  const cursor = stateCollection.find({"value.owner": req.auth.jwt.publicKey})
+  const cursor = stateCollection.find({"value.owner": req.auth.jwt.publicKey, "value.servicio.estado": {$ne: 'POSECION'}})
+    .skip(PAGE_SIZE*page)
+    .limit(PAGE_SIZE);
+
+  let todos = [];
+  await new Promise((resolve, reject) => {
+    cursor.forEach((doc)=>{
+      todos.push(doc);
+    }, 
+    resolve)
+  });
+  const tx = transactions.find({"deco.owner": req.auth.jwt.publicKey,"idx": 0})
+    .skip(PAGE_SIZE*page)
+    .limit(PAGE_SIZE);
+
+  await new Promise((resolve, reject) => {
+    tx.forEach((doc)=>{
+      todos.push(doc);
+    }, 
+    resolve)
+  });
+  res.json(todos);
+};
+
+
+module.exports.getAllToDoTipo = async function(req, res) {
+
+  const stateCollection = mongo.client().db('mydb').collection("todo_state");
+  const transactions = mongo.client().db('mydb').collection("todo_transaction");
+
+  const page = req.query.page || 0; 
+
+  const cursor = stateCollection.find({"value.owner": req.auth.jwt.publicKey, "value.estado": {$ne: 'POSECION'}})
     .skip(PAGE_SIZE*page)
     .limit(PAGE_SIZE);
 
@@ -43,9 +76,22 @@ module.exports.getAllToDo = async function(req, res) {
     resolve)
   });
 
+  let owner = req.auth.jwt.publicKey
+  const tx = transactions.find({"deco.output.owner": req.auth.jwt.publicKey,"idx": 0})
+    .skip(PAGE_SIZE*page)
+    .limit(PAGE_SIZE);
+
+  await new Promise((resolve, reject) => {
+    tx.forEach((doc)=>{
+      todos.push(doc);
+    }, 
+    resolve)
+  });
+
   res.json(todos);
 
 };
+
 
 module.exports.getToDo = async function(req, res) {
   const stateCollection = mongo.client().db('mydb').collection("todo_state");

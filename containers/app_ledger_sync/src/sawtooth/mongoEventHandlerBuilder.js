@@ -224,7 +224,7 @@ function addStateBuilder(transaction_family, transaction_prefix){
 
 
 function sawtoothTransactionToTransaction(t){
-  const payload = t.payload.args.transaction;
+  const payload = t.payload.args.transaction
   const txid = t.payload.args.txid;
   return {
     payload,
