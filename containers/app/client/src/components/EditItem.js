@@ -4,7 +4,7 @@ import Grid from '@material-ui/core/Grid';
 import Navbar from './Navbar';
 import { makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
+import {Button, Paper} from '@material-ui/core';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useHistory } from "react-router-dom";
@@ -35,11 +35,69 @@ function sleep(time){
   });
 }
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
+
   root: {
-    flexGrow: 1,
-    padding: '30px',
+    backgroundColor: "#F3F3F3",
+    height: "100%",
   },
+  padding_atributes:{
+    padding: theme.spacing(3.5, 7)
+  },
+  atribute_name:{
+    color: "#023e8a",
+    fontWeight: 'bold',
+    margin: theme.spacing(0.5, 0)
+  },
+
+  atribute_set: {
+    margin: theme.spacing(0.5,0)
+  },
+  margin_title_detail:{
+    margin: theme.spacing(3, 2.5, 2, 2.5),
+    padding: theme.spacing(0, 2)
+  },
+  tittle_detail:{
+    color: "#F76540",
+    fontWeight: 'bold',
+  },
+  button_orange: {
+    backgroundColor: "#F76540",
+    color: "#FFF"
+  },
+  orange: {
+    backgroundColor: "#F76540",
+    fontWeight: 'bold',
+    textTransform: 'none',
+    color: "#FFF",
+    margin: theme.spacing(3, 2),
+    padding: theme.spacing(2),
+    "&:hover, &:focus": {
+      backgroundColor: "#F78440"
+    }
+  },
+  blue: {
+    backgroundColor: "#023e8a",
+    fontWeight: 'bold',
+    textTransform: 'none',
+    color: "#FFF",
+    margin: theme.spacing(3, 2),
+    padding: theme.spacing(2),
+    "&:hover, &:focus": {
+      backgroundColor: "#046AF0"
+    }
+  },
+  grey: {
+    backgroundColor: "#c6c6c6",
+    fontWeight: 'bold',
+    textTransform: 'none',
+    color: "#000",
+    margin: theme.spacing(3, 2),
+    padding: theme.spacing(2),
+    "&:hover, &:focus": {
+      backgroundColor: "#8E8E8E"
+    }
+  }
 }));
 
 function useQuery() {
@@ -67,7 +125,11 @@ function CreateItem(){
   useEffect(()=>{
     (async () => {
 
-      let res1 = await axios.get('/api/todo/'+id, jwtHeader);
+      let res1 = await axios.get('/api/todo/'+id, jwtHeader)
+        .catch(function (response) {
+          //handle error
+          console.log(response);
+        });
       setElem(res1.data);
       setElemQueried(true);
     })();
@@ -146,132 +208,104 @@ function CreateItem(){
 
     },
   });
+  if(elem === null) return (<></>)
+  else{
+    return (
+      <React.Fragment>
+        <Navbar />
+  
+        <Grid className={classes.root}>
+          <Grid container justify="center">
+            <Grid container xs={12} justify="center">
+              
+              <Grid container xs={11} md={10} justify="space-between" className={classes.margin_title_detail}>
+                <Typography className={classes.tittle_detail}  component="h4" variant="h4" align="left">Información del cheque</Typography>
+                <Button className={classes.button_orange} onClick={() => {}}>Volver</Button>
+              </Grid>
+              <Grid item container xs={11} md={10}>
+                <Paper elevation={3} style={{ width : "100%" }}>
+                  <Grid container className={classes.padding_atributes}>
+                    <Grid container xs={12} md={10}>
+                    
 
-  return (
-    <React.Fragment>
-      <Navbar />
-      <form noValidate autoComplete="off" onSubmit={formik.handleSubmit}>
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Identificador:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography noWrap>{id}</Typography></Grid>
+                      
+
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Identificación beneficiario:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.titulo.idBeneficiario}</Typography></Grid>
+                      
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Tipo de identificación beneficiario:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.titulo.tipoIdentificacion}</Typography></Grid>
+                    
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Valor en números:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.titulo.valorNumeros}</Typography></Grid>
+
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Valor en letras:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.titulo.valorLetras}</Typography></Grid>
+
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Fecha de vencimiento:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.titulo.fechaVencimiento}</Typography></Grid>
+
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Tipo de cheque:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.titulo.tipo}</Typography></Grid>
+
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Lugar de emisión:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.titulo.lugarEmision}</Typography></Grid>
+
+                      <Grid item xs={6} md={5}><Typography className={classes.atribute_name} component="h5" variant="h5">Estado:</Typography></Grid>
+                      <Grid ietm xs={6} md={7}><Typography>{elem.output.servicio.estado}</Typography></Grid>
+
+                    </Grid>
+                    <Grid item xs={12} md={2} style={{ justifyItems : "center" }}>
+                      <Grid item xs={12}><Button className={classes.orange} onClick={() => {}}>Endosar</Button></Grid>
+            
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid style={{height: "25px"}}></Grid>
+        </Grid>
         <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center">
+          
           <Grid item xs={12} md={4} style={{width:"100%", display: 'flex', flexDirection: 'column', alignItems: "center"}} >
             <Typography noWrap variant="h4">
-              ToDo
+              History
             </Typography>
           </Grid>
-          <Grid item xs={12} md={4} style={{width:"100%"}}>
-            <Typography variant="body1" noWrap>
-              {id} {(elemQueried && !elem)? ', Not found': ''}
-            </Typography>
+  
+          <Grid item xs={4}>
+            <List component="nav" aria-label="main mailbox folders">
+              {hist && _.map(hist, (e, k) => 
+                <ListItem key={k}>
+                  <ListItemText primary={'BlockNum: ' + e.block_num} secondary={'Owner: ' + e.owner}/>
+                </ListItem>
+              )}
+            </List>
           </Grid>
-          <Grid item xs={12} md={4} style={{width:"100%"}}>
-            <TextField 
-              id="text" 
-              label="Text" 
-              value={formik.values.text}
-              onChange={formik.handleChange}
-              error={formik.touched.text && Boolean(formik.errors.text)}
-              helperText={formik.touched.text && formik.errors.text}
-              // disabled={formik.isSubmitting || !elem}
-              disabled={true}
-              autoFocus
-              fullWidth
-            />
-          </Grid>
-
-          <Grid item xs={12} md={4} style={{width:"100%"}}>
-            <TextField 
-              id="owner" 
-              label="owner" 
-              value={formik.values.owner}
-              onChange={formik.handleChange}
-              error={formik.touched.text && Boolean(formik.errors.owner)}
-              helperText={formik.touched.owner && formik.errors.owner}
-              disabled={formik.isSubmitting || !elem}
-              autoFocus
-              fullWidth
-            />
-          </Grid>
-
-          { formik.isSubmitting &&
-            <Grid item xs={12}>
-              <CircularProgress />
-            </Grid>
-          }
-
-          { formik.status &&
-            <Grid item xs={12}>
-              <Typography variant="body1" color="error">
-                { formik.status.error }
-              </Typography>
-            </Grid>
-          }
-
-          <Grid item xs={12}>
-            <Grid container spacing={2}>
-              <Grid item>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  className={classes.submit}
-                  disabled={formik.isSubmitting || !elem}
-                >
-                  Save
-                </Button>
-              </Grid>
-              <Grid item>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="default"
-                  className={classes.submit}
-                  disabled={formik.isSubmitting}
-                  onClick={()=>{history.push('/dashboard')}}
-                >
-                  Cancel
-                </Button>
-              </Grid>
-            </Grid>
+          <Grid item xs={12} md={4} style={{width:"100%", display: 'flex', flexDirection: 'column', alignItems: "center"}} >
+            <div>
+              <IconButton aria-label="delete" 
+                disabled={page < 2}
+                onClick={()=> history.replace(`/editItem/${id}?page=${page-1}`)}>
+                <ChevronLeft />
+              </IconButton>
+              Page: {page}
+              <IconButton aria-label="delete" 
+                disabled={!hasNextPage}
+                onClick={()=> history.replace(`/editItem/${id}?page=${page+1}`)}>
+                <ChevronRight />
+              </IconButton>
+            </div>
           </Grid>
         </Grid>
-      </form>
-      <Grid container className={classes.root} spacing={2} direction="column" jusify="center" alignItems="center">
-        
-        <Grid item xs={12} md={4} style={{width:"100%", display: 'flex', flexDirection: 'column', alignItems: "center"}} >
-          <Typography noWrap variant="h4">
-            History
-          </Typography>
-        </Grid>
+  
+      </React.Fragment>
+    );
+  }
 
-        <Grid item xs={4}>
-          <List component="nav" aria-label="main mailbox folders">
-            {hist && _.map(hist, (e, k) => 
-              <ListItem key={k}>
-                <ListItemText primary={'BlockNum: ' + e.block_num} secondary={'Owner: ' + e.owner}/>
-              </ListItem>
-            )}
-          </List>
-        </Grid>
-        <Grid item xs={12} md={4} style={{width:"100%", display: 'flex', flexDirection: 'column', alignItems: "center"}} >
-          <div>
-            <IconButton aria-label="delete" 
-              disabled={page < 2}
-              onClick={()=> history.replace(`/editItem/${id}?page=${page-1}`)}>
-              <ChevronLeft />
-            </IconButton>
-            Page: {page}
-            <IconButton aria-label="delete" 
-              disabled={!hasNextPage}
-              onClick={()=> history.replace(`/editItem/${id}?page=${page+1}`)}>
-              <ChevronRight />
-            </IconButton>
-          </div>
-        </Grid>
-      </Grid>
-
-    </React.Fragment>
-  );
 }
 
 export default CreateItem;

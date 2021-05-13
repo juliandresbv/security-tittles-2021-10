@@ -72,12 +72,6 @@ function App() {
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
         <Switch>
-          <Route path="/signup">
-            <SignUp />
-          </Route>
-          <Route path="/signin">
-            <SignIn />
-          </Route>
           <PrivateRoute path="/dashboard">
             <Dashboard />
           </PrivateRoute>
@@ -87,6 +81,12 @@ function App() {
           <PrivateRoute path="/editItem/:id">
             <EditItem />
           </PrivateRoute>
+          <Route path="/signup">
+            <SignUp />
+          </Route>
+          <Route path="">
+            <SignIn />
+          </Route>
           <Route path="/">
             <Home />
             {/* <Test /> */}

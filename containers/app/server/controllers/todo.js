@@ -27,6 +27,14 @@ const address = buildAddress(TRANSACTION_FAMILY);
 
 module.exports.getAllToDo = async function(req, res) {
 
+  var respuesta = {
+    fondosDisponibles: 2000000,
+    fondosGirados: 50000,
+    chequesDisponibles: 10,
+    chequesGirados: [],
+    chequesRecibidos: [],
+  }
+
   const stateCollection = mongo.client().db('mydb').collection("todo_state");
   const transactions = mongo.client().db('mydb').collection("todo_transaction");
 
@@ -36,10 +44,10 @@ module.exports.getAllToDo = async function(req, res) {
     .skip(PAGE_SIZE*page)
     .limit(PAGE_SIZE);
 
-  let todos = [];
+  let todos1 = [];
   await new Promise((resolve, reject) => {
     cursor.forEach((doc)=>{
-      todos.push(doc);
+      respuesta.chequesRecibidos.push(doc);
     }, 
     resolve)
   });
@@ -47,13 +55,22 @@ module.exports.getAllToDo = async function(req, res) {
     .skip(PAGE_SIZE*page)
     .limit(PAGE_SIZE);
 
+  let todos2 = [];
   await new Promise((resolve, reject) => {
     tx.forEach((doc)=>{
-      todos.push(doc);
+      const payload =  JSON.parse(doc.payload)
+
+      var titulo = {
+        _id: doc._id,
+        tipo: payload.titulo.tipo,
+        valorNumeros: payload.titulo.valorNumeros,
+        estado: payload.output.servicio.estado
+      }
+      respuesta.chequesGirados.push(titulo);
     }, 
     resolve)
   });
-  res.json(todos);
+  res.json(respuesta);
 };
 
 

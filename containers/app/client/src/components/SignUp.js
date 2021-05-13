@@ -1,16 +1,14 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
 import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import CircularProgress from '@material-ui/core/CircularProgress';
+
+import { Grid, makeStyles, Paper, TextField, Typography, MenuItem, Select, Button } from '@material-ui/core'
+
 
 import Navbar from './Navbar';
 
@@ -38,31 +36,57 @@ function Copyright() {
 }
 
 const useStyles = makeStyles((theme) => ({
-  paper: {
-    marginTop: theme.spacing(8),
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+  root: {
+    backgroundColor: "#F3F3F3",
+    height: "100vh",
   },
-  avatar: {
-    margin: theme.spacing(1),
-    backgroundColor: theme.palette.secondary.main,
+  title:{
+    margin: theme.spacing(2, 0)
+  },
+  inputs: {
+    margin:theme.spacing(1.5 ,0)
   },
   form: {
-    width: '100%', // Fix IE 11 issue.
-    marginTop: theme.spacing(3),
+    padding: theme.spacing(3,2),
+    margin: theme.spacing(4 , 3)
   },
-  submit: {
-    margin: theme.spacing(3, 0, 2),
-  },
+  button: {
+    height: "50px",
+    margin: theme.spacing(1,0),
+    backgroundColor: "#F76540",
+    color: "#FFF",
+    "&:hover, &:focus": {
+      backgroundColor: "#023e8a"
+    }
+  }
 }));
 
+const identificaciones = [
+  {
+    value: "CC",
+    label: "Cédula de ciudadanía"
+  },
+  {
+    value: "CE",
+    label: "Cédula de extrangería"
+  },
+  {
+    value: "PS",
+    label: "Pasaporte"
+  }
+]
 
-export default function SignUp() {
+
+const SignUp = (props) => {
   const classes = useStyles();
 
   const history = useHistory();
   const dispatch = useDispatch();
+  const [typeId, setTypeId] = useState("");
+
+  const handleChange = ( event ) => {
+    setTypeId(event.target.value)
+  }
 
   const metamaskMessage = selectMetamaskMessage(useStore().getState());
 
@@ -72,19 +96,17 @@ export default function SignUp() {
   
   const formik = useFormik({
     initialValues: {
-      firstName: '',
-      lastName: '',
+      name: '',
       email:'',
       password: ''
     },
     validationSchema: Yup.object({
-      firstName: Yup.string().required('Required'),
-      lastName: Yup.string().required('Required'),
+      name: Yup.string().required('Required'),
       email: Yup.string().email('Invalid email address').required('Required'),
       password: Yup.string().required('Required')
     }),
     onSubmit: async (values, {setStatus}) => {
-
+      console.log("Se registra")
       try{
         await dispatch(signupAsync(values.email, values.firstName, values.password));
         history.replace('/dashboard');
@@ -104,63 +126,68 @@ export default function SignUp() {
 
   return (
     <div>
-      <Navbar />
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
-        <div className={classes.paper}>
-          <Avatar className={classes.avatar}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Sign up
-          </Typography>
-          {metamaskMessage &&
-            <Typography variant="body1" color="error">
-              {(metamaskMessage == 'Please install MetaMask!')? 
-                <Link href="https://metamask.io/">
-                  To use this app please install Metamask. Click here to Install.
-                </Link>
-                :
-                metamaskMessage
+      <CssBaseline />
+      <Grid container justify="center" alignItems className={classes.root}>
+        <Grid item container justify="center" alignItems="center" xs={11} md={5}>
+          <Paper elevation={3} style={{ width : "100%",alignItems: "center"}}>
+          
+            <div className={classes.form}>          
+              <Typography variant="h3" align="center" className={classes.title} >Registrate</Typography>
+              {metamaskMessage &&
+                <Typography variant="body1" color="error">
+                  {(metamaskMessage == 'Please install MetaMask!')? 
+                    <Link href="https://metamask.io/">
+                      To use this app please install Metamask. Click here to Install.
+                    </Link>
+                    :
+                    metamaskMessage
+                  }
+                </Typography>
               }
-            </Typography>
-          }
-          <form className={classes.form} noValidate onSubmit={formik.handleSubmit}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  autoComplete="fname"
-                  name="firstName"
-                  variant="outlined"
-                  required
-                  fullWidth
-                  id="firstName"
-                  label="First Name"
-                  autoFocus
-                  value={formik.values.firstName}
-                  onChange={formik.handleChange}
-                  error={formik.touched.firstName && Boolean(formik.errors.firstName)}
-                  helperText={formik.touched.firstName && formik.errors.firstName}
-                  disabled={formik.isSubmitting || metamaskMessage}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
+              <form className={classes.form} noValidate onSubmit={formik.handleSubmit}>
                 <TextField
                   variant="outlined"
                   required
                   fullWidth
-                  id="lastName"
-                  label="Last Name"
-                  name="lastName"
-                  autoComplete="lname"
-                  value={formik.values.lastName}
+                  id="name"
+                  label="Nombre completo"
+                  name="name"
+                  className={classes.inputs}
+                  value={formik.values.name}
                   onChange={formik.handleChange}
-                  error={formik.touched.lastName && Boolean(formik.errors.lastName)}
-                  helperText={formik.touched.lastName && formik.errors.lastName}
+                  error={formik.touched.name && Boolean(formik.errors.name)}
+                  helperText={formik.touched.name && formik.errors.name}
                   disabled={formik.isSubmitting || metamaskMessage}
                 />
-              </Grid>
-              <Grid item xs={12}>
+                <TextField
+                  variant="outlined"
+                  required
+                  fullWidth
+                  id="cedula"
+                  label="Cédula"
+                  name="cedula"
+                  className={classes.inputs}
+                />
+                <Select
+                  id="type-id"
+                  value={typeId}
+                  displayEmpty
+                  onChange={handleChange}
+                  variant="outlined"
+                  required
+                  className={classes.inputs}
+                  style={{
+                    width : "100%"
+                  }}
+                >
+                  <MenuItem value="" disabled>Tipo de documento</MenuItem>
+                  {identificaciones.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              
                 <TextField
                   variant="outlined"
                   required
@@ -169,14 +196,31 @@ export default function SignUp() {
                   label="Email Address"
                   name="email"
                   autoComplete="email"
+                  className={classes.inputs}
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   error={formik.touched.email && Boolean(formik.errors.email)}
                   helperText={formik.touched.email && formik.errors.email}
                   disabled={formik.isSubmitting || metamaskMessage}
                 />
-              </Grid>
-              <Grid item xs={12}>
+                <TextField
+                  variant="outlined"
+                  required
+                  fullWidth
+                  id="direccion"
+                  label="Dirección"
+                  name="direccion"
+                  className={classes.inputs}
+                />
+                <TextField
+                  variant="outlined"
+                  required
+                  fullWidth
+                  id="celular"
+                  label="Celular"
+                  name="celular"
+                  className={classes.inputs}
+                />
                 <TextField
                   variant="outlined"
                   required
@@ -186,61 +230,52 @@ export default function SignUp() {
                   type="password"
                   id="password"
                   autoComplete="current-password"
+                  className={classes.inputs}
                   value={formik.values.password}
                   onChange={formik.handleChange}
                   error={formik.touched.password && Boolean(formik.errors.password)}
                   helperText={formik.touched.password && formik.errors.password}
                   disabled={formik.isSubmitting || metamaskMessage}
                 />
-              </Grid>
-              {/* <Grid item xs={12}>
-                <FormControlLabel
-                  control={<Checkbox value="allowExtraEmails" color="primary" />}
-                  label="I want to receive inspiration, marketing promotions and updates via email."
-                />
-              </Grid> */}
-            </Grid>
 
-            { formik.isSubmitting &&
-              <Grid container justify='center' >
-                <Grid item xs={1}>
-                  <CircularProgress />
-                </Grid>
-              </Grid>
-            }
-            { formik.status &&
-              <Grid container justify='center' >
-                <Grid item xs={12}>
-                  <Typography variant="body1" color="error">
-                    { formik.status.error }
-                  </Typography>
-                </Grid>
-              </Grid>
-            }
+                { formik.isSubmitting &&
+                  <Grid container justify='center' >
+                    <Grid item xs={1}>
+                      <CircularProgress />
+                    </Grid>
+                  </Grid>
+                }
+                { formik.status &&
+                  <Grid container justify='center' >
+                    <Grid item xs={12}>
+                      <Typography variant="body1" color="error">
+                        { formik.status.error }
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                }
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              className={classes.submit}
-              disabled={formik.isSubmitting || metamaskMessage}
-            >
-              Sign Up
-            </Button>
-            <Grid container justify="flex-end">
-              <Grid item>
-                <Link href="#" variant="body2" onClick={() => {history.push('/signin')}}>
-                  Already have an account? Sign in
-                </Link>
-              </Grid>
-            </Grid>
-          </form>
-        </div>
-        <Box mt={5}>
-          <Copyright />
-        </Box>
-      </Container>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  className={classes.button}
+                  disabled={formik.isSubmitting || metamaskMessage}
+                >
+                  Sign Up
+                </Button>
+                <Typography component="p" variant="p" align="center" className={classes.inputs}>¿Ya tienes cuenta? <a id="SignUp" onClick={() => {history.push('/signin')}}>Inicia sesión</a></Typography>
+              </form>
+            </div>
+          </Paper>
+          <Box mt={5}>
+            <Copyright />
+          </Box>
+        </Grid>
+      </Grid>
     </div>
   );
 }
+
+export default SignUp
