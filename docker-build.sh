@@ -19,3 +19,7 @@ cd -
 cd ./containers/app_ledger_sync
   docker build -t le999/app_ledger_sync_todo:1.0 .
 cd -
+
+cd ./containers/distributed-api
+  docker build -t le999/distributed-api:1.0 .
+cd -

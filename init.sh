@@ -31,3 +31,9 @@ cd ./containers/app_ledger_sync
   rm ./.env
   cp ./.env.docker-compose ./.env
 cd -
+
+cd ./containers/distributed-api
+  npm install
+  rm ./.env
+  cp ./.env.docker-compose ./.env
+cd -
