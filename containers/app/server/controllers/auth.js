@@ -4,27 +4,9 @@ const {getPublicKey} = require('../helpers/signature');
 const mongo = require('../mongodb/mongo')
 
 const crypto = require('crypto');
-const { 
-  sendTransaction, 
-  getAddress, 
-  sendTransactionWithAwait, 
-  queryState } = require('../sawtooth/sawtooth-helpers');
-
-const hash512 = (x) =>
-  crypto.createHash('sha512').update(x).digest('hex');
-
-const TRANSACTION_FAMILY = 'auth';
-const TRANSACTION_FAMILY_VERSION = '1.0';
-const INT_KEY_NAMESPACE = hash512(TRANSACTION_FAMILY).substring(0, 6)
 
 const { default: axios } = require("axios");
 const { json } = require('express');
-
-function buildAddress(transactionFamily){
-  return (key) => {
-    return getAddress(transactionFamily, key);
-  }
-}
 
 if(!process.env.JWT_SECRET){
   console.log('JWT_SECRET env var not defined');
@@ -86,7 +68,8 @@ module.exports.signin = async function(req, res){
 }
 
 module.exports.signup = async function(req, res){
-  const  {transaction, txid} = req.body;
+  const  { transaction, txid } = req.body;
+  
   try{
     const {email, challange, permissions} = JSON.parse(transaction);
 
@@ -108,25 +91,12 @@ module.exports.signup = async function(req, res){
       console.log('new client');
     }
 
-    const address = getAddress(TRANSACTION_FAMILY, publicKey);
-    const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
+    const payload = { transaction, txid };
 
-
-    await sendTransactionWithAwait([{
-      transactionFamily: TRANSACTION_FAMILY, 
-      transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
-      inputs: [address],
-      outputs: [address],
+    const postTxReq = await axios.post(
+      `${process.env.LEDGER_API_HOST}:${process.env.LEDGER_API_PORT}/api/transaction`,
       payload
-    }]);
-
-    // await sendTransaction([{
-    //   transactionFamily: TRANSACTION_FAMILY, 
-    //   transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
-    //   inputs: [address],
-    //   outputs: [address],
-    //   payload
-    // }]);
+    );
 
 
     var token = jwt.sign({

@@ -1,0 +1,35 @@
+{
+  "name": "mearn",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon -e yaml,js ./bin/www",
+    "test_debug": "./node_modules/.bin/mocha --recursive --inspect-brk",
+    "test": "./node_modules/.bin/mocha --recursive"
+  },
+  "dependencies": {
+    "@godaddy/terminus": "4.4.1",
+    "axios": "^0.21.1",
+    "cookie-parser": "1.4.4",
+    "debug": "2.6.9",
+    "dotenv": "8.2.0",
+    "ethers": "^5.0.31",
+    "express": "4.16.1",
+    "http-errors": "1.6.3",
+    "js-yaml": "3.14.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.6.4",
+    "morgan": "1.9.1",
+    "sawtooth-sdk": "^1.0.5",
+    "secp256k1": "^4.0.2",
+    "swagger-ui-express": "4.1.4",
+    "underscore": "1.12.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.3",
+    "eslint": "^7.19.0",
+    "mocha": "^8.3.2",
+    "nodemon": "2.0.7",
+    "supertest": "^6.1.3"
+  }
+}

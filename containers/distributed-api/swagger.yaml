@@ -1,0 +1,98 @@
+#Swagger docs:
+#https://swagger.io/docs/specification/basic-structure/
+openapi: 3.0.0
+info:
+  title: ToDo API.
+  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
+  version: 0.0.1
+servers:
+  - url: /api
+    description: API server
+paths:
+  /:
+    get:
+      summary: Return ToDo's
+      description: 
+      responses:
+        '200':    # status code
+          description: Some description
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      summary: Create ToDo
+      description:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+            example:
+              text: some Text
+      responses:
+        '200':    # status code
+          description: 
+          content:
+            application/json:
+              schema:
+                type: object
+  /{id}:
+    get:
+      summary: Returns a ToDo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the ToDo to return.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example:
+            10
+      responses:
+          '200':    # status code
+            description: 
+            content:
+              application/json:
+                schema:
+                  type: object
+    put:
+      summary: Update a ToDo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the ToDo to return.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example:
+            10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+            example:
+              text: New Text
+      responses:
+          '200':    # status code
+            description: 
+            content:
+              application/json:
+                schema:
+                  type: object
+
