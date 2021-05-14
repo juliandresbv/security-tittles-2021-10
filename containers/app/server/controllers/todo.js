@@ -132,23 +132,13 @@ module.exports.getToDo = async function(req, res) {
 
 module.exports.postToDo = async function(req, res) {
   const {transaction, txid} = req.body;
-  const address = getAddress(TRANSACTION_FAMILY, txid);
 
-  const payload = JSON.stringify({func: 'post', args:{transaction, txid}});
-  
-  try{
-    await sendTransactionWithAwait([{
-      transactionFamily: TRANSACTION_FAMILY, 
-      transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
-      inputs: [address],
-      outputs: [address],
-      payload
-    }]);
-    return res.json({msg:'ok'});
-  }
-  catch(err){
-    return res.status(500).json({err});
-  }
+  const postTodoTxReq = await axios.post(
+    `${process.env.LEDGER_API_HOST}:${process.env.LEDGER_API_PORT}/api/transaction`,
+    req.body
+  );
+
+  return res.send('ok');
 };
 
 module.exports.putToDo = async function(req, res) {

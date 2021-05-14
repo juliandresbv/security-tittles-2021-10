@@ -48,6 +48,9 @@ module.exports.postTransaction = async function(req, res){
   try{
     const {email, challange, permissions} = JSON.parse(transaction);
     const parsedTx = JSON.parse(transaction);
+    let {
+      type
+    } = parsedTx;
 
     const TRANSACTION_FAMILY = getFamilyFromType(parsedTx);
     
@@ -55,20 +58,39 @@ module.exports.postTransaction = async function(req, res){
     
     // return res.json('Hello');
     
-    const publicKey = getPublicKey(transaction, txid);
+    if (type == 'auth/signup') {
+      const publicKey = getPublicKey(transaction, txid);
     
-    const address = getAddress(TRANSACTION_FAMILY, publicKey);
-    const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
+      const address = getAddress(TRANSACTION_FAMILY, publicKey);
+      const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
 
-    await sendTransactionWithAwait([{
-      transactionFamily: TRANSACTION_FAMILY, 
-      transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
-      inputs: [address],
-      outputs: [address],
-      payload
-    }]);
+      await sendTransactionWithAwait([{
+        transactionFamily: TRANSACTION_FAMILY, 
+        transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
+        inputs: [address],
+        outputs: [address],
+        payload
+      }]);    
+    } else if (type == 'todo') {
+      const payload = JSON.stringify({func: 'post', args:{transaction, txid}});
+      const address = getAddress(TRANSACTION_FAMILY, txid);
+  
+      try{
+        await sendTransactionWithAwait([{
+          transactionFamily: TRANSACTION_FAMILY, 
+          transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
+          inputs: [address],
+          outputs: [address],
+          payload
+        }]);
+        return res.json({msg:'ok'});
+      }
+      catch(err){
+        return res.status(500).json({err});
+      }
+    }
 
-    return res.send('ok');        
+    return res.send('ok');
   }
   catch(err){
     console.log(err.message);
