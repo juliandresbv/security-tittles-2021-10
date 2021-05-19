@@ -1,0 +1,16 @@
+version: "3.3"
+
+services:
+
+  tp1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: le999/tp1:1.0
+    container_name: sawtooth-tp1
+    environment:
+      - VALIDATOR=tcp://validator1:30004
+    command: ["node", "./index.js"]
+    extra_hosts:
+    - "validator1:192.168.99.100"
+
