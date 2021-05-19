@@ -16,7 +16,7 @@ import { selectPublicKey, selectJWTHeader } from '../redux/authSlice';
 const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: "#F3F3F3",
-    height: "100%",
+    height: "92vh",
   }
 }));
 
@@ -119,7 +119,7 @@ const TitulosValorResumen = (props) => {
     axios.get(`/api/todo/resumen`, { ...jwtHeader, params: { service: service } })
       .then((res) => {
         setInterface(res.data.interfaz);
-        setData(dataPrueba)
+        setData(res.data.data)
         return "OK"
       })
       .then(res => {
@@ -132,10 +132,9 @@ const TitulosValorResumen = (props) => {
 
   }, [service])
 
-  if (InterfaceService === undefined || dataService === undefined) return <><Navbar /><Loading /></>
+  if (InterfaceService === undefined || dataService === undefined) return <><Loading /></>
   return (
     <>
-      <Navbar />
       <Grid className={classes.root}>
         <Grid container justify="center" direction={"row"} >
           {InterfaceService.resume.information.map(info => (

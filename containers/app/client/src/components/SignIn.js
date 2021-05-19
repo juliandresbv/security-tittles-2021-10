@@ -99,7 +99,7 @@ const useStyles = makeStyles((theme) => ({
 const SignIn = () => {
   let location = useLocation();
 
-  const { from } = location.state || { from: { pathname: "/dashboard" } };
+  const { from } = location.state || { from: { pathname: "/Dashboard" } };
 
   const state = useStore().getState();
   const [typeId, setTypeId] = useState("");
@@ -275,12 +275,12 @@ const SignIn = () => {
           </Paper>
         </Grid>
       </Grid>
-      <Box mt={8}>
-        <Copyright />
-      </Box>
  
     </div>
   );
 }
 
 export default SignIn
+{/* <Box mt={8}>
+  <Copyright />
+</Box> */}

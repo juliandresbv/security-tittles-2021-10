@@ -97,7 +97,11 @@ const SignUp = (props) => {
   const formik = useFormik({
     initialValues: {
       name: '',
+      id: '',
+      typeId: '',
       email:'',
+      address: '',
+      phone: '',
       password: ''
     },
     validationSchema: Yup.object({
@@ -108,8 +112,8 @@ const SignUp = (props) => {
     onSubmit: async (values, {setStatus}) => {
       console.log("Se registra")
       try{
-        await dispatch(signupAsync(values.email, values.firstName, values.password));
-        history.replace('/dashboard');
+        await dispatch(signupAsync(values));
+        history.replace('/Dashboard');
       }
       catch(e){
         let error;

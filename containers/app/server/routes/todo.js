@@ -21,6 +21,7 @@ router.post('/', jwtMiddleware, txMiddleware, postToDo);
 router.put('/', jwtMiddleware, txMiddleware, putToDo);
 router.get('/', jwtMiddleware, getAllToDo);
 router.get('/dashboard', jwtMiddleware, getDashboard);
+router.get('/allservices', jwtMiddleware, getDashboard);
 router.get('/create', jwtMiddleware, getCreate);
 router.get('/resumen', jwtMiddleware, getResumen);
 router.get('/:id', jwtMiddleware, getToDo);

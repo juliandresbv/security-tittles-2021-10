@@ -80,11 +80,6 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const dataPrueba = {
-  fondosDisponibles: 2000000,
-  fondosGirados: 50000,
-  chequesDisponibles: 5
-}
 
 const TituloValorCreate = (props) => {
 
@@ -116,7 +111,7 @@ const TituloValorCreate = (props) => {
     axios.get(`/api/todo/create`, { ...jwtHeader, params: { service: service, rol: rol } })
       .then((res) => {
         setInterface(res.data.interfaz);
-        setData(dataPrueba)
+        setData(res.data.data)
       })
       .catch(function (response) {
         //handle error
@@ -160,6 +155,9 @@ const TituloValorCreate = (props) => {
               if (i.atribute.type === "SELECT") {
                 value = document.getElementById(valueName).nextSibling.value
               }
+              else if(i.atribute.type === "CURRENCY"){
+                value = parseInt(document.getElementById(valueName).value)
+              }
               else {
                 value = document.getElementById(valueName).value
               }
@@ -202,7 +200,6 @@ const TituloValorCreate = (props) => {
   if (information === undefined || data === undefined) return <Loading />
   return (
     <>
-      <Navbar />
       <Grid className={classes.root}>
         <Grid container justify="center" direction="row">
           {information.information.map(info => (
@@ -212,13 +209,13 @@ const TituloValorCreate = (props) => {
         <Grid container justify="center">
           <Typography className={classes.black_tittle} component="h3" variant="h3">{information.create_tittle}</Typography>
         </Grid>
-        <Grid container justify="center">
-          <form noValidate autoComplete="off" onSubmit={formik.handleSubmit} >
+        <form noValidate autoComplete="off" onSubmit={formik.handleSubmit} >
+          <Grid container justify="center">
             {information.components.map(sec => (
               Section(sec)
             ))}
-          </form>
-        </Grid>
+          </Grid>
+        </form>
         <Grid style={{ height: "25px" }}></Grid>
       </Grid>
     </>
@@ -279,6 +276,7 @@ const TituloValorCreate = (props) => {
     return (
       <NumberFormat
         {...other}
+        id="valorNumeros"
         getInputRef={inputRef}
         onValueChange={(values) => {
           onChange({
@@ -372,9 +370,6 @@ const TituloValorCreate = (props) => {
               placeholder={input.placeholder}
               fullWidth
               variant="outlined"
-              InputProps={{
-                inputComponent: NumberFormatCustom,
-              }}
             >
             </TextField>
           </Grid>

@@ -14,11 +14,12 @@ import SignUp from './components/SignUp';
 import Home from './components/blog/Blog';
 import Dashboard from './components/Dashboard';
 import PrivateRoute from './helpers/PrivateRoute';
-import CreateItem from './components/CreateItem';
 import EditItem from './components/EditItem';
 import detectEthereumProvider from '@metamask/detect-provider';
 import TituloValorResumen from './components/TituloValorResumen';
 import TituloValorCreate from './components/TituloValorCreate'
+import Navbar from './components/Navbar'
+import UserDetail from './components/UserDetail';
 
 const { setCurrentAccountAsync, setMetamaskMessage } = require("./redux/authSlice");
 
@@ -70,6 +71,7 @@ function App() {
 
   return(
     <Router>
+      <Navbar />
       <div>
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
@@ -86,15 +88,14 @@ function App() {
           <PrivateRoute path="/titulovalor/:service">
             <TituloValorResumen />
           </PrivateRoute>
+          <PrivateRoute path="/userinformation/">
+            <UserDetail />
+          </PrivateRoute>
           <Route path="/signup">
             <SignUp />
           </Route>
           <Route path="">
             <SignIn />
-          </Route>
-          <Route path="/">
-            <Home />
-            {/* <Test /> */}
           </Route>
         </Switch>
       </div>

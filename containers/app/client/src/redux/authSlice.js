@@ -83,7 +83,9 @@ export const initAsync = () => async (dispatch) =>{
   dispatch(init({metamaskEnabled, accounts, currentAccount}))
 }
 
-export const signupAsync = (email) => async (dispatch, getState) => {
+export const signupAsync = (values) => async (dispatch, getState) => {
+  let email = values.email;
+
   let {accounts, currentAccount} = getState().auth;
   accounts = _.clone(accounts);
   if(!currentAccount){
@@ -91,7 +93,7 @@ export const signupAsync = (email) => async (dispatch, getState) => {
   }
   let res = await axios.post('/api/auth/challange');
 
-  const transaction = JSON.stringify({type: "auth/signup", email, challange: res.data.challange, permissions:['client']});
+  const transaction = JSON.stringify({type: "auth/signup", email, name: values.name, id: values.id, typeId: values.typeId, challange: res.data.challange, permissions:['client']});
   let {publicKey, signature} = await getPublicKey(transaction);
 
   let newAccount = {account: currentAccount, email, publicKey};
@@ -167,6 +169,13 @@ export const selectPublicKey = state => {
 export const selectMetamaskMessage = state => {
   return state.auth && state.auth.metamaskMessage;
 };
+
+export const isLoggedIn = state => {
+  if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
+    return true
+  }
+  return false;
+}
 
 export const selectJWTHeader = state => {
   if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){

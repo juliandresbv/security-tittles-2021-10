@@ -2,30 +2,31 @@ import React, { useState } from 'react';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import {AppBar, Toolbar, IconButton} from '@material-ui/core'
+import { AppBar, Toolbar, IconButton } from '@material-ui/core'
 import MenuIcon from '@material-ui/icons/Menu';
-import { useHistory, withRouter }from 'react-router-dom';
+import { useHistory, withRouter, useLocation } from 'react-router-dom';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 
+
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { selectUsername, signoutAsync, signoutAllAsync } from '../redux/authSlice';
+import { selectUsername, signoutAsync, signoutAllAsync, isLoggedIn } from '../redux/authSlice';
 
 import './navbar.css'
 
 const useStyles = makeStyles((theme) => ({
   titleHeader: {
-    margin: theme.spacing(2,4.5),
+    margin: theme.spacing(2, 4.5),
   },
   root: {
     flexGrow: 1,
   },
-  title:{
+  title: {
     flexGrow: 1,
   },
   rightToolbar: {
@@ -36,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 16,
     marginLeft: -12
   },
-  icons:{
+  icons: {
     fontSize: 40
   },
   elements: {
@@ -45,12 +46,12 @@ const useStyles = makeStyles((theme) => ({
   elements3: {
     margin: theme.spacing(3, 7)
   },
-  select:{
+  select: {
     color: "#EB370A",
     fontWeight: 'bold',
     textTransform: 'none'
   },
-  notSelect:{
+  notSelect: {
     color: "#686868",
     textTransform: 'none'
   }
@@ -59,7 +60,7 @@ const useStyles = makeStyles((theme) => ({
 const services = [
   {
     name: "Cheques",
-    id: "titulo-001"  
+    id: "titulo-001"
   }
   //,
   //{
@@ -76,10 +77,25 @@ const Navbar = (props) => {
 
   const dispatch = useDispatch();
   const username = useSelector(selectUsername);
-  const [actualPage, setActualPage] = useState("Dashboard")
+  const isLogged = useSelector(isLoggedIn);
+  const location = useLocation()
+  const [actualPage, setActualPage] = useState(actual())
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
+  function actual(){
+    if(location.pathname.includes("Dashboard")){
+      return "Dashboard"
+    }
+    if(location.pathname.includes("titulovalor")){
+      let paths = location.pathname.split("/")
+      let serv = services.find(a => a.id === paths[2])
+      return serv.name
+    }
+    else{
+      return ""
+    }
+  }
 
   const open = Boolean(anchorEl);
 
@@ -91,13 +107,19 @@ const Navbar = (props) => {
     setAnchorEl(null);
   };
 
+  const handlePerfil = () => {
+    setActualPage("")
+    setAnchorEl(null);
+    history.push('/userinformation');
+  };
+
   const handleLogout = () => {
     setAnchorEl(null);
     dispatch(signoutAsync());
     history.push('/');
   };
 
-  const handleLogoutAll = () =>{
+  const handleLogoutAll = () => {
     setAnchorEl(null);
     dispatch(signoutAllAsync());
     history.push('/');
@@ -108,58 +130,63 @@ const Navbar = (props) => {
     history.push(url)
   }
 
-  return (
-    <div className={classes.root}>
-      <AppBar position="static" style={{ backgroundColor: "#FFF"}}>
-        <Toolbar>
-          <h1 id="titulo-header" className={classes.titleHeader}>Títulos Valores</h1>
-          <Button className={("Dashboard" === actualPage)? classes.select : classes.notSelect} onClick={() => goTo("/Dashboard", "Dashboard")} ><DashboardIcon />Dashboard</Button>
-          {services.map(service => (<Button key="service.name" className={(service.name === actualPage)? classes.select : classes.notSelect} onClick={() => goTo(`/titulovalor/${service.id}`, service.name)}><AccountBalanceIcon/>{service.name}</Button>))}
+  if (!isLogged) return (<></>)
+  else {
+    return (
+      <div className={classes.root}>
+        <AppBar position="static" style={{ backgroundColor: "#FFF" }}>
+          <Toolbar>
+            <h1 id="titulo-header" className={classes.titleHeader}>Títulos Valores</h1>
+            <Button className={("Dashboard" === actualPage) ? classes.select : classes.notSelect} onClick={() => goTo("/Dashboard", "Dashboard")} ><DashboardIcon />Dashboard</Button>
+            {services.map(service => (<Button key="service.name" className={(service.name === actualPage) ? classes.select : classes.notSelect} onClick={() => goTo(`/titulovalor/${service.id}`, service.name)}><AccountBalanceIcon />{service.name}</Button>))}
 
-          {username
-            ?(
-              <div className={classes.rightToolbar}>
-                <Button
-                  aria-label="account of current user"
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  onClick={handleMenu}
-                  color="inherit"
-                  endIcon={<AccountCircle />}
-                >
-                  {username}
-                </Button>
-                <Menu
-                  id="menu-appbar"
-                  anchorEl={anchorEl}
-                  anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                  open={open}
-                  onClose={handleClose}
-                >
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                  <MenuItem onClick={handleLogoutAll}>Logout all</MenuItem>
+            {username
+              ? (
+                <div className={classes.rightToolbar}>
+                  <Button
+                    aria-label="account of current user"
+                    aria-controls="menu-appbar"
+                    aria-haspopup="true"
+                    onClick={handleMenu}
+                    color="inherit"
+                    endIcon={<AccountCircle />}
+                  >
+                    {username}
+                  </Button>
+                  <Menu
+                    id="menu-appbar"
+                    anchorEl={anchorEl}
+                    anchorOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    open={open}
+                    onClose={handleClose}
+                  >
+                    <MenuItem onClick={handlePerfil}>Perfil</MenuItem>
+                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                    <MenuItem onClick={handleLogoutAll}>Logout all</MenuItem>
 
-                </Menu>
-              </div>
-            )
-            :
-            (
-              <Button color="inherit" onClick={() => {history.push('/signin')}}>Sign in</Button>
-            )
+                  </Menu>
+                </div>
+              )
+              :
+              (
+                <Button color="inherit" onClick={() => { history.push('/signin') }}>Sign in</Button>
+              )
 
-          }
-        </Toolbar>
-      </AppBar>
-    </div>
-  );
+            }
+          </Toolbar>
+        </AppBar>
+      </div>
+    );
+  }
 }
+
 
 export default withRouter(Navbar)

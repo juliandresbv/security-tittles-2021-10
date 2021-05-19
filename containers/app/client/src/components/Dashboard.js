@@ -105,10 +105,9 @@ const Dashboard = (props) => {
       });
   }, [publicKey]);
 
-  if (interfas === undefined || data === undefined) return <><Navbar /><Loading /></>
+  if (interfas === undefined || data === undefined) return <><Loading /></>
   return (
     <div>
-      <Navbar />
       <Grid className={classes.root}>
         <Grid container justify="center">
           {interfas.map(s => (

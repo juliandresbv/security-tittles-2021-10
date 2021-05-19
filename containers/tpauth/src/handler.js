@@ -21,9 +21,11 @@ addressIntKey.keysCanCollide = true;
 const handlers = {
   async put([context], {transaction, txid}){
 
-    const {type, permissions, email} = JSON.parse(transaction);
+    const transactionDecoded = JSON.parse(transaction);
+
+
     
-    if (!type || type !== 'auth/signup') {
+    /* if (!type || type !== 'auth/signup') {
       throw new InvalidTransaction('type must be auth/signup');
     }
     if(!email){
@@ -32,9 +34,9 @@ const handlers = {
 
     if(!_.isArray(permissions) || !_.all(permissions, p => _.isString(p))){
       throw new InvalidTransaction('permissions must be an [] of strings')
-    }
+    } */
     
-    await context.putState(context.publicKey, {permissions, email});
+    await context.putState(context.publicKey, transactionDecoded);
 
     return;
   }

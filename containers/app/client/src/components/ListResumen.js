@@ -183,7 +183,7 @@ const ListResumen = (props) => {
     else if (type_value === "STRING" || type_value === "DATE") {
       return (
         <>
-          <StyledTableCell component="th" scope="row">{value}</StyledTableCell>
+          <StyledTableCell component="th" scope="row"><Typography noWrap >{value}</Typography></StyledTableCell>
         </>
       )
     }
