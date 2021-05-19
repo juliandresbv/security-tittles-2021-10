@@ -1,36 +1,82 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import {AppBar, Toolbar, IconButton} from '@material-ui/core'
 import MenuIcon from '@material-ui/icons/Menu';
-import { useHistory }from 'react-router-dom';
+import { useHistory, withRouter }from 'react-router-dom';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
+import DashboardIcon from '@material-ui/icons/Dashboard';
+import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
+
+import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUsername, signoutAsync, signoutAllAsync } from '../redux/authSlice';
 
+import './navbar.css'
+
 const useStyles = makeStyles((theme) => ({
+  titleHeader: {
+    margin: theme.spacing(2,4.5),
+  },
   root: {
     flexGrow: 1,
   },
-  menuButton: {
-    marginRight: theme.spacing(2),
-  },
-  title: {
+  title:{
     flexGrow: 1,
-    cursor: 'pointer'
   },
+  rightToolbar: {
+    marginLeft: "auto",
+    marginRight: -12
+  },
+  menuButton: {
+    marginRight: 16,
+    marginLeft: -12
+  },
+  icons:{
+    fontSize: 40
+  },
+  elements: {
+    margin: theme.spacing(1.5)
+  },
+  elements3: {
+    margin: theme.spacing(3, 7)
+  },
+  select:{
+    color: "#EB370A",
+    fontWeight: 'bold',
+    textTransform: 'none'
+  },
+  notSelect:{
+    color: "#686868",
+    textTransform: 'none'
+  }
 }));
 
-export default function Navbar() {
+const services = [
+  {
+    name: "Cheques",
+    id: "titulo-001"  
+  }
+  //,
+  //{
+  //  name: "Pagarés",
+  //  id: "aaaaa"
+  //}
+
+]
+
+const Navbar = (props) => {
+
   const classes = useStyles();
   const history = useHistory();
 
   const dispatch = useDispatch();
   const username = useSelector(selectUsername);
+  const [actualPage, setActualPage] = useState("Dashboard")
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -57,27 +103,22 @@ export default function Navbar() {
     history.push('/');
   }
 
+  const goTo = (url, service) => {
+    setActualPage(service)
+    history.push(url)
+  }
+
   return (
     <div className={classes.root}>
-      <AppBar position="static">
+      <AppBar position="static" style={{ backgroundColor: "#FFF"}}>
         <Toolbar>
-          <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
-            <MenuIcon />
-          </IconButton>
-          {username
-            ?
-            <Typography variant="h6" className={classes.title} onClick={() => {history.push('/dashboard')}}>
-              App
-            </Typography>
-            :
-            <Typography variant="h6" className={classes.title} onClick={() => {history.push('/')}}>
-              App
-            </Typography>
-          }
+          <h1 id="titulo-header" className={classes.titleHeader}>Títulos Valores</h1>
+          <Button className={("Dashboard" === actualPage)? classes.select : classes.notSelect} onClick={() => goTo("/Dashboard", "Dashboard")} ><DashboardIcon />Dashboard</Button>
+          {services.map(service => (<Button key="service.name" className={(service.name === actualPage)? classes.select : classes.notSelect} onClick={() => goTo(`/titulovalor/${service.id}`, service.name)}><AccountBalanceIcon/>{service.name}</Button>))}
 
           {username
             ?(
-              <div>
+              <div className={classes.rightToolbar}>
                 <Button
                   aria-label="account of current user"
                   aria-controls="menu-appbar"
@@ -120,3 +161,5 @@ export default function Navbar() {
     </div>
   );
 }
+
+export default withRouter(Navbar)

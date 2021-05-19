@@ -164,14 +164,14 @@ const SignIn = () => {
         </Grid>
         <Grid item xs={12} md={4} className={classes.columns}>
           <Paper elevation={3} justify="center">
-            <div className={classes.from}>
+            <div className={classes.form}>
 
               <Typography variant="h3" align="center" className={classes.title}>Bienvenido</Typography>
               {metamaskMessage &&
-                <Typography variant="body1" color="error">
+                <Typography variant="body1" color="error" align="center">
                   {(metamaskMessage == 'Please install MetaMask!')? 
                     <Link href="https://metamask.io/">
-                      To use this app please install Metamask. Click here to Install. 
+                      Para utilizar el app por favor instale Metamask. Haga clic aquí para instalarlo. 
                     </Link>
                     :
                     metamaskMessage
@@ -268,7 +268,7 @@ const SignIn = () => {
                 >
                   Iniciar sesión
                 </Button>
-                <Typography component="p" variant="p" align="center" className={classes.inputs} onClick={() => {history.push('/signup')}}>¿Aún no tienes cuenta? <a id="SignUp" href="/SignUp/">Registrarme</a></Typography>
+                <Typography component="p" variant="p" align="center" className={classes.inputs} onClick={() => {history.push('/signup')}}>¿Aún no tienes cuenta? <a id="SignUp" href="#">Registrarme</a></Typography>
                   
               </form>
             </div>

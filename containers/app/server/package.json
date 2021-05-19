@@ -19,6 +19,7 @@
     "js-yaml": "3.14.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.6.4",
+    "mongoose": "^5.12.9",
     "morgan": "1.9.1",
     "sawtooth-sdk": "^1.0.5",
     "secp256k1": "^4.0.2",

@@ -17,6 +17,8 @@ import PrivateRoute from './helpers/PrivateRoute';
 import CreateItem from './components/CreateItem';
 import EditItem from './components/EditItem';
 import detectEthereumProvider from '@metamask/detect-provider';
+import TituloValorResumen from './components/TituloValorResumen';
+import TituloValorCreate from './components/TituloValorCreate'
 
 const { setCurrentAccountAsync, setMetamaskMessage } = require("./redux/authSlice");
 
@@ -75,11 +77,14 @@ function App() {
           <PrivateRoute path="/dashboard">
             <Dashboard />
           </PrivateRoute>
-          <PrivateRoute path="/createItem">
-            <CreateItem />
+          <PrivateRoute path="/titulovalor/:service/create/:rol">
+            <TituloValorCreate />
           </PrivateRoute>
           <PrivateRoute path="/editItem/:id">
             <EditItem />
+          </PrivateRoute>
+          <PrivateRoute path="/titulovalor/:service">
+            <TituloValorResumen />
           </PrivateRoute>
           <Route path="/signup">
             <SignUp />

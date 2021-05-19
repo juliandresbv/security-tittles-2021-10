@@ -10,6 +10,8 @@ var authRouter = require('./routes/auth');
 
 var app = express();
 
+app.disable('etag')
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

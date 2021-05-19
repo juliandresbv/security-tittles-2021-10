@@ -6,7 +6,8 @@
   "rules": {
     "no-unused-vars": 1,
     "no-console": 1,
-    "indent": ["error", 2]
+    "indent": ["error", 2],
+    "react/prop-types": "off"
   },
   "env": {
     "node": true,

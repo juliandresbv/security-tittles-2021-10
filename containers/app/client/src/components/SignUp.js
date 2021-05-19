@@ -38,7 +38,7 @@ function Copyright() {
 const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: "#F3F3F3",
-    height: "100vh",
+    height: "100%",
   },
   title:{
     margin: theme.spacing(2, 0)
@@ -265,7 +265,8 @@ const SignUp = (props) => {
                 >
                   Sign Up
                 </Button>
-                <Typography component="p" variant="p" align="center" className={classes.inputs}>¿Ya tienes cuenta? <a id="SignUp" onClick={() => {history.push('/signin')}}>Inicia sesión</a></Typography>
+                <Typography component="p" variant="p" align="center" className={classes.inputs} onClick={() => {history.push('/signin')}}>¿Ya tienes cuenta? <a id="SignUp" href="#">Inicia sesión</a></Typography>
+                 
               </form>
             </div>
           </Paper>
