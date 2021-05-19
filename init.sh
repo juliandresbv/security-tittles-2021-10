@@ -12,6 +12,12 @@ cd ./containers/tpauth
   cp ./.env.docker-compose ./.env
 cd -
 
+cd ./containers/tpservice
+  npm install
+  rm ./.env
+  cp ./.env.docker-compose ./.env
+cd -
+
 
 
 cd ./containers/app/client

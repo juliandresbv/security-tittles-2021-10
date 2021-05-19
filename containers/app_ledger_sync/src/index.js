@@ -1,8 +1,9 @@
 const _ = require('underscore');
 const todo = require('./todo');
 const auth = require('./auth');
+const service = require('./service');
 
-const handlers = [todo, auth];
+const handlers = [todo, auth, service];
 
 
 const {

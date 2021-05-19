@@ -88,6 +88,19 @@ module.exports.postTransaction = async function(req, res){
       catch(err){
         return res.status(500).json({err});
       }
+    } else if (type == 'service') {
+      const publicKey = getPublicKey(transaction, txid);
+    
+      const address = getAddress(TRANSACTION_FAMILY, publicKey);
+      const payload = JSON.stringify({func: 'put', args:{transaction, txid}});
+
+      await sendTransactionWithAwait([{
+        transactionFamily: TRANSACTION_FAMILY, 
+        transactionFamilyVersion: TRANSACTION_FAMILY_VERSION,
+        inputs: [address],
+        outputs: [address],
+        payload
+      }]);    
     }
 
     return res.send('ok');
