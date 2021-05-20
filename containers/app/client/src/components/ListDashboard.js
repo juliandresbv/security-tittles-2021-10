@@ -110,7 +110,10 @@ const ListDashboard = (props) => {
         <StyledTableCell component="th" scope="row"><Chip style={{ width: "100%", overflow: "hidden" }} label={value}></Chip></StyledTableCell>
       )
     }
-    else {
+    else if (type_value === "STRING"){
+      if(value.length > 20){
+        value = value.slice(0,17) +"..."
+      }
       return (
         <>
           <StyledTableCell component="th" scope="row">{value}</StyledTableCell>

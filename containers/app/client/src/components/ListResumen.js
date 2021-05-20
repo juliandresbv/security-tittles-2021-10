@@ -33,6 +33,9 @@ const useStyles = makeStyles((theme) => ({
     color: "#F76540",
     fontWeight: 'bold',
   },
+  lista_vacia:{
+    margin: theme.spacing(5,0)
+  },
   button_orange: {
     backgroundColor: "#F76540",
     fontWeight: 'bold',
@@ -118,7 +121,7 @@ const ListResumen = (props) => {
     if (data.length <= 0) {
       return (
         <Grid>
-          <Typography>Esta lista está vacía</Typography>
+          <Typography className={classes.lista_vacia}>Esta lista está vacía</Typography>
         </Grid>
       )
     }
@@ -135,7 +138,7 @@ const ListResumen = (props) => {
             </TableHead>
             <TableBody>
               {data.map((row) => (
-                <StyledTableRow key={row.identificador} onClick={() => {goToDetail(row.identificador)}}>
+                <StyledTableRow hover key={row.identificador} onClick={() => {goToDetail(row.identificador)}}>
                   {lista.columns.map((col) => (
                     <>
                       {ValueFormater(col.type, row[col.value], row._id)}
@@ -185,9 +188,12 @@ const ListResumen = (props) => {
 
     }
     else if (type_value === "STRING" || type_value === "DATE") {
+      if(value.length > 20){
+        value = value.slice(0,25) +"..."
+      }
       return (
         <>
-          <StyledTableCell component="th" scope="row"><Typography noWrap >{value}</Typography></StyledTableCell>
+          <StyledTableCell component="th" scope="row" noWrap><Typography noWrap >{value}</Typography></StyledTableCell>
         </>
       )
     }

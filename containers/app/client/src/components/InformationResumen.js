@@ -67,7 +67,13 @@ const InformationResumen = (props) => {
   const serviceId = props.serviceId
 
   const createAs = (rol) => {
-    props.history.push("/titulovalor/" + serviceId + "/create/" + rol)
+    if(data.chequesDisponibles === 0){
+      alert("No tienes cheques disponibles para el uso, te dirigiremos para que puedas conseguir más")
+      props.history.push("/userinformation/")
+    }else{
+
+      props.history.push("/titulovalor/" + serviceId + "/create/" + rol)
+    }
   }
 
   if (information.type === "INFORMATION") {

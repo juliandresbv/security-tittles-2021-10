@@ -47,6 +47,7 @@ module.exports.signin = async function(req, res){
     }
 
     const authStateCollection = mongo.client().db('mydb').collection("auth_state");
+    console.log(pubK1)
     const me = await authStateCollection.findOne({_id: pubK1});
 
     if(!me){
@@ -86,7 +87,7 @@ module.exports.signup = async function(req, res){
 
     const authStateCollection = mongo.client().db('mydb').collection("auth_state");
     const me = await authStateCollection.findOne({_id: publicKey});
-
+    console.log(publicKey)
     if(!me){
       console.log('new client');
     }

@@ -41,42 +41,7 @@ const services = [
 
 ]
 
-const dataPrueba = {
-  balanceCheques: 1800000,
-  chequesDisponibles: 2,
-  historialCheques:[
-    {
-      identificador: "123",
-      tipo: "Expedido",
-      valorNumeros: 50000,
-      fechaCreacion: "15-15-2021"
-    },
-    {
-      identificador: "123",
-      tipo: "Recibido",
-      valorNumeros: 50000,
-      fechaCreacion: "15-15-2021"
-    },
-    {
-      identificador: "123",
-      tipo: "Expedido",
-      valorNumeros: 50000,
-      fechaCreacion: "15-15-2021"
-    },
-    {
-      identificador: "123",
-      tipo: "Recibido",
-      valorNumeros: 50000,
-      fechaCreacion: "15-15-2021"
-    },
-    {
-      identificador: "123",
-      tipo: "Expedido",
-      valorNumeros: 50000,
-      fechaCreacion: "15-15-2021"
-    }
-  ]
-}
+
 
 
 
@@ -97,7 +62,7 @@ const Dashboard = (props) => {
     axios.get(`/api/todo/dashboard/`, { ...jwtHeader, params: { services: body } })
       .then((res) => {
         setInterface(res.data.interfaz);
-        setData(dataPrueba)
+        setData(res.data.data.data)
       })
       .catch(function (response) {
         //handle error

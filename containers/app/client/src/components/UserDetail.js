@@ -55,7 +55,17 @@ const useStyles = makeStyles((theme) => ({
     "&:hover, &:focus": {
       backgroundColor: "#F78440"
     }
-  }
+  },
+  BLUE: {
+    backgroundColor: "#023e8a",
+    fontWeight: 'bold',
+    textTransform: 'none',
+    color: "#FFF",
+    margin: theme.spacing(0, 2),
+    "&:hover, &:focus": {
+      backgroundColor: "#046AF0"
+    }
+  },
 }));
 
 
@@ -145,33 +155,39 @@ const UserDetail = () => {
 
     try {
 
-      for (var i = 0; i < 5; i++) {
-
-        let ID = Math.floor(Math.random() * 10000) + ""; //Should probably use another
-
-        const payload = {
-          type: 'todo',
-          id: ID,
-          titulo: null,
-          input: null,
-          output: {
-            servicio: {
-              nombre: "cheque",
-              estado: "En Poseción",
-            },
-            owner: publicKey
-          }
-        };
-
-        let transaction = await buildTransaction(payload);
-
-        await axios.post('/api/todo', transaction, jwtHeader);
-
-        await sleep(1000);
+      if (userInformation.balance < 20000) {
+        alert("Lo sentimos pero no tienes los fondos suficientes para comprar cheques")
       }
+      else {
+
+        for (var i = 0; i < 5; i++) {
+
+          let ID = Math.floor(Math.random() * 10000) + ""; //Should probably use another
+
+          const payload = {
+            type: 'todo',
+            id: ID,
+            titulo: null,
+            input: null,
+            output: {
+              servicio: {
+                nombre: "cheque",
+                estado: "En Poseción",
+              },
+              owner: publicKey
+            }
+          };
+
+          let transaction = await buildTransaction(payload);
+
+          await axios.post('/api/todo', transaction, jwtHeader);
+
+          await sleep(1000);
+        }
 
 
-      history.replace('/dashboard');
+        history.replace('/dashboard');
+      }
     }
     catch (e) {
       let error;
@@ -185,7 +201,11 @@ const UserDetail = () => {
 
   }
 
-  if (userInformation === undefined || myServices === undefined) return <Loading />
+  function contratarServicio(){
+    
+  }
+
+  if (userInformation === undefined || myServices === undefined || otherServices=== undefined) return <Loading />
   else {
     return (
       <Grid className={classes.root}>
@@ -229,6 +249,10 @@ const UserDetail = () => {
           <Grid item xs={11} md={10} className={classes.section}>
             <Paper elevation={3}>
               <Typography className={classes.tittle_section} component="h4" variant="h4">Mis servicios</Typography>
+              {myServices.length === 0 &&
+
+                <Typography>Aún no tienes ningún servicio</Typography>
+              }
               <TableContainer component={Paper} >
                 <Table>
                   <TableHead>
@@ -246,23 +270,79 @@ const UserDetail = () => {
                         <StyledTableCell>{s.id}</StyledTableCell>
                         <StyledTableCell><CurrencyFormat value={s.cost} displayType={'text'} thousandSeparator={true} prefix={'$'} /></StyledTableCell>
                         <StyledTableCell>
-                          <Button
-                            className={classes.ORANGE}
-                            onClick={() => { onSubmit() }}
-                            item
-                            type="submit"
-                          >
-                            Comprar 5 cheques
-                          </Button>
+                          <Grid container justify="center" direction={"row"}>
+
+                            <Button
+                              className={classes.ORANGE}
+                              onClick={() => { onSubmit() }}
+                              item
+                              type="submit"
+                            >
+                              Comprar 5 cheques x $20,000
+                            </Button>
+                            <Button
+                              className={classes.BLUE}
+                              onClick={() => { onSubmit() }}
+                              item
+                              type="submit"
+                            >
+                              Cancelar servicio
+                            </Button>
+                          </Grid>
                         </StyledTableCell>
                       </StyledTableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-              
+
             </Paper>
           </Grid>
+
+          {otherServices.length !== 0 &&
+
+            <Grid item xs={11} md={10} className={classes.section}>
+              <Paper elevation={3}>
+                <Typography className={classes.tittle_section} component="h4" variant="h4">Mis servicios</Typography>
+                {myServices.length === 0 &&
+
+                  <Typography>Aún no tienes ningún servicio</Typography>
+                }
+                <TableContainer component={Paper} >
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <StyledTableCell>Servicio</StyledTableCell>
+                        <StyledTableCell>Identificación</StyledTableCell>
+                        <StyledTableCell>Costo mensual</StyledTableCell>
+                        <StyledTableCell>Servicios</StyledTableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {myServices.map(s => (
+                        <StyledTableRow key={s.name}>
+                          <StyledTableCell>{s.name}</StyledTableCell>
+                          <StyledTableCell>{s.id}</StyledTableCell>
+                          <StyledTableCell><CurrencyFormat value={s.cost} displayType={'text'} thousandSeparator={true} prefix={'$'} /></StyledTableCell>
+                          <StyledTableCell>
+                            <Button
+                              className={classes.ORANGE}
+                              onClick={() => { onSubmit() }}
+                              item
+                              type="submit"
+                            >
+                              Comprar 5 cheques
+                            </Button>
+                          </StyledTableCell>
+                        </StyledTableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+              </Paper>
+            </Grid>
+          }
 
         </Grid>
       </Grid>

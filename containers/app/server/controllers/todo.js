@@ -45,7 +45,13 @@ module.exports.getResumen = async function (req, res) {
 module.exports.getDashboard = async function (req, res) {
 
   var interfaz = []
-  var data = {}
+
+
+  var respuesta = {
+    balanceCheques:  await getBalanceClient(req.auth.jwt.publicKey),
+    chequesDisponibles: 0,
+    cheques: [],
+  }
   const services = mongo.client().db('mydb').collection('service').find({ "id": { $in: req.query.services } });
   await new Promise((resolve, reject) => {
     services.forEach((s) => {
@@ -60,7 +66,84 @@ module.exports.getDashboard = async function (req, res) {
       resolve)
 
   })
-  res.send({ interfaz: interfaz, data: {} })
+
+  const enviados2 = mongo.client().db('mydb').collection("todo_transaction").aggregate([
+    {
+      $lookup: {
+        from: "todo_transaction",
+        localField: "_id",
+        foreignField: "input",
+        as: "chequesEnviados"
+      }
+    },
+    { $match: { 'deco.owner': req.auth.jwt.publicKey, 'deco.servicio.estado': 'En Poseción', chequesEnviados: [] } }
+  ])
+  await new Promise((resolve, reject) => {
+    enviados2.forEach((doc) => {
+      console.log(respuesta.balanceCheques)
+      respuesta.chequesDisponibles += 1
+    },
+      resolve)
+  });
+
+  const recibidos = mongo.client().db('mydb').collection("todo_state").aggregate([
+    {
+      $lookup: {
+        from: "todo_transaction",
+        localField: "_id",
+        foreignField: "_id",
+        as: "chequesRecibidos"
+      }
+    },
+    { $match: { 'value.owner': req.auth.jwt.publicKey, 'value.servicio.estado': { $ne: 'En Poseción' } } }
+  ])
+  await new Promise((resolve, reject) => {
+    recibidos.forEach((doc) => {
+      const payload = JSON.parse(doc.chequesRecibidos[0].payload)
+      console.log(respuesta.balanceCheques)
+      respuesta.balanceCheques = respuesta.balanceCheques + payload.titulo.valorNumeros
+      respuesta.cheques.push({
+        identificador: doc._id,
+        tipo: "Recibido",
+        valorNumeros: payload.titulo.valorNumeros,
+      });
+    },
+      resolve)
+  });
+
+  const enviados = mongo.client().db('mydb').collection("todo_transaction").aggregate([
+    {
+      $lookup: {
+        from: "todo_transaction",
+        localField: "_id",
+        foreignField: "input",
+        as: "chequesEnviados"
+      }
+    },
+    { $match: { 'deco.owner': req.auth.jwt.publicKey, 'chequesEnviados.idx': 1 } }
+  ])
+  await new Promise((resolve, reject) => {
+    enviados.forEach((doc) => {
+
+      
+      const payload = JSON.parse(doc.chequesEnviados[0].payload)
+      if (payload.output.servicio.estado === "Activo" || payload.output.servicio.estado === "Endosado") {
+        console.log(respuesta.balanceCheques)
+        respuesta.balanceCheques = respuesta.balanceCheques - payload.titulo.valorNumeros
+      }
+      respuesta.cheques.push({
+        identificador: doc._id,
+        tipo: "Expedido",
+        valorNumeros: payload.titulo.valorNumeros,
+      });
+    },
+      resolve)
+  });
+
+  var data = respuesta
+
+
+  res.send({ interfaz: interfaz, data: {data}})
 }
 
 module.exports.getResumen = async function (req, res) {
@@ -121,7 +204,7 @@ module.exports.getResumen = async function (req, res) {
     await new Promise((resolve, reject) => {
       enviados.forEach((doc) => {
 
-        //console.log(doc)
+        
         const payload = JSON.parse(doc.chequesEnviados[0].payload)
         if (payload.output.servicio.estado === "Activo" || payload.output.servicio.estado === "Endosado") {
           respuesta.fondosGirados += payload.titulo.valorNumeros
@@ -352,14 +435,30 @@ module.exports.getToDo = async function (req, res) {
   const b = await transactions.findOne({ "root": r.root, "idx": 0 })
 
   let rol = ""
+  var nombreLibrador
+  var idLibrador
+  var nombreBeneficiario
+  var idBeneficiario
 
   if (b.deco.owner === req.auth.jwt.publicKey) {
-    console.log("librador")
     rol = "librador"
+    var public = JSON.parse(a.payload);
+    var temp =  mongo.client().db('mydb').collection("auth_state").findOne({"value.id": public.titulo.idBeneficiario})
+    idBeneficiario = public.titulo.idBeneficiario
+    nameBeneficiario = temp.value.name
   }
   else {
     rol = "beneficiario"
+    var temp = await mongo.client().db('mydb').collection("auth_state").findOne({_id: b.deco.owner})
+    nombreLibrador = temp.value.name
+    idLibrador = temp.value.id
+    var public = JSON.parse(a.payload);
+    idBeneficiario = public.titulo.idBeneficiario
+    var temp =  await mongo.client().db('mydb').collection("auth_state").findOne({"value.id": public.titulo.idBeneficiario})
+    nombreBeneficiario = temp.value.name
   }
+
+
 
   const service = await mongo.client().db('mydb').collection("service").findOne({ "id": req.params.service })
   let detail
@@ -384,7 +483,15 @@ module.exports.getToDo = async function (req, res) {
   return res.json({
     interfaz: detail,
     data: {
-      ...primeraTran.titulo, identificador: ultimaTran.input, output: ultimaTran.output, state: ultimaTran.output.servicio.estado, cadenaEndosos: cadenaEndosos
+      idBeneficiario: idBeneficiario,
+      nombreBeneficiario: nombreBeneficiario,
+      ...primeraTran.titulo, 
+      nombreLibrador: nombreLibrador, 
+      idLibrador: idLibrador, 
+      identificador: ultimaTran.input, 
+      output: ultimaTran.output, 
+      state: ultimaTran.output.servicio.estado, 
+      cadenaEndosos: cadenaEndosos
     }
   });
 }
@@ -475,8 +582,8 @@ async function getToDoHistory(id) {
     .sort({ block_num: -1 })
   await new Promise((resolve, reject) => {
     cursor.forEach((doc) => {
-      console.log(doc)
-      history.push({ state: doc.deco.servicio.estado });
+      var temp =  mongo.client().db('mydb').collection("auth_state").findOne({"_id": doc.deco.owner})
+      history.push({ state: doc.deco.servicio.estado, owner:  doc.deco.owner});
     },
       resolve)
   });

@@ -107,7 +107,7 @@ export const signupAsync = (values) => async (dispatch, getState) => {
     permissions:['client']});
   let {publicKey, signature} = await getPublicKey(transaction);
 
-  let newAccount = {account: currentAccount, email, publicKey};
+  let newAccount = {account: currentAccount, email, publicKey, services: []};
 
   res = await axios.post('/api/auth/signup', {transaction, txid: signature});
   newAccount.jwt = res.data.token;

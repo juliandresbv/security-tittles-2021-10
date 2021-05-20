@@ -105,7 +105,7 @@ function ValueFormater(type_value, value) {
       <StyledTableCell component="th" scope="row"><CurrencyFormat value={value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></StyledTableCell>
     )
   }
-  else if (type_value === "state") {
+  else if (type_value === "STATE") {
     return (
       <StyledTableCell component="th" scope="row"><Chip label={value}></Chip></StyledTableCell>
     )

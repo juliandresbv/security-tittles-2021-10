@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "#F78440"
     }
   },
-  blue: {
+  BLUE: {
     backgroundColor: "#023e8a",
     fontWeight: 'bold',
     textTransform: 'none',
@@ -49,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "#046AF0"
     }
   },
-  grey: {
+  GREY: {
     backgroundColor: "#c6c6c6",
     fontWeight: 'bold',
     textTransform: 'none',
@@ -75,7 +75,6 @@ const AtributesDetail = (props) => {
 
   const handleClick = (event) => {
     if (event === "endosar") { 
-
       props.history.push(data.identificador + "/endosar/")
     }
     
@@ -100,7 +99,7 @@ const AtributesDetail = (props) => {
             </Grid>
             <Grid item xs={12} md={2} style={{ justifyItems: "center" }}>
               {information.buttons.map((o) => (
-                <Grid key={o.name} item xs={12}><Button className={classes[o.type]} onClick={() => { handleClick(o.ction) }}>{o.value}</Button></Grid>
+                <Grid key={o.name} item xs={12}><Button className={classes[o.type]} onClick={() => { handleClick(o.action) }}>{o.value}</Button></Grid>
               ))}
             </Grid>
           </Grid>

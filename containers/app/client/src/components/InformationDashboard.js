@@ -89,7 +89,7 @@ const InformationDashboard = (props) => {
 
   function ValueFormater(type_value, value) {
     if (type_value === "CURRENCY") {
-      return <Typography component="h3" variant="h3" align="right" className={classes.fondos_positivos}><CurrencyFormat value={value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></Typography>
+      return <Typography component="h3" variant="h3" align="right" className={(value > 0)?classes.fondos_positivos: classes.fondos_negativos}><CurrencyFormat value={value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></Typography>
     }
     return <Typography component="h3" variant="h3" align="right">{value}</Typography>
   }
