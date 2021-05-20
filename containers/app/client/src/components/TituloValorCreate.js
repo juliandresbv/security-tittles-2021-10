@@ -132,9 +132,7 @@ const TituloValorCreate = (props) => {
       try {
         axios.get(`/api/auth/publickey`, { ...jwtHeader, params: { id: document.getElementById("idBeneficiario").value, typeId: document.getElementById("tipoIdBeneficiario").nextSibling.value } })
           .then((res) => {
-
             createOnSubmit(res.data)
-
           })
           .catch(function (response) {
             //handle error
@@ -156,6 +154,8 @@ const TituloValorCreate = (props) => {
 
   async function createOnSubmit(publicKeyC) {
     try {
+
+      console.log("Data", data)
 
       const payload = {
         type: 'todo',

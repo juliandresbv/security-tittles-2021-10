@@ -15,7 +15,7 @@ import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { selectUsername, signoutAsync, signoutAllAsync, isLoggedIn } from '../redux/authSlice';
+import { selectUsername, signoutAsync, signoutAllAsync, isLoggedIn, selectUserServices } from '../redux/authSlice';
 
 import './navbar.css'
 
@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: -12
   },
   icons: {
-    fontSize: 40
+    color: "#F76540"
   },
   elements: {
     margin: theme.spacing(1.5)
@@ -57,19 +57,6 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const services = [
-  {
-    name: "Cheques",
-    id: "titulo-001"
-  }
-  //,
-  //{
-  //  name: "Pagarés",
-  //  id: "aaaaa"
-  //}
-
-]
-
 const Navbar = (props) => {
 
   const classes = useStyles();
@@ -77,6 +64,7 @@ const Navbar = (props) => {
 
   const dispatch = useDispatch();
   const username = useSelector(selectUsername);
+  const services = useSelector(selectUserServices)
   const isLogged = useSelector(isLoggedIn);
   const location = useLocation()
   const [actualPage, setActualPage] = useState(actual())
@@ -149,11 +137,13 @@ const Navbar = (props) => {
                     aria-haspopup="true"
                     onClick={handleMenu}
                     color="inherit"
-                    endIcon={<AccountCircle />}
+                    startIcon={<AccountCircle />}
+                    className={classes.icons}
                   >
                     {username}
                   </Button>
                   <Menu
+                    
                     id="menu-appbar"
                     anchorEl={anchorEl}
                     anchorOrigin={{

@@ -61,7 +61,7 @@ const TitulosValorResumen = (props) => {
         </Grid>
         <Grid container justify="center">
           {InterfaceService.resume.lists.map(list => (
-            <ListResumen key={list.name} list={list} data={dataService[list.value]} service={service} states={InterfaceService.states} />
+            <ListResumen key={list.name} list={list} data={dataService[list.value]} service={service} states={InterfaceService.resume.states} />
           ))}
         </Grid>
         <Grid style={{ height: "25px" }}></Grid>

@@ -140,6 +140,7 @@ module.exports.getPublicKeyClient = async function(req, res){
   const id = req.query.id;
   const typeId = req.query.typeId;
 
+
   const otherClient = await mongo.client().db('mydb').collection("auth_state").findOne({"value.id": id, "value.typeId": typeId});
 
 

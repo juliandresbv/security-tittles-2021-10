@@ -128,13 +128,14 @@ export const signinAsync = (email) => async (dispatch, getState) => {
   const transaction = JSON.stringify({type: "auth/signin", email, challange: res.data.challange, permissions:['client']});
   let {publicKey, signature} = await getPublicKey(transaction);
 
-  let newAccount = {account: currentAccount, email, publicKey};
+  let newAccount = {account: currentAccount, email, publicKey, services: []};
 
   res = await axios.post('/api/auth/signin', {transaction, txid: signature});
   newAccount.jwt = res.data.token;
 
   res = await axios.get('/api/auth/whoami', {headers: {"Authorization":"Bearer " + newAccount.jwt}});
   newAccount.email = res.data.email;
+  newAccount.services = res.data.services
   
   accounts[newAccount.account] = newAccount;
   localSaveAccounts(accounts, currentAccount)
@@ -163,6 +164,16 @@ export const selectUsername = state => {
   }
   if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
     return state.auth.accounts[state.auth.currentAccount].email;
+  }
+  return null;
+};
+
+export const selectUserServices = state => {
+  if(state.auth.metamaskMessage || !state.auth.metamaskEnabled){
+    return null;
+  }
+  if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
+    return state.auth.accounts[state.auth.currentAccount].services;
   }
   return null;
 };

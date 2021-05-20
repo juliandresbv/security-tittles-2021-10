@@ -116,7 +116,7 @@ module.exports.getResumen = async function (req, res) {
           as: "chequesEnviados"
         }
       },
-      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'chequesEnviados.idx': 1} }
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'chequesEnviados.idx': 1 } }
     ])
     await new Promise((resolve, reject) => {
       enviados.forEach((doc) => {
@@ -145,11 +145,11 @@ module.exports.getResumen = async function (req, res) {
           as: "chequesEnviados"
         }
       },
-      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'deco.servicio.estado': 'En Poseción', chequesEnviados: []} }
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'deco.servicio.estado': 'En Poseción', chequesEnviados: [] } }
     ])
     await new Promise((resolve, reject) => {
       enviados2.forEach((doc) => {
-        respuesta.chequesDisponibles += 1        
+        respuesta.chequesDisponibles += 1
       },
         resolve)
     });
@@ -186,6 +186,8 @@ module.exports.getCreate = async function (req, res) {
     }
     respuesta.fondosDisponibles = await getBalanceClient(req.auth.jwt.publicKey)
 
+
+
     const enviados2 = mongo.client().db('mydb').collection("todo_transaction").aggregate([
       {
         $lookup: {
@@ -195,11 +197,12 @@ module.exports.getCreate = async function (req, res) {
           as: "chequesEnviados"
         }
       },
-      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'deco.servicio.estado': 'En Poseción', chequesEnviados: []} }
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'deco.servicio.estado': 'En Poseción', chequesEnviados: [] } }
     ])
     await new Promise((resolve, reject) => {
       enviados2.forEach((doc) => {
-          respuesta.chequesDisponibles += 1        
+        respuesta.title = doc
+        respuesta.chequesDisponibles += 1
       },
         resolve)
     });
@@ -213,7 +216,7 @@ module.exports.getCreate = async function (req, res) {
           as: "chequesEnviados"
         }
       },
-      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'chequesEnviados.idx': 1} }
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'chequesEnviados.idx': 1 } }
     ])
     await new Promise((resolve, reject) => {
       enviados.forEach((doc) => {

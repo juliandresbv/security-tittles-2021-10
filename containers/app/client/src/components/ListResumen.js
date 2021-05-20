@@ -167,7 +167,11 @@ const ListResumen = (props) => {
     }
     else if (type_value === "STATE") {
 
-      var state = "Activo"
+      var state = states.find(s => {
+        if(s.state === value){
+          return s
+        }
+      })
 
       if (state !== undefined) {
 
