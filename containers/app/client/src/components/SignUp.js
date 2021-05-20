@@ -106,12 +106,16 @@ const SignUp = (props) => {
     },
     validationSchema: Yup.object({
       name: Yup.string().required('Required'),
+      id: Yup.string().required('Required'),
       email: Yup.string().email('Invalid email address').required('Required'),
+      address: Yup.string().required('Required'),
+      phone: Yup.string().required('Required'),
       password: Yup.string().required('Required')
     }),
     onSubmit: async (values, {setStatus}) => {
       console.log("Se registra")
       try{
+        values.typeId = typeId
         await dispatch(signupAsync(values));
         history.replace('/Dashboard');
       }
@@ -167,10 +171,15 @@ const SignUp = (props) => {
                   variant="outlined"
                   required
                   fullWidth
-                  id="cedula"
-                  label="Cédula"
-                  name="cedula"
+                  id="id"
+                  label="Identificación"
+                  name="id"
                   className={classes.inputs}
+                  value={formik.values.id}
+                  onChange={formik.handleChange}
+                  error={formik.touched.id && Boolean(formik.errors.id)}
+                  helperText={formik.touched.id && formik.errors.id}
+                  disabled={formik.isSubmitting || metamaskMessage}
                 />
                 <Select
                   id="type-id"
@@ -211,19 +220,29 @@ const SignUp = (props) => {
                   variant="outlined"
                   required
                   fullWidth
-                  id="direccion"
+                  id="address"
                   label="Dirección"
-                  name="direccion"
+                  name="address"
                   className={classes.inputs}
+                  value={formik.values.address}
+                  onChange={formik.handleChange}
+                  error={formik.touched.address && Boolean(formik.errors.address)}
+                  helperText={formik.touched.address && formik.errors.address}
+                  disabled={formik.isSubmitting || metamaskMessage}
                 />
                 <TextField
                   variant="outlined"
                   required
                   fullWidth
-                  id="celular"
+                  id="phone"
                   label="Celular"
-                  name="celular"
+                  name="phone"
                   className={classes.inputs}
+                  value={formik.values.phone}
+                  onChange={formik.handleChange}
+                  error={formik.touched.phone && Boolean(formik.errors.phone)}
+                  helperText={formik.touched.phone && formik.errors.phone}
+                  disabled={formik.isSubmitting || metamaskMessage}
                 />
                 <TextField
                   variant="outlined"

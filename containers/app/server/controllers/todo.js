@@ -30,7 +30,6 @@ const address = buildAddress(TRANSACTION_FAMILY);
 
 module.exports.getResumen = async function (req, res) {
 
-  console.log("aaaaaaaaaaaaaa")
   mongo.client().db('mydb').atribute.insertOne({
     name: "Prueba", value: "prueba", type: "STRING"
   })
@@ -44,7 +43,7 @@ module.exports.getResumen = async function (req, res) {
 }
 
 module.exports.getDashboard = async function (req, res) {
-  
+
   var interfaz = []
   var data = {}
   const services = mongo.client().db('mydb').collection('service').find({ "id": { $in: req.query.services } });
@@ -65,7 +64,6 @@ module.exports.getDashboard = async function (req, res) {
 }
 
 module.exports.getResumen = async function (req, res) {
-  console.log(req.query.service)
   const service = await mongo.client().db('mydb').collection('service').findOne({ "id": req.query.service });
   const interfaz = {
     _id: service._id,
@@ -73,99 +71,170 @@ module.exports.getResumen = async function (req, res) {
     name: service.name,
     resume: service.resume
   }
-  if (req.query.service === "titulo-001"){
+  if (req.query.service === "titulo-001") {
     var respuesta = {
-      fondosDisponibles: 2000000,
+      fondosDisponibles: 0,
       fondosGirados: 0,
-      chequesDisponibles: 10,
+      chequesDisponibles: 0,
       chequesGirados: [],
       chequesRecibidos: [],
     }
-  
-    const stateCollection = mongo.client().db('mydb').collection("todo_state");
-    const transactions = mongo.client().db('mydb').collection("todo_transaction");
-  
-    const page = req.query.page || 0;
-  
-    const cursor = stateCollection.find({ "value.owner": req.auth.jwt.publicKey, "value.servicio.estado": { $ne: 'POSECION' } })
-      .skip(PAGE_SIZE * page)
-      .limit(PAGE_SIZE);
-  
-    let todos1 = [];
-    await new Promise((resolve, reject) => {
-      cursor.forEach((doc) => {
-        respuesta.chequesRecibidos.push(doc);
-      },
-        resolve)
-    });
-    const tx = transactions.find({ "deco.owner": req.auth.jwt.publicKey, "idx": 0 })
-      .skip(PAGE_SIZE * page)
-      .limit(PAGE_SIZE);
-  
-    let todos2 = [];
-    await new Promise((resolve, reject) => {
-      tx.forEach((doc) => {
-        const payload = JSON.parse(doc.payload)
 
-        respuesta.fondosGirados += payload.titulo.valorNumeros
-  
-        var titulo = {
+    respuesta.fondosDisponibles = await getBalanceClient(req.auth.jwt.publicKey)
+    const recibidos = mongo.client().db('mydb').collection("todo_state").aggregate([
+      {
+        $lookup: {
+          from: "todo_transaction",
+          localField: "_id",
+          foreignField: "_id",
+          as: "chequesRecibidos"
+        }
+      },
+      { $match: { 'value.owner': req.auth.jwt.publicKey, 'value.servicio.estado': { $ne: 'En Poseción' } } }
+    ])
+    await new Promise((resolve, reject) => {
+      recibidos.forEach((doc) => {
+        const payload = JSON.parse(doc.chequesRecibidos[0].payload)
+
+        respuesta.chequesRecibidos.push({
           identificador: doc._id,
           tipo: payload.titulo.tipo,
           valorNumeros: payload.titulo.valorNumeros,
           estado: payload.output.servicio.estado
+        });
+
+      },
+        resolve)
+    });
+
+    const enviados = mongo.client().db('mydb').collection("todo_transaction").aggregate([
+      {
+        $lookup: {
+          from: "todo_transaction",
+          localField: "_id",
+          foreignField: "input",
+          as: "chequesEnviados"
         }
-        respuesta.chequesGirados.push(titulo);
+      },
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'chequesEnviados.idx': 1} }
+    ])
+    await new Promise((resolve, reject) => {
+      enviados.forEach((doc) => {
+
+        //console.log(doc)
+        const payload = JSON.parse(doc.chequesEnviados[0].payload)
+        if (payload.output.servicio.estado === "Activo" || payload.output.servicio.estado === "Endosado") {
+          respuesta.fondosGirados += payload.titulo.valorNumeros
+        }
+        respuesta.chequesGirados.push({
+          identificador: doc._id,
+          tipo: payload.titulo.tipo,
+          valorNumeros: payload.titulo.valorNumeros,
+          estado: payload.output.servicio.estado
+        });
+      },
+        resolve)
+    });
+
+    const enviados2 = mongo.client().db('mydb').collection("todo_transaction").aggregate([
+      {
+        $lookup: {
+          from: "todo_transaction",
+          localField: "_id",
+          foreignField: "input",
+          as: "chequesEnviados"
+        }
+      },
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'deco.servicio.estado': 'En Poseción', chequesEnviados: []} }
+    ])
+    await new Promise((resolve, reject) => {
+      enviados2.forEach((doc) => {
+        respuesta.chequesDisponibles += 1        
       },
         resolve)
     });
     data = respuesta
   }
+
   res.send({ interfaz: interfaz, data: data })
+}
+
+async function getBalanceClient(id) {
+
+  const user = await mongo.client().db('mydb').collection("auth_state").findOne({ "_id": id });
+  return user.value.balance
+
 }
 
 module.exports.getCreate = async function (req, res) {
 
   console.log(req.query.rol)
-  const service = await mongo.client().db('mydb').collection('service').findOne({ "id": req.query.service});
+  const service = await mongo.client().db('mydb').collection('service').findOne({ "id": req.query.service });
   let interfaz
   let data
   service.create.forEach(c => {
-    if (c.rol === req.query.rol){
+    if (c.rol === req.query.rol) {
       interfaz = c
     }
   })
-  if (req.query.service === "titulo-001"){
+  if (req.query.service === "titulo-001") {
     var respuesta = {
-      fondosDisponibles: 2000000,
+      fondosDisponibles: 0,
       fondosGirados: 0,
-      chequesDisponibles: 10
+      chequesDisponibles: 0,
+      title: {}
     }
-    const transactions = mongo.client().db('mydb').collection("todo_transaction");
-  
-    const page = req.query.page || 0;
+    respuesta.fondosDisponibles = await getBalanceClient(req.auth.jwt.publicKey)
 
-    const tx = transactions.find({ "deco.owner": req.auth.jwt.publicKey, "idx": 0 })
-      .skip(PAGE_SIZE * page)
-      .limit(PAGE_SIZE);
-  
-    let todos2 = [];
+    const enviados2 = mongo.client().db('mydb').collection("todo_transaction").aggregate([
+      {
+        $lookup: {
+          from: "todo_transaction",
+          localField: "_id",
+          foreignField: "input",
+          as: "chequesEnviados"
+        }
+      },
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'deco.servicio.estado': 'En Poseción', chequesEnviados: []} }
+    ])
     await new Promise((resolve, reject) => {
-      tx.forEach((doc) => {
-        const payload = JSON.parse(doc.payload)
-        respuesta.fondosGirados += payload.titulo.valorNumeros
+      enviados2.forEach((doc) => {
+          respuesta.chequesDisponibles += 1        
+      },
+        resolve)
+    });
+
+    const enviados = mongo.client().db('mydb').collection("todo_transaction").aggregate([
+      {
+        $lookup: {
+          from: "todo_transaction",
+          localField: "_id",
+          foreignField: "input",
+          as: "chequesEnviados"
+        }
+      },
+      { $match: { 'deco.owner': req.auth.jwt.publicKey, 'chequesEnviados.idx': 1} }
+    ])
+    await new Promise((resolve, reject) => {
+      enviados.forEach((doc) => {
+
+        //console.log(doc)
+        const payload = JSON.parse(doc.chequesEnviados[0].payload)
+        if (payload.output.servicio.estado === "Activo" || payload.output.servicio.estado === "Endosado") {
+          respuesta.fondosGirados += payload.titulo.valorNumeros
+        }
       },
         resolve)
     });
     data = respuesta
   }
-  
+
   res.send({ interfaz: interfaz, data: data })
 }
 
-module.exports.getAllServices = async function (req, res){
+module.exports.getAllServices = async function (req, res) {
   var data = []
-  const services = mongo.client().db('mydb').collection('service');
+  const services = mongo.client().db('mydb').collection('service').find();
   await new Promise((resolve, reject) => {
     services.forEach((s) => {
       const serv = {
@@ -276,14 +345,57 @@ module.exports.getToDo = async function (req, res) {
     return res.status(404).json("not found");
   }
   const r = await transactions.findOne({ "_id": req.params.id })
-  const a = await transactions.findOne({ "root": r.root, "idx": 0 })
+  const a = await transactions.findOne({ "root": r.root, "idx": 1 })
+  const b = await transactions.findOne({ "root": r.root, "idx": 0 })
+
+  let rol = ""
+
+  if (b.deco.owner === req.auth.jwt.publicKey) {
+    console.log("librador")
+    rol = "librador"
+  }
+  else {
+    rol = "beneficiario"
+  }
+
+  const service = await mongo.client().db('mydb').collection("service").findOne({ "id": req.params.service })
+  let detail
+
+  if (!service) {
+    return res.status(404).json("not found");
+  }
+  else {
+
+    service.details.map(d => {
+      if (d.rol === rol && d.state === value.value.servicio.estado) {
+        detail = d
+      }
+    })
+  }
 
   var ultimaTran = JSON.parse(r.payload);
   var primeraTran = JSON.parse(a.payload);
 
+  var cadenaEndosos = await getToDoHistory(req.params.id)
+
   return res.json({
-    ...primeraTran, input: ultimaTran.input, output: ultimaTran.output
+    interfaz: detail,
+    data: {
+      ...primeraTran.titulo, identificador: ultimaTran.input, output: ultimaTran.output, state: ultimaTran.output.servicio.estado, cadenaEndosos: cadenaEndosos
+    }
   });
+}
+
+module.exports.postServiceClient = async function (req, res) {
+
+  const { transaction, txid } = req.body;
+
+  const postTodoTxReq = await axios.post(
+    `${process.env.LEDGER_API_HOST}:${process.env.LEDGER_API_PORT}/api/transaction`,
+    req.body
+  );
+
+  return res.send('ok');
 }
 
 
@@ -339,6 +451,36 @@ module.exports.putToDo = async function (req, res) {
 
 const PAGE_SIZE = (process.env.PAGE_SIZE) ? parseInt(process.env.PAGE_SIZE) : 10;
 
+
+async function getToDoHistory(id) {
+
+  const transactionCollection = mongo.client().db('mydb').collection("todo_transaction");
+  const stateCollection = mongo.client().db('mydb').collection("todo_state");
+
+  const st = await stateCollection.findOne({ _id: id });
+  if (!st) {
+    return res.status(404).json({ msg: "not UTXO" });
+  }
+
+  const tx = await transactionCollection.findOne({ _id: id });
+  if (!tx) {
+    return res.status(404).json({ msg: "Transaction not found" });
+  }
+
+  let history = [];
+  const cursor = await transactionCollection.find({ root: tx.root })
+    .sort({ block_num: -1 })
+  await new Promise((resolve, reject) => {
+    cursor.forEach((doc) => {
+      console.log(doc)
+      history.push({ state: doc.deco.servicio.estado });
+    },
+      resolve)
+  });
+  return history;
+}
+
+/*
 module.exports.getToDoHistory = async function (req, res) {
 
   const page = req.query.page || 0;
@@ -368,4 +510,4 @@ module.exports.getToDoHistory = async function (req, res) {
       resolve)
   });
   return res.json(history);
-}
+} */

@@ -5,10 +5,11 @@ const {
   getToDo, 
   postToDo, 
   putToDo,
-  getToDoHistory,
   getDashboard,
   getResumen,
-  getCreate
+  getCreate,
+  postServiceClient,
+  getAllServices
 } = require('../controllers/todo');
 
 const {
@@ -19,13 +20,14 @@ const {
 
 router.post('/', jwtMiddleware, txMiddleware, postToDo);
 router.put('/', jwtMiddleware, txMiddleware, putToDo);
-router.get('/', jwtMiddleware, getAllToDo);
+//router.get('/', jwtMiddleware, getAllToDo);
 router.get('/dashboard', jwtMiddleware, getDashboard);
-router.get('/allservices', jwtMiddleware, getDashboard);
+router.post('/service', jwtMiddleware, postServiceClient);
+router.get('/allservices', jwtMiddleware, getAllServices);
 router.get('/create', jwtMiddleware, getCreate);
 router.get('/resumen', jwtMiddleware, getResumen);
-router.get('/:id', jwtMiddleware, getToDo);
-router.get('/:id/:history', jwtMiddleware, getToDoHistory)
+router.get('/:id/:service', jwtMiddleware, getToDo);
+//router.get('/:id/:history', jwtMiddleware, getToDoHistory)
 
 router.use('/*', function(req, res){
   res.status(404).json({msg: 'Resource not found'});

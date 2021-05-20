@@ -122,7 +122,32 @@ module.exports.whoami = async function(req, res){
     return res.status(404).json({msg: 'Not found'});
   }
 
-  return res.json({publicKey: publickey, permissions: me.value.permissions, email: me.value.email});
+  return res.json({
+    publicKey: publickey, 
+    permissions: me.value.permissions, 
+    email: me.value.email,
+    name: me.value.name,
+    id: me.value.id,
+    typeId: me.value.typeId,
+    addres: me.value.address,
+    phone: me.value.phone,
+    services: me.value.services,
+    balance: me.value.balance
+  });
+};
+
+module.exports.getPublicKeyClient = async function(req, res){
+  const id = req.query.id;
+  const typeId = req.query.typeId;
+
+  const otherClient = await mongo.client().db('mydb').collection("auth_state").findOne({"value.id": id, "value.typeId": typeId});
+
+
+  if(!otherClient){
+    return res.status(404).json({msg: 'Client not found'});
+  }
+
+  return res.json(otherClient._id );
 };
 
 module.exports.jwtMiddleware = async function(req, res, next){

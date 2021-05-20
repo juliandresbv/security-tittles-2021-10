@@ -135,7 +135,7 @@ const ListResumen = (props) => {
             </TableHead>
             <TableBody>
               {data.map((row) => (
-                <StyledTableRow key={row.identificador}>
+                <StyledTableRow key={row.identificador} onClick={() => {goToDetail(row.identificador)}}>
                   {lista.columns.map((col) => (
                     <>
                       {ValueFormater(col.type, row[col.value], row._id)}

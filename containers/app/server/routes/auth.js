@@ -5,13 +5,15 @@ const {
   signup,
   challange,
   whoami,
-  jwtMiddleware
+  jwtMiddleware,
+  getPublicKeyClient
 } = require('../controllers/auth');
 
 router.post('/challange', challange);
 router.post('/signup', signup);
 router.post('/signin', signin);
 router.get('/whoami', jwtMiddleware, whoami);
+router.get('/publickey', jwtMiddleware, getPublicKeyClient);
 
 module.exports = router;
 

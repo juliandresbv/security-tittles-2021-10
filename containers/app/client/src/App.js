@@ -20,6 +20,7 @@ import TituloValorResumen from './components/TituloValorResumen';
 import TituloValorCreate from './components/TituloValorCreate'
 import Navbar from './components/Navbar'
 import UserDetail from './components/UserDetail';
+import TituloValorDetalle from './components/TituloValorDetalle';
 
 const { setCurrentAccountAsync, setMetamaskMessage } = require("./redux/authSlice");
 
@@ -82,8 +83,8 @@ function App() {
           <PrivateRoute path="/titulovalor/:service/create/:rol">
             <TituloValorCreate />
           </PrivateRoute>
-          <PrivateRoute path="/editItem/:id">
-            <EditItem />
+          <PrivateRoute path="/titulovalor/:service/detalle/:id">
+            <TituloValorDetalle />
           </PrivateRoute>
           <PrivateRoute path="/titulovalor/:service">
             <TituloValorResumen />

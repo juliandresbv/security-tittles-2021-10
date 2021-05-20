@@ -122,76 +122,97 @@ const TituloValorCreate = (props) => {
 
   const formik = useFormik({
     initialValues: {
-      
+
     },
     validationSchema: Yup.object({
-      
+
     }),
-    onSubmit: async (values, {setStatus}) => {
+    onSubmit: async (values, { setStatus }) => {
 
-      try{
+      try {
+        axios.get(`/api/auth/publickey`, { ...jwtHeader, params: { id: document.getElementById("idBeneficiario").value, typeId: document.getElementById("tipoIdBeneficiario").nextSibling.value } })
+          .then((res) => {
 
-        let ID = Math.floor(Math.random() * 10000) + ""; //Should probably use another
-        
-        const payload = {
-          type: 'todo',
-          id: ID,
-          titulo:{},
-          input: null,
-          output:{
-            servicio: {
-              nombre:"cheque",
-              estado: "POSECION",
-            },
-            owner: publicKey
-          }
-        };
+            createOnSubmit(res.data)
 
-        information.components.map(c => {
-          if (c.type === "INPUT") {
-            c.inputs.map(i => {
-              var valueName = i.atribute.value
-              var value
-              if (i.atribute.type === "SELECT") {
-                value = document.getElementById(valueName).nextSibling.value
-              }
-              else if(i.atribute.type === "CURRENCY"){
-                value = parseInt(document.getElementById(valueName).value)
-              }
-              else {
-                value = document.getElementById(valueName).value
-              }
-              console.log(valueName)
-  
-              payload.titulo[i.atribute.value] = value
-            })
-          }
-        })
-
-        let transaction = await buildTransaction(payload);
-                
-        await axios.post('/api/todo', transaction, jwtHeader);
-
-        await sleep(1000);
-
-        history.replace('/dashboard');
+          })
+          .catch(function (response) {
+            //handle error
+            console.log(response);
+          });
       }
-      catch(e){
+      catch (e) {
         let error;
-        if(e.response){
+        if (e.response) {
           error = JSON.stringify(e.response.data);
-        }else{
+        } else {
           error = e.message;
         }
-        setStatus({error});
+        //setStatus({ error });
       }
 
     },
   });
 
-  function sleep(time){
+  async function createOnSubmit(publicKeyC) {
+    try {
+
+      const payload = {
+        type: 'todo',
+        input: data.title._id,
+        titulo: {},
+        output: {
+          servicio: {
+            nombre: "cheque",
+            estado: "Activo",
+          },
+          owner: publicKeyC
+        }
+      };
+
+      information.components.map(c => {
+        if (c.type === "INPUT") {
+          c.inputs.map(i => {
+            var valueName = i.atribute.value
+            var value
+            if (i.atribute.type === "SELECT") {
+              value = document.getElementById(valueName).nextSibling.value
+            }
+            else if (i.atribute.type === "CURRENCY") {
+              value = parseInt(document.getElementById(valueName).value)
+            }
+            else {
+              value = document.getElementById(valueName).value
+            }
+            console.log(valueName)
+
+            payload.titulo[i.atribute.value] = value
+          })
+        }
+      })
+
+      let transaction = await buildTransaction(payload);
+
+      await axios.put('/api/todo/', transaction, jwtHeader);
+
+      await sleep(1000);
+
+      history.replace('/dashboard');
+    }
+    catch (e) {
+      let error;
+      if (e.response) {
+        error = JSON.stringify(e.response.data);
+      } else {
+        error = e.message;
+      }
+      //setStatus({ error });
+    }
+  }
+
+  function sleep(time) {
     return new Promise((resolve) => {
-      setTimeout(()=>{
+      setTimeout(() => {
         resolve();
       }, time);
     });

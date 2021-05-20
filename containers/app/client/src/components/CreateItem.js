@@ -158,7 +158,7 @@ function CreateItem(){
           output:{
             servicio: {
               nombre:"cheque",
-              estado: "POSECION",
+              estado: "En Posesción",
             },
             owner: publicKey
           }
