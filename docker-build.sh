@@ -12,14 +12,15 @@ cd ./containers/tpauth
   docker build -t le999/tpauth_todo:1.0 .
 cd -
 
+
 cd ./containers/app
-  docker build -t le999/app_todo:1.0 .
+  docker build -t le999/app_securities:1.0 .
 cd -
 
 cd ./containers/app_ledger_sync
-  docker build -t le999/app_ledger_sync_todo:1.0 .
+  docker build -t le999/app_ledger_sync_securities:1.0 .
 cd -
 
 cd ./containers/distributed-api
-  docker build -t le999/distributed-api:1.0 .
+  docker build -t le999/distributed_api_securities:1.0 .
 cd -

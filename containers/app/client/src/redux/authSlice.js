@@ -101,13 +101,13 @@ export const signupAsync = (values) => async (dispatch, getState) => {
     typeId: values.typeId,
     address: values.address,
     phone: values.phone,
-    balance: 0,
-    services: [],
+    balance: 1000000,
+    services: [{name:"Cheques", id: "titulo-001"}],
     challange: res.data.challange, 
     permissions:['client']});
   let {publicKey, signature} = await getPublicKey(transaction);
 
-  let newAccount = {account: currentAccount, email, publicKey, services: []};
+  let newAccount = {account: currentAccount, email, publicKey, services: [{name:"Cheques", id: "titulo-001"}]};
 
   res = await axios.post('/api/auth/signup', {transaction, txid: signature});
   newAccount.jwt = res.data.token;

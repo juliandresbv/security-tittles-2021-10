@@ -25,6 +25,9 @@ function jwtVerify(token){
 }
 
 
+const ledgerUrl = process.env.APPORG0APP2_PORT && new URL(process.env.APPORG0APP2_PORT);
+const LEDGER_HOST_PORT = ledgerUrl && `${ledgerUrl.hostname}:${ledgerUrl.port}`;
+
 module.exports.challange = async function(req, res){
   var token = jwt.sign({
     challange: Date.now()
@@ -95,10 +98,12 @@ module.exports.signup = async function(req, res){
     const payload = { transaction, txid };
 
     const postTxReq = await axios.post(
-      `${process.env.LEDGER_API_HOST}:${process.env.LEDGER_API_PORT}/api/transaction`,
+      `http://${LEDGER_HOST_PORT}/api/transaction`,
       payload
     );
 
+
+    
 
     var token = jwt.sign({
       publicKey,

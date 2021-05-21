@@ -1,0 +1,61 @@
+{
+  "NUM_ORGS":2, 
+  "NUM_PEER_ORG":2, 
+  "NUM_APPS_ORG":3, 
+  "SMART_CONTRACTS":2,
+  "MONGODB":true,
+  "KAFKA":true,
+  "RETHINKDB":false,
+  "PEER_STORAGE":null,
+  "PEER_CPU":null,
+  "PEER_MEMORY":null,
+
+  "apps": [
+    {
+      "image": "le999/app_securities:1.0",
+      "env": [
+        {
+          "name": "JWT_SECRET",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE2MTU2NTE5ODJ9.Fr8AAvMHdi9at7qUX5WdJevaQrnJnMM5CMhxOFW4820"
+        },
+        {
+          "name": "PAGE_SIZE",
+          "value": "10"
+        }
+      ],
+      "loadBalancer": true
+    },
+    {
+      "image": "le999/app_ledger_sync_securities:1.0",
+      "env": [
+      ],
+      "loadBalancer": false
+    },
+    {
+      "image": "le999/distributed_api_securities:1.0",
+      "env": [
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "JWT_SECRET",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE2MTU2NTE5ODJ9.Fr8AAvMHdi9at7qUX5WdJevaQrnJnMM5CMhxOFW4820"
+        }
+      ],
+      "loadBalancer": false
+    }
+  ],
+  "tps": [
+    {
+      "image": "le999/tp1_todo:1.0",
+      "env": [
+      ]
+    },
+    {
+      "image": "le999/tpauth_todo:1.0",
+      "env": [
+      ]
+    }
+  ]
+}

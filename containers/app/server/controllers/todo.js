@@ -28,6 +28,10 @@ function buildAddress(transactionFamily) {
 
 const address = buildAddress(TRANSACTION_FAMILY);
 
+
+const ledgerUrl = process.env.APPORG0APP2_PORT && new URL(process.env.APPORG0APP2_PORT);
+const LEDGER_HOST_PORT = ledgerUrl && `${ledgerUrl.hostname}:${ledgerUrl.port}`;
+
 module.exports.getResumen = async function (req, res) {
 
   mongo.client().db('mydb').atribute.insertOne({
@@ -501,7 +505,7 @@ module.exports.postServiceClient = async function (req, res) {
   const { transaction, txid } = req.body;
 
   const postTodoTxReq = await axios.post(
-    `${process.env.LEDGER_API_HOST}:${process.env.LEDGER_API_PORT}/api/transaction`,
+    `http://${LEDGER_HOST_PORT}/api/transaction`,
     req.body
   );
 
@@ -513,7 +517,7 @@ module.exports.postToDo = async function (req, res) {
   const { transaction, txid } = req.body;
 
   const postTodoTxReq = await axios.post(
-    `${process.env.LEDGER_API_HOST}:${process.env.LEDGER_API_PORT}/api/transaction`,
+    `http://${LEDGER_HOST_PORT}/api/transaction`,
     req.body
   );
 
