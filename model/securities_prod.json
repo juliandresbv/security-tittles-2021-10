@@ -12,7 +12,7 @@
 
   "apps": [
     {
-      "image": "le999/app_securities:1.0",
+      "image": "juliandresbv/app_securities:latest",
       "env": [
         {
           "name": "JWT_SECRET",
@@ -26,13 +26,13 @@
       "loadBalancer": true
     },
     {
-      "image": "le999/app_ledger_sync_securities:1.0",
+      "image": "juliandresbv/app_ledger_sync_securities:latest",
       "env": [
       ],
       "loadBalancer": false
     },
     {
-      "image": "le999/distributed_api_securities:1.0",
+      "image": "juliandresbv/distributed_api_securities:latest",
       "env": [
         {
           "name": "PORT",
@@ -48,12 +48,12 @@
   ],
   "tps": [
     {
-      "image": "le999/tp1_todo:1.0",
+      "image": "juliandresbv/tp1_securities:latest",
       "env": [
       ]
     },
     {
-      "image": "le999/tpauth_todo:1.0",
+      "image": "juliandresbv/tpauth_securities:latest",
       "env": [
       ]
     }
