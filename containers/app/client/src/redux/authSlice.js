@@ -170,12 +170,12 @@ export const selectUsername = state => {
 
 export const selectUserServices = state => {
   if(state.auth.metamaskMessage || !state.auth.metamaskEnabled){
-    return null;
+    return [];
   }
-  if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts){
+  if(state.auth.currentAccount && state.auth.currentAccount in state.auth.accounts && state.auth.accounts[state.auth.currentAccount].services){
     return state.auth.accounts[state.auth.currentAccount].services;
   }
-  return null;
+  return [];
 };
 
 export const selectPublicKey = state => {
